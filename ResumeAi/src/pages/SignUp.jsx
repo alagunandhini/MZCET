@@ -28,7 +28,7 @@ const SignUp = () => {
             return;
         }
         try {
-            const res = await axios.post("https://ai-resumereview.onrender.com/users/signup", { name, email, password });
+            const res = await axios.post("http://localhost:3007/users/signup", { name, email, password });
             var user = res.data.user;
             const token = res.data.token;
             localStorage.setItem("user", JSON.stringify(user));

@@ -6,7 +6,7 @@ export default function Feedback() {
   const [feedback, setFeedback] = useState(null);
 
   useEffect(() => {
-    fetch(`https://ai-resumereview.onrender.com/feedback/${sessionId}`)
+    fetch(`http://localhost:3007/feedback/${sessionId}`)
       .then(res => res.json())
       .then(data => {
         if (!data || data.error) return;
