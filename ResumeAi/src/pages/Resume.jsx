@@ -12,54 +12,15 @@ import { useNavigate } from "react-router-dom";
 import TransitionLoader from "../components/TransitionLoader";
 import InterviewCompleted from "../components/InterviewCompleted";
 import { motion, AnimatePresence } from "framer-motion";
-import * as pdfjsLib from "pdfjs-dist/legacy/build/pdf";
+
 import { CheckCircle } from "lucide-react";
+import ResumeUpload from "../pages/ResumeUpload";
 
-
-// Set workerSrc to CDN URL
-//pdfjs-dist needs a web worker to process PDFs in a background thread.
-pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
 
 const Resume = () => {
-  const [resumeText, setResumeText] = useState();
-  const [file, setFile] = useState(null); //to acess the file uploaded
+ 
   const navigate = useNavigate();
-  const onDrop = useCallback((acceptedFiles) => {
-    var file = acceptedFiles[0]; // stores the first file in arrary
-    setFile(file); // save the file in file variable
-    console.log(file);
-
-    if (file.type === "application/pdf") {
-      readPdf(file); //checking wheather file is pdf or not
-    } else {
-      alert("Upload Pdf file");
-    }
-  }, []); // it calls once file get from users
-  const { getRootProps, getInputProps } = useDropzone({
-    onDrop,
-    accept: { "application/pdf": [".pdf"] },
-  }); // to accept only pdf file , it is DropZone function for for drag and drop
-
-  const readPdf = async (file) => {
-    const reader = new FileReader(); // create a new file reader
-    // when file readed this function triggers
-    reader.onload = async function () {
-      const array = new Uint8Array(this.result); //file into a Uint8Array (pdf want this format)
-      const pdf = await pdfjsLib.getDocument({ data: array }).promise;
-      let text = "";
-
-      for (let i = 1; i <= pdf.numPages; i++) {
-        const page = await pdf.getPage(i); //get each page
-        const content = await page.getTextContent(); //get file content
-        const strings = content.items.map((item) => item.str);
-        text += strings.join(" ");
-      }
-      console.log(text);
-      setResumeText(text);
-    };
-    reader.readAsArrayBuffer(file);
-  };
-
+ 
 // toast notification , if user not login 
   const [toast, setToast] = useState({
     show: false,
@@ -95,62 +56,7 @@ const Resume = () => {
   const [showFeedback, setShowFeedback] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
 
-  // it send the resume text to backend , to get Ai interview question
-  const analyzeInterview = async () => {
-    if (!resumeText) {
-      alert("Please upload your resume first!");
-      return;
-    }
-
-    const token = localStorage.getItem("token");
-
-    if (!token) {
-      showToast("Please login to continue", "error");
-      setTimeout(() => {
-        navigate("/login");
-      }, 2000);
-
-      return;
-    }
-
-    //  show loader
-    setTransitionText("Generating interview questions…");
-    setTransitionLoading(true);
-
-    // send the resume text ,fetch Ai response
-    try {
-      const response = await fetch("http://localhost:3007/analyze", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-        body: JSON.stringify({ text: resumeText }),
-      });
-
-      // store the backend response
-      const data = await response.json();
-
-      if (data.success) {
-        try {
-          console.log("BACKEND RAW RESPONSE:", data.analysis);
-
-          const parsedQuestions = JSON.parse(data.analysis); // convert string to object
-          setQuestions(parsedQuestions); // now each section is an array
-
-          setTransitionLoading(false);
-          setShowQuestionsUI(true);
-        } catch (err) {
-          console.error("Failed to parse AI response:", err);
-          alert("AI response is invalid");
-        }
-      }
-    } catch (error) {
-      setLoading(false);
-      console.error("Error:", error);
-      alert("Something went wrong");
-    }
-  };
+  
 
   const sections = ["HR", "Technical", "Stress", "Scenario"];
   const [activeSection, SetActiveSection] = useState("HR");
@@ -484,68 +390,14 @@ const Resume = () => {
         {/* Page 1 - Upload Resume */}
 
         {!showQuestionsUI && (
-          <div className=" grid grid-cols-1 md:grid-cols-6  bg-white">
-            {/* LEFT SECTION */}
-            <div className="hidden md:flex md:col-span-2 flex-col items-center px-10 py-14 border-r border-gray-200 bg-gradient-to-b from-pink-50 to-white">
-              <img
-                src="resume1.png"
-                className="rounded-xl w-full max-w-xs shadow-lg object-contain"
-                alt="Resume Preview"
-              />
-              <p className="mt-8 text-[11px] text-gray-400 font-semibold tracking-widest uppercase">
-                Powered by AI Analysis
-              </p>
-            </div>
-
-            {/* RIGHT SECTION */}
-            <div className="md:col-span-4 px-8 md:px-14 py-14 flex flex-col">
-              {/* HEADER */}
-              <h1 className="text-4xl font-bold text-gray-800 leading-tight mb-3 md:ms-30">
-                Upload Your Resume
-              </h1>
-              <p className="text-gray-600 max-w-xl mb-10 md:ms-30">
-                Upload your resume to receive AI-generated interview questions
-                based on your skills, projects, and experience.
-              </p>
-
-              {/* UPLOAD BOX */}
-              <div
-                {...getRootProps()}
-                className="border-2 border-dashed border-pink-300 rounded-xl 
-                     h-[38vh] max-w-2xl w-full mx-auto
-                     flex flex-col items-center justify-center
-                     text-center cursor-pointer
-                     hover:border-pink-400 hover:bg-pink-50
-                     transition-all duration-300"
-              >
-                <input {...getInputProps()} />
-                <img src="border.png" className="w-28 mb-4" />
-                <p className="font-semibold text-gray-700">
-                  Upload your resume
-                </p>
-                <p className="text-sm text-gray-500 mt-1">
-                  Drag & drop or click to upload
-                </p>
-              </div>
-
-              {/* FILE STATUS */}
-              {file && (
-                <p className="mt-4 text-sm text-green-600 text-center">
-                  ✅ {file.name} uploaded successfully
-                </p>
-              )}
-
-              {/* CTA BUTTON */}
-              <button
-                onClick={analyzeInterview}
-                className="mt-8 self-center bg-pink-400 text-white 
-                     px-10 py-4 rounded-lg font-semibold
-                     hover:bg-pink-500 transition duration-300 shadow-md"
-              >
-                Generate Questions
-              </button>
-            </div>
-          </div>
+             <ResumeUpload
+      setQuestions={setQuestions}
+      setShowQuestionsUI={setShowQuestionsUI}
+      showToast={showToast}
+      setTransitionLoading={setTransitionLoading}
+      setTransitionText={setTransitionText}
+      setLoading={setLoading}
+    />
         )}
 
         {/* Page 2 - Generate question  */}
