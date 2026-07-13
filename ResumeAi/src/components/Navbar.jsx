@@ -45,12 +45,12 @@ const Navbar = () => {
 
   return (
     <>
-      <nav className="bg-white text-gray-500 w-full shadow-sm shadow-pink-300 py-1 sticky top-0 z-50">
+      <nav className="bg-white text-gray-500 w-full shadow-md py-1 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto  py-1 flex items-center justify-between">
           {/* Logo */}
           <div className="flex items-center gap-2">
-            <img src="robot.png" alt="Logo" className="h-14  bg-pink-50 rounded-full" />
-            <h1 className="font-bold text-lg jua-regular">Pinkyy Ai</h1>
+            <img src="mzlogo.png" alt="Logo" className="h-14  bg-sky-50 rounded-full" />
+            <h1 className="font-bold text-lg jua-regular">Mz Mock AI</h1>
           </div>
 
           {/* navbar links */}
@@ -67,7 +67,7 @@ const Navbar = () => {
             {user ? (
               <div className="relative group cursor-pointer">
                 <div className="">
-                  <div className="bg-pink-50 w-10 h-10 rounded-full flex items-center justify-center font-bold text-gray-400 ">
+                  <div className="bg-sky-50 w-10 h-10 rounded-full flex items-center justify-center font-bold text-gray-400 ">
                     {user.name.charAt(0).toUpperCase()}
                   </div>
                 </div>
@@ -78,7 +78,7 @@ const Navbar = () => {
                 {/* Dropdown */}
                 <div className="absolute right-2  mt-2  w-64 bg-white border border-gray-200 rounded-md shadow-md invisible opacity-0  group-hover:opacity-100 group-hover:visible transition-all duration-200">
                   <div className="flex  gap-2 p-4">
-                    <div className="bg-pink-50 w-10 h-10 rounded-full flex items-center justify-center font-bold text-gray-400 ">
+                    <div className="bg-sky-50 w-10 h-10 rounded-full flex items-center justify-center font-bold text-gray-400 ">
                       {user.name.charAt(0).toUpperCase()}
                     </div>
                     <div className="flex flex-col">
@@ -91,10 +91,10 @@ const Navbar = () => {
                     </div>{" "}
                   </div>
 
-                  <div className="border border-pink-50"></div>
+                  <div className="border border-sky-50"></div>
                   <button
                     onClick={handleLogout}
-                    className="w-full  flex items-center gap-2 text-left px-4 py-2 text-sm hover:bg-pink-50 text-gray-700"
+                    className="w-full  flex items-center gap-2 text-left px-4 py-2 text-sm hover:bg-sky-50 text-gray-700"
                   >
                     <LogOut size={16} /> Logout
                   </button>
@@ -103,7 +103,7 @@ const Navbar = () => {
             ) : (
               <div className="flex gap-5">
                 <Link to="/signup">
-                  <button className="bg-pink-600/50 text-white px-4 py-2 rounded-md hover:bg-pink-400">
+                  <button className="bg-sky-500 hover:bg-sky-600 text-white px-4 py-2 rounded-md ">
                     Sign Up
                   </button>
                 </Link>
@@ -146,21 +146,21 @@ const Navbar = () => {
             <Link
               to="/"
               onClick={() => setMenuOpen(false)}
-              className="hover:text-gray-300 border-b border-pink-300 pb-2"
+              className="hover:text-gray-300 border-b border-sky-300 pb-2"
             >
               Home
             </Link>
             <Link
               to="/resume"
               onClick={() => setMenuOpen(false)}
-              className="hover:text-gray-300 border-b border-pink-300 pb-2"
+              className="hover:text-gray-300 border-b border-sky-300 pb-2"
             >
               Resume
             </Link>
             <Link
               to="/resources"
               onClick={() => setMenuOpen(false)}
-              className="hover:text-gray-300 border-b border-pink-300 pb-2"
+              className="hover:text-gray-300 border-b border-sky-300 pb-2"
             >
               Resources
             </Link>
@@ -170,9 +170,9 @@ const Navbar = () => {
                 {/* Profile toggle for mobile */}
                 <button
                   onClick={() => setProfileOpen(!profileOpen)}
-                  className="flex items-center gap-2 w-full text-left px-4 py-2 rounded-md hover:bg-pink-50"
+                  className="flex items-center gap-2 w-full text-left px-4 py-2 rounded-md hover:bg-sky-50"
                 >
-                  <div className="bg-pink-50 w-10 h-10 rounded-full flex items-center justify-center font-bold text-gray-400">
+                  <div className="bg-sky-100 w-10 h-10 rounded-full flex items-center justify-center font-bold text-gray-400">
                     {user.name.charAt(0).toUpperCase()}
                   </div>
                   <span className="text-gray-700 font-semibold">
@@ -191,10 +191,10 @@ const Navbar = () => {
                         {user.email}
                       </p>
                     </div>
-                    <div className="border border-pink-50"></div>
+                    <div className="border border-sky-50"></div>
                     <button
                       onClick={handleLogout}
-                      className="w-full flex items-center gap-2 text-left px-4 py-2 text-sm hover:bg-pink-50 text-gray-700"
+                      className="w-full flex items-center gap-2 text-left px-4 py-2 text-sm hover:bg-sky-50 text-gray-700"
                     >
                       <LogOut size={16} /> Logout
                     </button>
@@ -204,7 +204,7 @@ const Navbar = () => {
             ) : (
               <div className="flex gap-5">
                 <Link to="/signup">
-                  <button className="bg-pink-600/50 text-white px-4 py-2 rounded-md hover:bg-pink-400">
+                  <button className="bg-sky-600/50 text-white px-4 py-2 rounded-md hover:bg-sky-400">
                     Sign Up
                   </button>
                 </Link>
@@ -223,11 +223,11 @@ const Navbar = () => {
         <div className="fixed bottom-5 right-5 z-[100] animate-slideIn">
           <div
             className={`px-8 py-3 rounded-lg shadow-lg  text-sm ${
-              toast.type === "success" ? "bg-pink-400 " : "bg-gray-900"
+              toast.type === "success" ? "bg-sky-400 " : "bg-gray-900"
             } text-white flex gap-3`}
           >
             {toast.type === "success" ? (
-              <CheckCircle size={18} className="text-pink-500" />
+              <CheckCircle size={18} className="text-sky-500" />
             ) : (
               <span className="font-extrabold  ">!</span>
             )}
