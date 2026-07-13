@@ -28,7 +28,7 @@ const Login = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            const userdata = await axios.post("https://ai-resumereview.onrender.com/users/login", { email, password });
+            const userdata = await axios.post("http://localhost:3007/users/login", { email, password });
             const token = userdata.data.token;
             var user = userdata.data.user;
             localStorage.setItem("user", JSON.stringify(user));

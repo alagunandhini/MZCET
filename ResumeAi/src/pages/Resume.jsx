@@ -119,7 +119,7 @@ const Resume = () => {
 
     // send the resume text ,fetch Ai response
     try {
-      const response = await fetch("https://ai-resumereview.onrender.com/analyze", {
+      const response = await fetch("http://localhost:3007/analyze", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -217,7 +217,7 @@ const Resume = () => {
           setIsAnalyzing(true);
           speakText("Great! Analyzing your interview. Please wait.");
           // WAIT for LAST answer to save
-          const res = await fetch("https://ai-resumereview.onrender.com/upload-audio", {
+          const res = await fetch("http://localhost:3007/upload-audio", {
             method: "POST",
             body: formData,
           });
@@ -229,7 +229,7 @@ const Resume = () => {
           }
         } else {
           //  Fire & forget for normal questions
-          fetch("https://ai-resumereview.onrender.com/upload-audio", {
+          fetch("http://localhost:3007/upload-audio", {
             method: "POST",
             body: formData,
           }).catch((err) => console.error("Backend audio save failed", err));
@@ -259,7 +259,7 @@ const Resume = () => {
   const endInterview = async () => {
    
     try {
-      const res = await fetch("https://ai-resumereview.onrender.com/end-session", {
+      const res = await fetch("http://localhost:3007/end-session", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ sessionId }),
