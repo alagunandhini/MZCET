@@ -30,7 +30,7 @@ return (
 
           <div className="w-full min-h-screen flex flex-col items-center justify-between  ">
             <div className="w-full text-center">
-              <p className="  text-xl font-bold bg-pink-300 p-2 text-gray-50">
+              <p className="  text-xl font-bold bg-sky-300 p-2 text-gray-50">
                 {activeSection} Round
               </p>
             </div>
@@ -60,14 +60,14 @@ return (
                     setCurrentIndex(0);
                     SetActiveSection(activeSection); // optional but recommended
                   }}
-                  className="md:ms-250 mb-2 px-6 py-2 rounded-full text-white bg-pink-300 shadow hover:bg-pink-200 transition"
+                  className="md:ms-250 mb-2 px-6 py-2 rounded-full text-white bg-sky-300 shadow hover:bg-sky-200 transition"
                 >
                   Start Again
                 </button>
 
                 <button
                   onClick={() => setShowExitModal(true)}
-                  className=" mb-2 px-6 py-2 rounded-full text-white bg-pink-300 shadow hover:bg-pink-200 transition"
+                  className=" mb-2 px-6 py-2 rounded-full text-white bg-sky-300 shadow hover:bg-sky-200 transition"
                   title="Go Home"
                 >
                   Exit
@@ -81,7 +81,7 @@ return (
               <div className="flex justify-center md:w-1/4 w-full">
                 <div className="flex flex-col items-center">
                   <motion.img
-                    src="robot.png"
+                    src="mzlogo.png"
                     className="w-50 h-50 md:w-70 md:h-70 me-4"
                     initial={{}}
                     animate={{
@@ -99,7 +99,7 @@ return (
                       {[...Array(6)].map((_, i) => (
                         <motion.span
                           key={i}
-                          className="w-2 h-6 bg-pink-300 rounded-full"
+                          className="w-2 h-6 bg-sky-300 rounded-full"
                           animate={{ scaleY: [1, 2, 1] }}
                           transition={{
                             duration: 0.5,
@@ -117,7 +117,7 @@ return (
                       animate={{ opacity: 1, y: 0 }}
                       className="text-center mt-1 font-medium text-gray-600"
                     >
-                      Hi, Pinkyy here! 💗 <br />
+                      Hi,I'm your interviewer! <br />
                       <span className="text-gray-600">
                         Start speaking When You Are Ready{" "}
                       </span>
@@ -176,8 +176,8 @@ return (
                 className={`w-28 h-28 rounded-full flex items-center justify-center shadow-xl transition-all
     ${
       isRecording
-        ? "bg-pink-400 animate-pulse ring-8 ring-pink-300/50"
-        : "bg-pink-300 hover:bg-pink-400"
+        ? "bg-sky-400 animate-pulse ring-8 ring-sky-300/50"
+        : "bg-sky-300 hover:bg-sky-400"
     }
   `}
               >

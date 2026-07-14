@@ -7,7 +7,7 @@ const ExitModal = ({
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-5 md:p-0">
-      <div className="bg-white p-8 rounded-xl shadow-2xl text-center max-w-md w-full border border-pink-300">
+      <div className="bg-white p-8 rounded-xl shadow-2xl text-center max-w-md w-full border border-sky-300">
 
         <h2 className="text-2xl font-bold text-gray-800 mb-4">
           Exit Practice?
@@ -27,7 +27,7 @@ const ExitModal = ({
 
           <button
             onClick={onExit}
-            className="px-6 py-2 rounded-full bg-pink-300 text-white hover:bg-pink-400"
+            className="px-6 py-2 rounded-full bg-sky-300 text-white hover:bg-sky-400"
           >
             Yes, Exit
           </button>
