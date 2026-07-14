@@ -6,5 +6,6 @@ const authMiddleware=require("..//midleware/authMiddleware.js")
 
 
 router.post("/", authMiddleware,analyzeResume);
+  console.log("✅ Route reached");
 
 module.exports = router;
