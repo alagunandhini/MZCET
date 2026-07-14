@@ -38,7 +38,11 @@ const Login = () => {
             if (userdata) {
                 showToast("login succesfull", "success");
                 setTimeout(() => {
-                    navigate("/resume");
+                      navigate("/resume", {
+            state: {
+                hasResume: userdata.data.hasResume,
+            },
+        });
                 }, 2000);
             }
         } catch (e) {

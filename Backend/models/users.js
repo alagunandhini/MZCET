@@ -18,6 +18,11 @@ const userShema =new mongoose.Schema({
          type:String,
         required:true,
 
+    },
+
+     resumeText:{
+        type:String,
+        default:""
     }
 
 })

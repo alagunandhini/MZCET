@@ -18,13 +18,13 @@ import { CheckCircle } from "lucide-react";
 import ResumeUpload from "../pages/ResumeUpload";
 import useToast from "../hooks/useToast";
 import useSpeech from "../hooks/useSpeech";
-
+import useInterviewStorage from "../hooks/useInterviewStorage";
+import axios from "axios";
 
 const Resume = () => {
- 
- 
  const navigate = useNavigate();
  const { toast, showToast } = useToast();
+ const [checkingResume, setCheckingResume] = useState(true);
 
  //  if token is not there then it autamatically in login page 
   useEffect(() => {
@@ -34,6 +34,41 @@ const Resume = () => {
   }
 }, []);
 
+// Check whether resume already exists
+useEffect(() => {
+
+  const checkResume = async () => {
+const token = localStorage.getItem("token");
+  try {
+      const res = await axios.get(
+        "http://localhost:3007/users/resume-status",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (res.data.hasResume) {
+        setShowQuestionsUI(true);
+      }
+
+    } catch (err) {
+      console.log(err);
+    }
+     finally {
+      // Always stop loading
+      setTimeout(() => {
+    setCheckingResume(false);
+  }, 1500);
+    }
+
+
+  };
+
+  checkResume();
+
+}, []);
 
   const [questions, setQuestions] = useState([]); // store generated questions
   const [loading, setLoading] = useState(false);
@@ -55,6 +90,25 @@ const { speakText, isSpeaking } = useSpeech();
   const [sectionIndex, setSectionIndex] = useState();
   const computedSection =
     mode === "interview" ? sections[sectionIndex] : activeSection;
+  const hydrated = useInterviewStorage({
+  showQuestionsUI,
+  startPractice,
+  questions,
+  activeSection,
+  currentIndex,
+  sectionIndex,
+  mode,
+  sessionId,
+
+  setShowQuestionsUI,
+  setStartPractice,
+  setQuestions,
+  SetActiveSection,
+  setCurrentIndex,
+  setSectionIndex,
+  setMode,
+  setSessionId,
+});
 
   // automatic voice read
   useEffect(() => {
@@ -140,7 +194,6 @@ const { speakText, isSpeaking } = useSpeech();
 
   const stopRecording = () => {
     if (!isRecording) return;
-
     mediaRecorderRef.current.stop();
     mediaRecorderRef.current.stream
       .getTracks()
@@ -149,7 +202,6 @@ const { speakText, isSpeaking } = useSpeech();
   };
 
   const endInterview = async () => {
-   
     try {
       const res = await fetch("http://localhost:3007/end-session", {
         method: "POST",
@@ -175,8 +227,7 @@ const { speakText, isSpeaking } = useSpeech();
   };
 
 
-
-  const next = () => {
+ const next = () => {
     const index = questions[computedSection]?.length || 0;
 
     // move normally for other question
@@ -210,23 +261,15 @@ const { speakText, isSpeaking } = useSpeech();
   // skip question logic
   const skipQuestion = () => {
     const key = `${activeSection}-${currentIndex}`;
-
     // mark skipped only if not answered
     setQuestionStatus((prev) => ({
       ...prev,
       [key]: prev[key] || "skipped",
     }));
-
-    // speakText("Okay, skipping this question.");
-
     next();
   };
 
-  // const prev = () => {
-  //   if (currentIndex > 0) {
-  //     setCurrentIndex(currentIndex - 1);
-  //   }
-  // };
+
 
   // trigger when reaches last Question of each question
   const moveToNextSectionWithLoader = (nextIndex) => {
@@ -234,7 +277,6 @@ const { speakText, isSpeaking } = useSpeech();
     const nextSection = sections[nextIndex];
     setTransitionText(`Round-${nextIndex} completed`);
     setTransitionLoading(true);
-
     setTimeout(() => {
       setTransitionLoading(false);
       setSectionIndex(nextIndex); // updating the current section index
@@ -242,53 +284,7 @@ const { speakText, isSpeaking } = useSpeech();
       setCurrentIndex(0);
     }, 3000);
   };
-  const [hydrated, setHydrated] = useState(false);
-
-  // storing each state, when each state changes
-  useEffect(() => {
-    if (!hydrated) {
-      return;
-    }
-    const appState = {
-      showQuestionsUI,
-      startPractice,
-      questions,
-      activeSection,
-      currentIndex,
-      sectionIndex,
-      mode,
-      sessionId,
-    };
-    localStorage.setItem("interviewstate", JSON.stringify(appState));
-  }, [
-    hydrated,
-    showQuestionsUI,
-    startPractice,
-    questions,
-    activeSection,
-    currentIndex,
-    sectionIndex,
-    mode,
-    sessionId,
-  ]);
-
-  // when refresh it will will on same screen
-  useEffect(() => {
-    const savedState = localStorage.getItem("interviewstate");
-    if (savedState) {
-      const state = JSON.parse(savedState);
-      setShowQuestionsUI(state.showQuestionsUI);
-      setStartPractice(state.startPractice);
-      setQuestions(state.questions || []);
-      SetActiveSection(state.activeSection || "HR");
-      setCurrentIndex(state.currentIndex || 0);
-      setSectionIndex(state.sectionIndex || 0);
-      setMode(state.mode || "practice");
-      setSessionId(state.sessionId || uuidv4());
-    }
-    setHydrated(true);
-  }, []);
-
+  
   // username
   const username = localStorage.getItem("username");
 
@@ -332,7 +328,6 @@ const handleExitPractice = () => {
   setShowExitModal(false);
   setTransitionText("Returning to questions…");
   setTransitionLoading(true);
-
   setTimeout(() => {
     setSessionId(uuidv4());
     setTransitionLoading(false);
@@ -341,38 +336,33 @@ const handleExitPractice = () => {
     setCurrentIndex(0);
   }, 2000);
 };
+ if (checkingResume) {
+    return <TransitionLoader text="Checking resume..." />;
+  }
 
   return (
-    <>
-  
-      {toast.show && (
+    <> {toast.show && (
         <div className="fixed bottom-5 right-5 z-[100] animate-slideIn">
           <div
             className={`px-8 py-3 rounded-lg shadow-lg  text-sm ${
               toast.type === "success" ? "bg-pink-400 " : "bg-gray-900"
-            } text-white flex gap-3`}
-          >
+            } text-white flex gap-3`} >
             {toast.type === "success" ? (
               <CheckCircle size={18} className="text-pink-500" />
             ) : (
               <span className="font-extrabold  ">!</span>
-            )}
-
-            {toast.message}
+            )}  {toast.message}
           </div>
-        </div>
-      )}
+        </div> )}
       
       {!showQuestionsUI && <Navbar />}
-
       {/* Loader for all */}
       {transitionLoading && <TransitionLoader text={transitionText} />}
 
-      <div className="min-h-screen ">
-       
-        {/* Page 1 - Upload Resume */}
-
-   {!showQuestionsUI && (
+  <div className="min-h-screen ">
+    
+     {/* Page 1 - Upload Resume */}
+         {!showQuestionsUI && (
              <ResumeUpload
       setQuestions={setQuestions}
       setShowQuestionsUI={setShowQuestionsUI}
@@ -383,7 +373,7 @@ const handleExitPractice = () => {
     />
         )}
 
-        {/* Page 2 - Generate question  */}
+{/* Page 2 - Generate question  */}
         {showQuestionsUI && !startPractice && (
   <QuestionPreview
     sections={sections}
@@ -402,10 +392,7 @@ const handleExitPractice = () => {
     setShowQuestionsUI={setShowQuestionsUI}
   />
 )}
-
-
-
-        {/* Page 3 - Practice Question */}
+{/* Page 3 - Practice Question */}
 
         {startPractice && (
          <InterviewRoom
@@ -445,9 +432,7 @@ const handleExitPractice = () => {
 <ExitModal
   showExitModal={showExitModal}
   onCancel={() => setShowExitModal(false)}
-  onExit={handleExitPractice}
-/>
-    </>
-  );
+  onExit={handleExitPractice} />
+    </>);
 };
 export default Resume;
