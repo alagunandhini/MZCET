@@ -139,17 +139,17 @@ const ResumeUpload = ({
 
         {/* LEFT */}
 
-        <div className="hidden md:flex md:col-span-2 flex-col items-center px-10 py-14 border-r border-gray-200 bg-gradient-to-b from-pink-50 to-white">
+        <div className="hidden md:flex md:col-span-2 flex-col items-center px-10 py-14 border-r border-gray-200 bg-gradient-to-b from-sky-50 to-white">
 
           <img
-            src="resume1.png"
+            src="resumebluetheme.png"
             className="rounded-xl w-full max-w-xs shadow-lg object-contain"
             alt=""
           />
 
-          <p className="mt-8 text-[11px] text-gray-400 font-semibold tracking-widest uppercase">
+          {/* <p className="mt-8 text-[11px] text-gray-400 font-semibold tracking-widest uppercase">
             Powered by AI Analysis
-          </p>
+          </p> */}
 
         </div>
 
@@ -157,7 +157,7 @@ const ResumeUpload = ({
 
         <div className="md:col-span-4 px-8 md:px-14 py-14 flex flex-col">
 
-          <h1 className="text-4xl font-bold text-gray-800 mb-3 md:ms-30">
+          <h1 className="text-4xl font-bold text-gray-500 mb-3 md:ms-30">
             Upload Your Resume
           </h1>
 
@@ -167,14 +167,14 @@ const ResumeUpload = ({
 
           <div
             {...getRootProps()}
-            className="border-2 border-dashed border-pink-300 rounded-xl h-[38vh] max-w-2xl w-full mx-auto flex flex-col items-center justify-center cursor-pointer hover:border-pink-400 hover:bg-pink-50"
+            className="border-2 border-dashed border-sky-300 rounded-xl h-[38vh] max-w-2xl w-full mx-auto flex flex-col items-center justify-center cursor-pointer hover:border-sky-400 hover:bg-sky-50"
           >
 
             <input {...getInputProps()} />
 
-            <img src="border.png" className="w-28 mb-4" alt="" />
+            <img src="blue border.png" className="w-28 mb-4 opacity-30 grayscale brightness-125" alt="" />
 
-            <p className="font-semibold">
+            <p className="font-semibold text-gray-500">
               Upload your resume
             </p>
 
@@ -192,7 +192,7 @@ const ResumeUpload = ({
 
           <button
             onClick={analyzeInterview}
-            className="mt-8 self-center bg-pink-400 text-white px-10 py-4 rounded-lg hover:bg-pink-500"
+            className="mt-8 self-center bg-sky-400 text-white px-10 py-4 rounded-lg hover:bg-sky-500"
           >
             Generate Questions
           </button>
