@@ -4,8 +4,8 @@ const TransitionLoader = ({ text }) => {
 
       {/* Robot Animation */}
       <img
-        src="/robot.png"   // your Pinkyy robot image
-        alt="Pinkyy"
+        src="3d blue.png"   // your Pinkyy robot image
+        alt="mz mock ai"
         className="w-32 h-32 animate-bounceSlow drop-shadow-xl"
       />
 
@@ -16,7 +16,7 @@ const TransitionLoader = ({ text }) => {
       </div> */}
 
       {/* Pulsing Text */}
-      <p className="mt-0 text-lg font-semibold text-pink-500 animate-pulse text-center">
+      <p className="mt-0 text-lg font-semibold text-black-300 animate-pulse text-center">
         {text || "Pinkyy is thinking...💗"}
       </p>
 

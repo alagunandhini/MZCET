@@ -70,6 +70,8 @@ const ResumeUpload = ({
     reader.readAsArrayBuffer(file);
   };
 
+  // console.log("resume text here:" +resumeText)
+
   // Function 3 - Analyze Resume
   const analyzeInterview = async () => {
 
@@ -90,7 +92,7 @@ const ResumeUpload = ({
       return;
     }
 
-    setTransitionText("Generating interview questions...");
+    setTransitionText(" interview questions...");
     setTransitionLoading(true);
 
     try {
