@@ -19,10 +19,12 @@ import ResumeUpload from "../pages/ResumeUpload";
 import useToast from "../hooks/useToast";
 import useSpeech from "../hooks/useSpeech";
 import useInterviewStorage from "../hooks/useInterviewStorage";
+import axios from "axios";
 
 const Resume = () => {
  const navigate = useNavigate();
  const { toast, showToast } = useToast();
+ const [checkingResume, setCheckingResume] = useState(true);
 
  //  if token is not there then it autamatically in login page 
   useEffect(() => {
@@ -30,6 +32,42 @@ const Resume = () => {
   if (!token) {
     navigate("/login");
   }
+}, []);
+
+// Check whether resume already exists
+useEffect(() => {
+
+  const checkResume = async () => {
+const token = localStorage.getItem("token");
+  try {
+      const res = await axios.get(
+        "http://localhost:3007/users/resume-status",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (res.data.hasResume) {
+        setShowQuestionsUI(true);
+      }
+
+    } catch (err) {
+      console.log(err);
+    }
+     finally {
+      // Always stop loading
+      setTimeout(() => {
+    setCheckingResume(false);
+  }, 1500);
+    }
+
+
+  };
+
+  checkResume();
+
 }, []);
 
   const [questions, setQuestions] = useState([]); // store generated questions
@@ -298,6 +336,9 @@ const handleExitPractice = () => {
     setCurrentIndex(0);
   }, 2000);
 };
+ if (checkingResume) {
+    return <TransitionLoader text="Checking resume..." />;
+  }
 
   return (
     <> {toast.show && (

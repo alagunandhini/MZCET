@@ -3,6 +3,7 @@ var router = express.Router();
 const bcrypt=require("bcryptjs");
 const jwt=require("jsonwebtoken");
 const User=require("../models/users");
+const authMiddleware = require("../midleware/authMiddleware");
 
 // sign up endpoint 
 router.post("/signup",async(req ,res)=>{
@@ -63,6 +64,7 @@ router.post("/login",async(req,res)=>{
   return  res.json({
     message:"login Sucessful",
     token,
+    hasResume: !!user.resumeText, 
     user:{
       id:user._id,
       name:user.name,
@@ -79,14 +81,25 @@ router.post("/login",async(req,res)=>{
     })
   }
 
-  
-
-
-
-
-
-
 })
+
+router.get("/resume-status", authMiddleware, async (req, res) => {
+  try {
+    const user = await User.findById(req.userId);
+
+    res.json({
+      success: true,
+      hasResume: !!user.resumeText,
+      resumeText: user.resumeText
+    });
+
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      message: "Something went wrong"
+    });
+  }
+});
 
 
 module.exports = router;
