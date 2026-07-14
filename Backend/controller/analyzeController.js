@@ -1,7 +1,13 @@
+const User=require("../models/users");
 const analyzeResume = async (req, res) => {
   try {
     // getting resume text from from frontend
     const { text } = req.body;
+    const userId = req.userId;
+
+await User.findByIdAndUpdate(userId, {
+    resumeText: text,
+});
        console.log("Sending response:", text);
  
 
