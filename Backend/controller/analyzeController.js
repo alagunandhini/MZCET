@@ -2,6 +2,7 @@ const analyzeResume = async (req, res) => {
   try {
     // getting resume text from from frontend
     const { text } = req.body;
+       console.log("Sending response:", text);
  
 
     if (!text) {
@@ -61,8 +62,10 @@ const analyzeResume = async (req, res) => {
         ]
       })
     });
+         console.log("Sending response:", response);
 
     const data = await response.json();
+ 
     console.log("GROQ INTERVIEW OUTPUT:", JSON.stringify(data, null, 2));
 
     let analysis = "No output";
@@ -79,6 +82,8 @@ const analyzeResume = async (req, res) => {
       // it will taje only required response format 
       analysis = data.choices[0].message.content;
     }
+
+  
   // now response send back to frontend 
     res.json({
       success: true,

@@ -13,6 +13,8 @@ import TransitionLoader from "../components/TransitionLoader";
 import InterviewCompleted from "../components/InterviewCompleted";
 import { motion, AnimatePresence } from "framer-motion";
 import InterviewRoom  from "./InterviewRoom";
+import InterviewLoader from "../components/InterviewLoader";
+import ExitModal from "../components/ExitModal";
 
 import { CheckCircle } from "lucide-react";
 import ResumeUpload from "../pages/ResumeUpload";
@@ -56,9 +58,6 @@ const Resume = () => {
   const [questionStatus, setQuestionStatus] = useState({});
   const [showFeedback, setShowFeedback] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
-
-  
-
   const sections = ["HR", "Technical", "Stress", "Scenario"];
   const [activeSection, SetActiveSection] = useState("HR");
   const [startPractice, setStartPractice] = useState(false);
@@ -363,8 +362,40 @@ const Resume = () => {
     (v) => v === "skipped"
   ).length;
 
+  const handleNextRound = () => {
+  setTransitionText("Restarting interview...");
+  setTransitionLoading(true);
+
+  setTimeout(() => {
+    setShowCompletionScreen(false);
+    setMode("interview");
+    setSectionIndex(0);
+    SetActiveSection(sections[0]);
+    setCurrentIndex(0);
+    setQuestionStatus({});
+    setSessionId(uuidv4());
+    setStartPractice(true);
+    setTransitionLoading(false);
+  }, 2200);
+};
+
+const handleExitPractice = () => {
+  setShowExitModal(false);
+  setTransitionText("Returning to questions…");
+  setTransitionLoading(true);
+
+  setTimeout(() => {
+    setSessionId(uuidv4());
+    setTransitionLoading(false);
+    setStartPractice(false);
+    setShowQuestionsUI(true);
+    setCurrentIndex(0);
+  }, 2000);
+};
+
   return (
     <>
+  
       {toast.show && (
         <div className="fixed bottom-5 right-5 z-[100] animate-slideIn">
           <div
@@ -388,9 +419,10 @@ const Resume = () => {
       {transitionLoading && <TransitionLoader text={transitionText} />}
 
       <div className="min-h-screen ">
+       
         {/* Page 1 - Upload Resume */}
 
-        {!showQuestionsUI && (
+   {!showQuestionsUI && (
              <ResumeUpload
       setQuestions={setQuestions}
       setShowQuestionsUI={setShowQuestionsUI}
@@ -557,140 +589,45 @@ const Resume = () => {
         {/* Page 3 - Practice Question */}
 
         {startPractice && (
-         
-  <InterviewRoom
-
-    activeSection={activeSection}
-
-    currentIndex={currentIndex}
-
-    questions={questions}
-
-    computedSection={computedSection}
-
-    isSpeaking={isSpeaking}
-
-    isRecording={isRecording}
-
-    startRecording={startRecording}
-
-    stopRecording={stopRecording}
-
-    skipQuestion={skipQuestion}
-
-    setShowExitModal={setShowExitModal}
-
-    setSessionId={setSessionId}
-
-    mediaRecorderRef={mediaRecorderRef}
-
-    setIsRecording={setIsRecording}
-
-    setCurrentIndex={setCurrentIndex}
-
-    SetActiveSection={SetActiveSection}
-
-  />
-
-         
-        )}
+         <InterviewRoom
+        activeSection={activeSection}
+        currentIndex={currentIndex}
+        questions={questions}
+        computedSection={computedSection}
+        isSpeaking={isSpeaking}
+         isRecording={isRecording}
+         startRecording={startRecording}
+         stopRecording={stopRecording}
+         skipQuestion={skipQuestion}
+         setShowExitModal={setShowExitModal}
+         setSessionId={setSessionId}
+         mediaRecorderRef={mediaRecorderRef}
+         setIsRecording={setIsRecording}
+         setCurrentIndex={setCurrentIndex}
+         SetActiveSection={SetActiveSection} />  )}
       </div>
 
-      {/* Loader-ANalyze interview */}
-      {isAnalyzing && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-pink-100/80 backdrop-blur-md p-6 md:p-0">
-          <div className=" rounded-3xl p-10 shadow-2xl flex flex-col items-center gap-6 animate-fadeIn">
-            {/* Robot */}
-            <img src="/robot.png" className="w-32 animate-bounceSlow" />
 
-            {/* Text */}
-            <h2 className="text-2xl font-bold text-pink-400 text-center">
-              Analyzing Your Interview
-            </h2>
+ {/* Loader-ANalyze interview */}
+<InterviewLoader isAnalyzing={isAnalyzing} />
 
-            {/* Dots loader */}
-            <div className="flex gap-2">
-              <span className="dot"></span>
-              <span className="dot delay-200"></span>
-              <span className="dot delay-400"></span>
-            </div>
+{/* interview completed page */}
+{showCompletionScreen && (
+  <InterviewCompleted
+    sessionId={sessionId}
+    answered={answeredCount}
+    skipped={skippedCount}
+    feedback={feedback}
+    onNextRound={handleNextRound}
+  />
+)}
 
-            <p className="text-gray-500 text-sm">Please Wait.....</p>
-          </div>
-        </div>
-      )}
-
-      {/* completed screen */}
-      {showCompletionScreen && (
-        <InterviewCompleted
-          sessionId={sessionId}
-          answered={answeredCount}
-          skipped={skippedCount}
-          feedback={feedback}
-          onNextRound={() => {
-            setTransitionText("Restarting interview...");
-            setTransitionLoading(true);
-
-            setTimeout(() => {
-              setShowCompletionScreen(false);
-              setMode("interview");
-              setSectionIndex(0);
-              SetActiveSection(sections[0]);
-              setCurrentIndex(0);
-              setQuestionStatus({});
-              setSessionId(uuidv4());
-
-              setStartPractice(true);
-              setTransitionLoading(false);
-            }, 2200);
-
-            // later you can route to round 2
-          }}
-        />
-      )}
-
-      {/* Exit button pop box */}
-      {showExitModal && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-5 md:p-0">
-          <div className="bg-white p-8 rounded-xl shadow-2xl text-center max-w-md w-full border border-pink-300">
-            <h2 className="text-2xl font-bold text-gray-800 mb-4">
-              Exit Practice?
-            </h2>
-            <p className="text-gray-600 mb-8">
-              Are you sure you want to exit the practice session?
-            </p>
-
-            <div className="flex justify-center gap-6">
-              <button
-                onClick={() => setShowExitModal(false)}
-                className="px-6 py-2 rounded-full border border-gray-400 text-gray-600 hover:bg-gray-100"
-              >
-                Cancel
-              </button>
-
-              <button
-                onClick={() => {
-                  setShowExitModal(false);
-
-                  setTransitionText("Returning to questions…");
-                  setTransitionLoading(true);
-
-                  setTimeout(() => {
-                    setSessionId(uuidv4());
-                    setTransitionLoading(false);
-                    setStartPractice(false);
-                    setShowQuestionsUI(true);
-                    setCurrentIndex(0);
-                  }, 2000);
-                }}
-                className="px-6 py-2 rounded-full bg-pink-300 text-white hover:bg-pink-400"
-              >
-                Yes, Exit
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+{/* exit module */}
+<ExitModal
+  showExitModal={showExitModal}
+  onCancel={() => setShowExitModal(false)}
+  onExit={handleExitPractice}
+/>
     </>
   );
 };
