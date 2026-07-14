@@ -9,14 +9,14 @@ const Home = () => {
 
     return (
         <>
-        <Navbar/>
-        
+            <Navbar />
+
             <div className="bg-white w-full min-h-[90vh] grid grid-cols-1 md:grid-cols-2 gap-8 py-8 border-b border-gray-200">
 
                 {/* Left Image */}
                 <div className="flex items-center justify-center px-6">
                     <img
-                        src="landingpage.png"
+                        src="homeimgfinal.png"
                         alt="Mz Mock AI"
                         className="w-full max-w-lg h-auto object-contain"
                     />
@@ -37,7 +37,7 @@ const Home = () => {
 
                     <p className="text-gray-600 text-lg leading-8 mb-8">
                         Build interview confidence with personalized AI feedback and realistic mock interview experiences.
-                        
+
                     </p>
 
                     <div className="flex items-center gap-4">
@@ -45,9 +45,7 @@ const Home = () => {
                             Get Started →
                         </button>
 
-                        <p className="text-sm text-gray-500">
-                            Takes less than a minute
-                        </p>
+
                     </div>
 
                 </div>
@@ -64,7 +62,7 @@ const Home = () => {
                     <div className="bg-white flex flex-col justify-center  p-6 shadow-lg rounded-t-4xl rounded-s-4xl rounded-e-sm relative">
                         <div className=" bg-sky-300 rounded-full text-xl text-white w-12 h-12 flex items-center justify-center mb-4 absolute -top-6">1</div>
                         <div className="max-w-4xl mx-auto ">
-                            <img src="step1.png" className="h-32 w-32 border-12 border-pink-300/10 bg-white rounded-full p-3 mt-10" />
+                            <img src="blue step 2.png" className="h-45 w-45 border-12 border-sky-300/10 bg-white rounded-full p-3 mt-10" />
                         </div>
                         <h1 className="font-bold text-xl text-gray-700 mt-6"> Upload Your Resume</h1>
                         <p className="text-gray-400 mt-2">Get your resume analyzed for personalized interview prep.</p>
@@ -74,7 +72,7 @@ const Home = () => {
                     <div className="bg-white flex flex-col justify-center p-6 shadow-lg rounded-t-4xl rounded-s-4xl rounded-e-sm relative">
                         <div className="bg-sky-300 rounded-full text-xl text-white w-12 h-12 flex items-center justify-center mb-4 absolute -top-6 ">2</div>
                         <div className="max-w-4xl mx-auto ">
-                            <img src="steps2.png" className="h-32 w-32 object-cover border border-pink-300/10 bg-pink-300/10 rounded-full p-3 mt-10" />
+                            <img src="blue step 3.png" className="h-45 w-45 object-cover border border-sky-300/10 bg-sky-300/10 rounded-full p-3 mt-10" />
                         </div>
 
                         <h1 className="font-bold text-xl text-gray-700 mt-6"> AI Analysis</h1>
@@ -85,7 +83,7 @@ const Home = () => {
                     <div className="bg-white flex flex-col justify-center p-6 shadow-lg rounded-t-4xl rounded-s-4xl rounded-e-sm relative">
                         <div className="bg-sky-300 rounded-full text-xl text-white w-12 h-12 flex items-center justify-center mb-4 absolute -top-6">3</div>
                         <div className="max-w-4xl mx-auto ">
-                            <img src="step3.png" className="h-32 w-32 border border-pink-300/10 bg-pink-300/10 rounded-full p-3 mt-10" />
+                            <img src="blue step 1.png" className="h-40 w-40 border border-sky-300/10 bg-sky-300/10 rounded-full p-3 mt-10" />
                         </div>
                         <h1 className="font-bold text-xl text-gray-700 mt-6"> Practice & Improve</h1>
                         <p className="text-gray-400 mt-2">Answer with your voice and get instant AI feedback.</p>
@@ -96,18 +94,64 @@ const Home = () => {
                 </div>
 
             </div>
+            {/* Instructions */}
 
+            <div className="w-full bg-gray-100 border border-sky-200 rounded-2xl p-8 shadow-sm mt-10">
+                <h2 className="text-3xl font-bold text-sky-600 mb-6 text-center">
+                    Interview Instructions
+                </h2>
 
+                <ul className="space-y-4 text-gray-700 leading-8 max-w-4xl mx-auto list-disc list-inside ">
+                    <li>
+                        Upload your <span className="font-semibold">resume only once</span>. Once uploaded,
+                        it will be saved for the current interview session.
+                    </li>
 
-            {/* section-3 */}
+                    <li>
+                        Interview questions will be generated only from the uploaded resume.
+                        Uploading another resume or regenerating questions is not allowed.
+                    </li>
+
+                    <li>
+                        Each interview round provides a maximum of
+                        <span className="font-semibold"> 3 attempts</span>.
+                    </li>
+
+                    <li>
+                        If all <span className="font-semibold">3 attempts</span> are exhausted,
+                        your score for that round will automatically become
+                        <span className="font-semibold text-red-500"> 0</span>.
+                    </li>
+
+                    <li>
+                        Do not switch browser tabs, minimize the window, or leave the interview page.
+                    </li>
+
+                    <li>
+                        Every tab switch generates one warning. After
+                        <span className="font-semibold text-red-500"> 5 warnings</span>,
+                        the interview will be terminated automatically.
+                    </li>
+
+                    <li>
+                        Ensure your microphone is enabled before starting the interview.
+                    </li>
+
+                    <li>
+                        Complete the interview in one session for the best experience.
+                    </li>
+                </ul>
+            </div>
+
+            {/* section-3
             <div className="min-h-[80vh] flex items-center py-10 bg-white  ">
                 <div className="grid  grid-cols-1 md:grid-cols-2 max-w-6xl mx-auto">
                     {/* left-img */}
-                    <div className="flex justify-center items-center">
+            {/* <div className="flex justify-center items-center">
                         <img src="res.png" className="max-w-[90%]  max-h-[50vh] object-contain mt-8 md:mt-0" />
                     </div>
                     {/* right-content */}
-                    <div className="flex flex-col justify-center items-center md:items-start px-10 md:px-0">
+            {/* <div className="flex flex-col justify-center items-center md:items-start px-10 md:px-0">
                         <h2 className="font-bold text-3xl text-gray-700 mb-3">AI-Powered Interview Assistant</h2>
                         <p className=" text-gray-600 text-lg mb-5 ">
                             Upload your resume and get tailored HR questions with sample answers. Prepare smartly with instant AI feedback and voice-based mock interviews to boost your confidence and land your dream job.
@@ -120,15 +164,15 @@ const Home = () => {
 
                         </ul>
 
-                    </div>
+                    </div> */}
 
 
-
+            {/* 
                 </div>
-            </div>
+            </div> */}
 
             {/* section-4 (premium)*/}
-            <div className="bg-pink-300/10 min-h-[40vh] mb-5 grid grid-cols-1 md:grid-cols-2   flex justify-center items-center">
+            {/* <div className="bg-pink-300/10 min-h-[40vh] mb-5 grid grid-cols-1 md:grid-cols-2   flex justify-center items-center">
                 <div className="p-8 md:p-0 mx-0 md:ms-50 ">
                     <h1 className="text-3xl font-bold mb-3 text-gray-600">Premium AI Tools - Elevate Your Career</h1>
                     <p className="mb-4">Prepare smarter for interviews with AI. Go Premium for personalized help and exclusive tools to get ahead</p>
@@ -142,36 +186,36 @@ const Home = () => {
             </div>
 
             {/* section-5 (FAQ) */}
-            <div className="min-h-[90vh] md:min-h-[80vh] bg-white">
+            {/* <div className="min-h-[90vh] md:min-h-[80vh] bg-white">
                 <div className="max-w-4xl mx-auto p-6">
                     <h2 className=" text-4xl font-bold text-center mb-8 text-gray-700 ">Frequently Asked Questions (FAQs)</h2>
                     {/* Question-1 */}
-                    <div className="bg-white shadow-md  p-5 rounded-lg border border-gray-300 mt-5">
+            {/* <div className="bg-white shadow-md  p-5 rounded-lg border border-gray-300 mt-5">
                         <button className="flex justify-between items-center w-full text-left " onClick={() => setOpen(open === 1 ? null : 1)}>
                             <h3 className="text-lg font-semibold text-gray-500"> Is this tool free to use?</h3>
                             <span className="text-2xl text-pink-300">{open === 1 ? "×" : "+"}</span>
                         </button>
                         {open === 1 && (
                             <p className="text-gray-600 mt-2"> Yes! Our basic AI resume based interview prep is completely free. Premium features will be available soon.
-                            </p>
-                        )}
+                            </p> */}
+            {/* )}
 
-                    </div>
+                    </div> */}
 
-                    {/* Question-2 */}
-                    <div className="bg-white shadow-md  p-5 rounded-lg border border-gray-300 mt-5">
+            {/* Question-2 */}
+            {/* <div className="bg-white shadow-md  p-5 rounded-lg border border-gray-300 mt-5">
                         <button className="flex justify-between items-center w-full text-left " onClick={() => setOpen(open === 2 ? null : 2)}>
-                            <h3 className="text-lg font-semibold text-gray-500">What file formats are supported?</h3>
-                            <span className="text-2xl text-pink-300">{open === 2 ? "×" : "+"}</span>
+                            <h3 className="text-lg font-semibold text-gray-500">What file formats are supported?</h3> */}
+            {/* <span className="text-2xl text-pink-300">{open === 2 ? "×" : "+"}</span>
                         </button>
                         {open === 2 && (
                             <p className="text-gray-600 mt-2"> You should upload resumes in PDF only</p>
-                        )}
+                        )} */}
 
-                    </div>
+            {/* </div> */}
 
-                    {/* Question-3 */}
-                    <div className="bg-white shadow-md  p-5 rounded-lg border border-gray-300 mt-5">
+            {/* Question-3 */}
+            {/* <div className="bg-white shadow-md  p-5 rounded-lg border border-gray-300 mt-5">
                         <button className="flex justify-between items-center w-full text-left " onClick={() => setOpen(open === 3 ? null : 3)}>
                             <h3 className="text-lg font-semibold text-gray-500"> How accurate is the AI review?</h3>
                             <span className="text-2xl text-pink-300">{open === 3 ? "×" : "+"}</span>
@@ -180,10 +224,10 @@ const Home = () => {
                             <p className="text-gray-600 mt-2"> Our AI provides 90% accurate feedback</p>
                         )}
 
-                    </div>
+                    </div> */}
 
-                    {/* Question-4 */}
-                    <div className="bg-white shadow-md  p-5 rounded-lg border border-gray-300 mt-5">
+            {/* Question-4 */}
+            {/* <div className="bg-white shadow-md  p-5 rounded-lg border border-gray-300 mt-5">
                         <button className="flex justify-between items-center w-full text-left " onClick={() => setOpen(open === 4 ? null : 4)}>
                             <h3 className="text-lg font-semibold text-gray-500"> Can I practice multiple times?</h3>
                             <span className="text-2xl text-pink-300">{open === 4 ? "×" : "+"}</span>
@@ -195,11 +239,11 @@ const Home = () => {
                     </div>
 
 
-                </div>
+                </div> */}
 
-
+            {/* 
             </div>
-            <Footer />
+            <Footer /> */}
 
 
         </>
