@@ -22,6 +22,12 @@ const InterviewRoom = ({
   SetActiveSection
 }) => {
 
+  const totalQuestions = questions[computedSection]?.length || 0;
+
+const progress =
+  totalQuestions > 0
+    ? ((currentIndex + 1) / totalQuestions) * 100
+    : 0;
 
 return (
 
@@ -81,7 +87,7 @@ return (
               <div className="flex justify-center md:w-1/4 w-full">
                 <div className="flex flex-col items-center">
                   <motion.img
-                    src="mzlogo.png"
+                    src="robo.png"
                     className="w-50 h-50 md:w-70 md:h-70 me-4"
                     initial={{}}
                     animate={{
