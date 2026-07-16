@@ -1,12 +1,21 @@
 @import "tailwindcss";
 
 @keyframes fade {
-  from { opacity: 0; transform: translateY(6px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
+
 .animate-fade {
   animation: fade 0.35s ease-in-out;
 }
+
 /* .wave {
   width: 6px;
   height: 20px;
@@ -30,32 +39,72 @@
 .voice-wave {
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: 8px;
+  transform: translateX(-6px);
+ 
 }
 
-.wave-bar{
+.wave-bar {
   width: 4px;
   height: 35px;
-  background-color: #ec4899;
+  background-color: #04d0f4;
   border-radius: 4px;
   animation: wave 0.8s infinite ease-in-out;
+   
 }
 
-.wave-bar:nth-child(1) { animation-delay: 0s; }
-.wave-bar:nth-child(2) { animation-delay: 0.1s; }
-.wave-bar:nth-child(3) { animation-delay: 0.2s; }
-.wave-bar:nth-child(4) { animation-delay: 0.3s; }
-.wave-bar:nth-child(5) { animation-delay: 0.4s; }
-.wave-bar:nth-child(6) { animation-delay: 0.4s; }
-.wave-bar:nth-child(7) { animation-delay: 0.3s; }
-.wave-bar:nth-child(8) { animation-delay: 0.2s; }
-.wave-bar:nth-child(9) { animation-delay: 0.1s; }
-.wave-bar:nth-child(10) { animation-delay: 0s; }
+.wave-bar:nth-child(1) {
+  animation-delay: 0s;
+}
+
+.wave-bar:nth-child(2) {
+  animation-delay: 0.1s;
+}
+
+.wave-bar:nth-child(3) {
+  animation-delay: 0.2s;
+}
+
+.wave-bar:nth-child(4) {
+  animation-delay: 0.3s;
+}
+
+.wave-bar:nth-child(5) {
+  animation-delay: 0.4s;
+}
+
+.wave-bar:nth-child(6) {
+  animation-delay: 0.4s;
+}
+
+.wave-bar:nth-child(7) {
+  animation-delay: 0.3s;
+}
+
+.wave-bar:nth-child(8) {
+  animation-delay: 0.2s;
+}
+
+.wave-bar:nth-child(9) {
+  animation-delay: 0.1s;
+}
+
+.wave-bar:nth-child(10) {
+  animation-delay: 0s;
+}
 
 @keyframes wave {
-  0% { transform: scaleY(0.3); }
-  50% { transform: scaleY(1); }
-  100% { transform: scaleY(0.3); }
+  0% {
+    transform: scaleY(0.3);
+  }
+
+  50% {
+    transform: scaleY(1);
+  }
+
+  100% {
+    transform: scaleY(0.3);
+  }
 }
 
 .dot {
@@ -66,17 +115,37 @@
   animation: dotPulse 1.4s infinite ease-in-out;
 }
 
-.delay-200 { animation-delay: 0.2s; }
-.delay-400 { animation-delay: 0.4s; }
+.delay-200 {
+  animation-delay: 0.2s;
+}
+
+.delay-400 {
+  animation-delay: 0.4s;
+}
 
 @keyframes dotPulse {
-  0%, 80%, 100% { opacity: 0; }
-  40% { opacity: 1; }
+
+  0%,
+  80%,
+  100% {
+    opacity: 0;
+  }
+
+  40% {
+    opacity: 1;
+  }
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: scale(0.9); }
-  to { opacity: 1; transform: scale(1); }
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 .animate-fadeIn {
@@ -92,6 +161,7 @@
     opacity: 0;
     transform: scale(0.96);
   }
+
   to {
     opacity: 1;
     transform: scale(1);
@@ -103,10 +173,12 @@
 }
 
 @keyframes float {
+
   0%,
   100% {
     transform: translateY(0);
   }
+
   50% {
     transform: translateY(-8px);
   }
@@ -115,6 +187,7 @@
 .animate-float {
   animation: float 3s ease-in-out infinite;
 }
+
 .custom-scrollbar::-webkit-scrollbar {
   width: 8px;
 }
@@ -127,12 +200,14 @@
   background: #f472b6;
   border-radius: 8px;
 }
- /* toast notification */
+
+/* toast notification */
 @keyframes slideIn {
   from {
     transform: translateY(20px);
     opacity: 0;
   }
+
   to {
     transform: translateY(0);
     opacity: 1;
@@ -142,10 +217,9 @@
 .animate-slideIn {
   animation: slideIn 0.3s ease-out;
 }
+
 .jua-regular {
   font-family: "Jua", sans-serif;
   font-weight: 400;
   font-style: normal;
 }
-
-
