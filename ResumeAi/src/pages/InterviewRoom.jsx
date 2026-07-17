@@ -42,7 +42,7 @@ const InterviewRoom = ({
         </div>
 
         {/* TOP SECTION - Progress bar (75%) + buttons (25%) parallel */}
-        <div className="w-full flex items-center px-4 md:px-10 pt-4 gap-3">
+        <div className="w-full flex items-center px-4 md:px-10 pt-2 md:pt-2 gap-3">
           {/* Progress Bar - 75% */}
           <div className="w-[75%]">
             <div className="flex justify-between items-center mb-1 md:mb-2">
@@ -97,13 +97,13 @@ const InterviewRoom = ({
         </div>
 
         {/* LEFT SECTION */}
-        <div className="flex flex-col md:flex-row w-full px-6 md:px-10 mt-3 md:mt-5 gap-2 md:gap-4">
+        <div className="flex flex-col md:flex-row w-full px-6 md:px-10 mt-1 md:mt-5 gap-2 md:gap-4">
           {/* ROBOT */}
           <div className="flex justify-center md:w-1/4 w-full">
             <div className="flex flex-col items-center">
               <motion.img
                 src="mzlogo.png"
-                className="w-28 h-28 sm:w-36 sm:h-36 md:w-70 md:h-70 me-4"
+                className="w-36 h-36 sm:w-40 sm:h-40 md:w-70 md:h-70 me-4"
                 initial={{}}
                 animate={{
                   scale: isSpeaking ? [1, 1.04, 1] : 1,
@@ -148,7 +148,7 @@ const InterviewRoom = ({
           </div>
 
           {/* QUESTION BOX */}
-          <div className="flex flex-col md:w-200 w-full md:mt-6">
+          <div className="flex flex-col md:w-200 w-full mt-1 md:mt-6">
             <div
               className="
     border border-gray-300

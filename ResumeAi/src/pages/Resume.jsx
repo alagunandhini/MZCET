@@ -13,7 +13,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import InterviewRoom  from "./InterviewRoom";
 import InterviewLoader from "../components/InterviewLoader";
 import ExitModal from "../components/ExitModal";
-import QuestionPreview from "../pages/QuestionPreview";
+import RoundDashboard from "./RoundDashboard";
 import { CheckCircle } from "lucide-react";
 import ResumeUpload from "../pages/ResumeUpload";
 import useToast from "../hooks/useToast";
@@ -60,7 +60,7 @@ const token = localStorage.getItem("token");
       // Always stop loading
       setTimeout(() => {
     setCheckingResume(false);
-  }, 1500);
+  }, 1100);
     }
 
 
@@ -88,6 +88,7 @@ const { speakText, isSpeaking } = useSpeech();
   const [feedback, setFeedback] = useState(null);
   const [mode, setMode] = useState("practice");
   const [sectionIndex, setSectionIndex] = useState();
+  const [selectedRound, setSelectedRound] = useState(0);
   const computedSection =
     mode === "interview" ? sections[sectionIndex] : activeSection;
   const hydrated = useInterviewStorage({
@@ -374,23 +375,26 @@ const handleExitPractice = () => {
         )}
 
 {/* Page 2 - Generate question  */}
-        {showQuestionsUI && !startPractice && (
-  <QuestionPreview
-    sections={sections}
-    activeSection={activeSection}
-    SetActiveSection={SetActiveSection}
-    questions={questions}
-    isSpeaking={isSpeaking}
-    setMode={setMode}
-    setCurrentIndex={setCurrentIndex}
-    setTransitionLoading={setTransitionLoading}
-    setTransitionText={setTransitionText}
-    setStartPractice={setStartPractice}
-    setSectionIndex={setSectionIndex}
-    sectionIndex={sectionIndex}
-    showQuestionsUI={showQuestionsUI}
-    setShowQuestionsUI={setShowQuestionsUI}
-  />
+    {showQuestionsUI && !startPractice && (
+<RoundDashboard
+
+sections={sections}
+
+selectedRound={selectedRound}
+setSelectedRound={setSelectedRound}
+
+setMode={setMode}
+setCurrentIndex={setCurrentIndex}
+setSectionIndex={setSectionIndex}
+
+setTransitionLoading={setTransitionLoading}
+setTransitionText={setTransitionText}
+
+setStartPractice={setStartPractice}
+
+setShowQuestionsUI={setShowQuestionsUI}
+
+/>
 )}
 {/* Page 3 - Practice Question */}
 
