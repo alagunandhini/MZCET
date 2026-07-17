@@ -110,7 +110,7 @@
 .dot {
   width: 10px;
   height: 10px;
-  background-color: #ec4899;
+  background-color: #48b8ec;
   border-radius: 50%;
   animation: dotPulse 1.4s infinite ease-in-out;
 }
