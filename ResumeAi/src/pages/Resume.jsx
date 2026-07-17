@@ -308,21 +308,21 @@ const { speakText, isSpeaking } = useSpeech();
     (v) => v === "skipped"
   ).length;
 
-  const handleNextRound = () => {
-  setTransitionText("Restarting interview...");
+ const handleNextRound = () => {
+  setTransitionText("Back to Dashboard");
   setTransitionLoading(true);
 
   setTimeout(() => {
     setShowCompletionScreen(false);
-    setMode("interview");
-    setSectionIndex(0);
-    SetActiveSection(sections[0]);
+    setStartPractice(false);      
+    setShowQuestionsUI(true);      
     setCurrentIndex(0);
+    setMode(interview);
     setQuestionStatus({});
     setSessionId(uuidv4());
-    setStartPractice(true);
     setTransitionLoading(false);
   }, 2200);
+
 };
 
 const handleExitPractice = () => {
