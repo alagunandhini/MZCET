@@ -12,7 +12,7 @@ const InterviewCompleted = ({ answered, skipped, onNextRound, feedback }) => {
   }, []);
 
   return (
-    <div className="fixed inset-0 z-50 bg-gradient-to-br from-pink-50 via-white to-purple-50 overflow-hidden font-sans">
+    <div className="fixed inset-0 z-50 bg-gradient-to-br from-sky-50 via-white to-purple-50 overflow-hidden font-sans">
       
       {/* 🎉 Confetti */}
       {showConfetti && (
@@ -30,9 +30,9 @@ const InterviewCompleted = ({ answered, skipped, onNextRound, feedback }) => {
               : "left-1/2 -translate-x-1/2"
           }`}
         >
-          <div className="bg-white rounded-3xl border border-pink-100 p-6 md:p-10 w-full max-w-[440px] text-center shadow-xl scale-90 md:scale-100">
+          <div className="bg-white rounded-3xl border border-sky-100 p-6 md:p-10 w-full max-w-[440px] text-center shadow-xl scale-90 md:scale-100">
             <img
-              src="/robot.png"
+              src="completed logo.png"
               alt="Completed"
               className="w-40 md:w-56 mx-auto -mt-20 md:-mt-28 mb-2 animate-float drop-shadow-md"
             />
@@ -54,14 +54,14 @@ const InterviewCompleted = ({ answered, skipped, onNextRound, feedback }) => {
             <div className="flex flex-col sm:flex-row gap-3 md:gap-4 mt-5 justify-center">
               <button
                 onClick={() => setShowFeedback((prev) => !prev)}
-                className="py-3 px-6 md:px-10 rounded-full bg-pink-400 text-white text-sm font-semibold hover:bg-pink-500 transition shadow-sm"
+                className="py-3 px-6 md:px-10 rounded-full bg-sky-400 text-white text-sm font-semibold hover:bg-sky-500 transition shadow-sm"
               >
                 {showFeedback ? "Hide Feedback" : "View Feedback"}
               </button>
 
               <button
                 onClick={onNextRound}
-                className="py-3 px-6 md:px-10 rounded-full border border-pink-300 text-pink-500 text-sm font-semibold hover:bg-pink-50 transition"
+                className="py-3 px-6 md:px-10 rounded-full border border-sky-300 text-sky-500 text-sm font-semibold hover:bg-sky-50 transition"
               >
                 Retry Again
               </button>
@@ -186,9 +186,9 @@ const InterviewCompleted = ({ answered, skipped, onNextRound, feedback }) => {
 };
 
 const StatCard = ({ label, value }) => (
-  <div className="rounded-xl border border-pink-100 bg-pink-50/50 py-2 md:py-4">
+  <div className="rounded-xl border border-sky-100 bg-sky-50/50 py-2 md:py-4">
     <p className="text-[10px] md:text-xs text-gray-500 font-medium">{label}</p>
-    <p className="text-lg md:text-xl font-bold text-pink-500">{value}</p>
+    <p className="text-lg md:text-xl font-bold text-sky-500">{value}</p>
   </div>
 );
 
