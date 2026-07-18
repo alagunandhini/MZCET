@@ -5,24 +5,20 @@ const useInterviewStorage = ({
   showQuestionsUI,
   startPractice,
   questions,
-  activeSection,
   currentIndex,
   sectionIndex,
-  mode,
   sessionId,
+
   setShowQuestionsUI,
   setStartPractice,
   setQuestions,
-  SetActiveSection,
   setCurrentIndex,
   setSectionIndex,
-  setMode,
   setSessionId,
 }) => {
   const [hydrated, setHydrated] = useState(false);
 
-// storing each state, when each state changes
-  // Save state
+  // Save state whenever it changes
   useEffect(() => {
     if (!hydrated) return;
 
@@ -30,49 +26,46 @@ const useInterviewStorage = ({
       showQuestionsUI,
       startPractice,
       questions,
-      activeSection,
       currentIndex,
       sectionIndex,
-      mode,
       sessionId,
     };
 
-    localStorage.setItem("interviewstate", JSON.stringify(appState));
+    localStorage.setItem("interviewState", JSON.stringify(appState));
   }, [
     hydrated,
     showQuestionsUI,
     startPractice,
     questions,
-    activeSection,
     currentIndex,
     sectionIndex,
-    mode,
     sessionId,
   ]);
 
-
- 
-
-  // when refresh it will will on same screen
-  // Restore state
+  // Restore state after refresh
   useEffect(() => {
-    const savedState = localStorage.getItem("interviewstate");
+    const savedState = localStorage.getItem("interviewState");
 
     if (savedState) {
       const state = JSON.parse(savedState);
 
-      setShowQuestionsUI(state.showQuestionsUI);
-      setStartPractice(state.startPractice);
+      setShowQuestionsUI(state.showQuestionsUI ?? false);
+      setStartPractice(state.startPractice ?? false);
       setQuestions(state.questions || []);
-      SetActiveSection(state.activeSection || "HR");
-      setCurrentIndex(state.currentIndex || 0);
-      setSectionIndex(state.sectionIndex || 0);
-      setMode(state.mode || "practice");
+      setCurrentIndex(state.currentIndex ?? 0);
+      setSectionIndex(state.sectionIndex ?? 0);
       setSessionId(state.sessionId || uuidv4());
     }
 
     setHydrated(true);
-  }, []);
+  }, [
+    setShowQuestionsUI,
+    setStartPractice,
+    setQuestions,
+    setCurrentIndex,
+    setSectionIndex,
+    setSessionId,
+  ]);
 
   return hydrated;
 };
