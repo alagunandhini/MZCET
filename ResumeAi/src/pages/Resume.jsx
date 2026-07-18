@@ -276,21 +276,21 @@ const next = () => {
     (v) => v === "skipped"
   ).length;
 
-  const handleNextRound = () => {
-  setTransitionText("Restarting interview...");
+ const handleNextRound = () => {
+  setTransitionText("Back to Dashboard");
   setTransitionLoading(true);
 
   setTimeout(() => {
     setShowCompletionScreen(false);
-   
-    setSectionIndex(0);
-
+    setStartPractice(false);      
+    setShowQuestionsUI(true);      
     setCurrentIndex(0);
+   
     setQuestionStatus({});
     setSessionId(uuidv4());
-    setStartPractice(true);
     setTransitionLoading(false);
   }, 2200);
+
 };
 
 const handleExitPractice = () => {

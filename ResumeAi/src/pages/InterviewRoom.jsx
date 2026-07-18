@@ -100,9 +100,9 @@ const InterviewRoom = ({
         </div>
 
         {/* WRAPPER - only logo, question box, mic, skip go here. This is what moves down / centers on mobile */}
-       <div className="w-full flex flex-col items-center ">
+        <div className="w-full flex flex-col items-center ">
           {/* LEFT SECTION */}
-         <div className="flex flex-col md:flex-row w-full px-6 md:px-10 mt-6 md:mt-5 gap-2 md:gap-4">
+          <div className="flex flex-col md:flex-row w-full px-6 md:px-10 mt-6 md:mt-5 gap-2 md:gap-4">
             {/* ROBOT */}
             <div className="flex justify-center md:w-1/4 w-full">
               <div className="flex flex-col items-center">
@@ -199,13 +199,14 @@ const InterviewRoom = ({
             {/* SPEAK NOW BUTTON */}
             <button
               onClick={isRecording ? stopRecording : startRecording}
+              disabled={isSpeaking}
               className={`w-28 h-28 rounded-full flex items-center justify-center shadow-xl transition-all border-none outline-none focus:outline-none appearance-none
 ${isRecording
                   ? "bg-sky-400 animate-pulse ring-8 ring-sky-300/50"
                   : "bg-sky-300 hover:bg-sky-400"
                 }
+    ${isSpeaking ? "opacity-40 cursor-not-allowed" : ""}
 `}
-
             >
               {isRecording ? (
                 <FaStop size={28} className="text-white md:hidden" />
