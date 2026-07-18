@@ -70,7 +70,12 @@ const token = localStorage.getItem("token");
 
 }, []);
 
-  const [questions, setQuestions] = useState([]); // store generated questions
+const [questions, setQuestions] = useState({
+  HR: [],
+  Technical: [],
+  Stress: [],
+  Scenario: []
+});// store generated questions
   const [loading, setLoading] = useState(false);
   const [showQuestionsUI, setShowQuestionsUI] = useState(false);
   const [transitionLoading, setTransitionLoading] = useState(false);
@@ -80,50 +85,57 @@ const token = localStorage.getItem("token");
   const [showFeedback, setShowFeedback] = useState(false);
 const { speakText, isSpeaking } = useSpeech();
   const sections = ["HR", "Technical", "Stress", "Scenario"];
-  const [activeSection, SetActiveSection] = useState("HR");
+
   const [startPractice, setStartPractice] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [showExitModal, setShowExitModal] = useState(false);
   const [sessionId, setSessionId] = useState(uuidv4());
   const [feedback, setFeedback] = useState(null);
-  const [mode, setMode] = useState("practice");
+ 
   const [sectionIndex, setSectionIndex] = useState();
   const [selectedRound, setSelectedRound] = useState(0);
-  const computedSection =
-    mode === "interview" ? sections[sectionIndex] : activeSection;
+const currentSection = sections[sectionIndex];
+const [completedRounds, setCompletedRounds] = useState([]);
+const question =
+questions[currentSection]?.[currentIndex]?.q;
   const hydrated = useInterviewStorage({
   showQuestionsUI,
   startPractice,
   questions,
-  activeSection,
   currentIndex,
   sectionIndex,
-  mode,
+
   sessionId,
 
   setShowQuestionsUI,
   setStartPractice,
   setQuestions,
-  SetActiveSection,
+
   setCurrentIndex,
   setSectionIndex,
-  setMode,
+
   setSessionId,
 });
 
-  // automatic voice read
-  useEffect(() => {
-    if (startPractice) {
-      const question = questions[computedSection]?.[currentIndex]?.q;
-      if (question) speakText(question);
-    }
-  }, [currentIndex, computedSection, startPractice]);
+useEffect(() => {
+  if (!startPractice) return;
+
+  const question = questions[currentSection]?.[currentIndex]?.q;
+
+  if (question) {
+    speakText(question);
+  }
+}, [startPractice, currentSection, currentIndex, questions]);
+
+
+ 
 
   const [isRecording, setIsRecording] = useState(false);
   const mediaRecorderRef = useRef(null);
   const audioChunks = useRef([]);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
 
+  // for start recording
   const startRecording = async () => {
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
 
@@ -136,28 +148,23 @@ const { speakText, isSpeaking } = useSpeech();
 
     mediaRecorderRef.current.onstop = async () => {
       const audioBlob = new Blob(audioChunks.current, { type: "audio/webm" });
-      const key = `${activeSection}-${currentIndex}`;
+      const key = `${currentSection}-${currentIndex}`;
+      
 
       setQuestionStatus((prev) => ({
         ...prev,
         [key]: "answered",
       }));
 
-      if (mode === "practice") {
-        speakText("Okay good.");
-        setTimeout(() => next(), 1200);
-        return;
-      }
-
+    
       // send these data to backend to save in db and also convert audio into text
       const formData = new FormData();
       formData.append("audio", audioBlob, "answer.webm");
-      formData.append("question", questions[computedSection][currentIndex]?.q);
+      formData.append("question", questions[currentSection][currentIndex]?.q);
       formData.append("sessionId", sessionId);
 
       const isLastQuestion =
-        currentIndex === questions[computedSection].length - 1 &&
-        sectionIndex === sections.length - 1;
+        currentIndex === questions[currentSection].length - 1
 
       try {
         if (isLastQuestion) {
@@ -193,6 +200,7 @@ const { speakText, isSpeaking } = useSpeech();
     setIsRecording(true);
   };
 
+  // for stop recording
   const stopRecording = () => {
     if (!isRecording) return;
     mediaRecorderRef.current.stop();
@@ -216,6 +224,13 @@ const { speakText, isSpeaking } = useSpeech();
     );
       if (data.success) {
         setFeedback(data.feedback);
+         
+        // unlock next round
+  setCompletedRounds(prev => [
+    ...prev,
+    sectionIndex
+  ]);
+
         // show completion screen
         setShowCompletionScreen(true);
       }
@@ -227,41 +242,20 @@ const { speakText, isSpeaking } = useSpeech();
     }
   };
 
+// funstion to move question
+const next = () => {
+  const totalQuestions = questions[currentSection]?.length || 0;
+  // move to next question
+  if (currentIndex < totalQuestions - 1) {
+    setCurrentIndex((prev) => prev + 1);
+  
+  }
 
- const next = () => {
-    const index = questions[computedSection]?.length || 0;
-
-    // move normally for other question
-    if (currentIndex < index - 1) {
-      setCurrentIndex((prev) => prev + 1);
-      return;
-    }
-    // reaches when last question came in practce mode
-    if (mode === "practice") {
-      speakText("practice completed");
-      setTransitionText("practice Completed...");
-      setTransitionLoading(true);
-
-      setTimeout(() => {
-        setTransitionLoading(false);
-        setStartPractice(false);
-        setShowQuestionsUI(true);
-        setCurrentIndex(0);
-      }, 2000);
-      return;
-    }
-
-    // when reaches last question of each section , it call moveToNextSectionWithLoader
-    if (mode === "interview") {
-      if (sectionIndex < sections.length - 1) {
-        moveToNextSectionWithLoader(sectionIndex + 1);
-      }
-    }
-  };
+};
 
   // skip question logic
   const skipQuestion = () => {
-    const key = `${activeSection}-${currentIndex}`;
+    const key = `${currentSection}-${currentIndex}`;
     // mark skipped only if not answered
     setQuestionStatus((prev) => ({
       ...prev,
@@ -271,34 +265,8 @@ const { speakText, isSpeaking } = useSpeech();
   };
 
 
-
-  // trigger when reaches last Question of each question
-  const moveToNextSectionWithLoader = (nextIndex) => {
-    // next section to move forward
-    const nextSection = sections[nextIndex];
-    setTransitionText(`Round-${nextIndex} completed`);
-    setTransitionLoading(true);
-    setTimeout(() => {
-      setTransitionLoading(false);
-      setSectionIndex(nextIndex); // updating the current section index
-      SetActiveSection(nextSection); // updates current section
-      setCurrentIndex(0);
-    }, 3000);
-  };
-  
   // username
   const username = localStorage.getItem("username");
-
-  //  automatic speak when question ui comes
-  useEffect(() => {
-    if (showQuestionsUI && !startPractice) {
-      const timer = setTimeout(() => {
-        speakText(`Hey ${username} , are you Ready to practice`);
-      }, 1000);
-
-      return () => clearTimeout(timer);
-    }
-  }, [showQuestionsUI, startPractice]);
 
   const answeredCount = Object.values(questionStatus).filter(
     (v) => v === "answered"
@@ -314,9 +282,9 @@ const { speakText, isSpeaking } = useSpeech();
 
   setTimeout(() => {
     setShowCompletionScreen(false);
-    setMode("interview");
+   
     setSectionIndex(0);
-    SetActiveSection(sections[0]);
+
     setCurrentIndex(0);
     setQuestionStatus({});
     setSessionId(uuidv4());
@@ -340,6 +308,10 @@ const handleExitPractice = () => {
  if (checkingResume) {
     return <TransitionLoader text="Checking resume..." />;
   }
+
+  console.log("sectionIndex:", sectionIndex);
+console.log("currentSection:", currentSection);
+console.log("questions:", questions);
 
   return (
     <> {toast.show && (
@@ -378,12 +350,16 @@ const handleExitPractice = () => {
     {showQuestionsUI && !startPractice && (
 <RoundDashboard
 
+completedRounds={completedRounds}
+
+setCompletedRounds={setCompletedRounds}
+
 sections={sections}
 
 selectedRound={selectedRound}
 setSelectedRound={setSelectedRound}
 
-setMode={setMode}
+
 setCurrentIndex={setCurrentIndex}
 setSectionIndex={setSectionIndex}
 
@@ -400,10 +376,10 @@ setShowQuestionsUI={setShowQuestionsUI}
 
         {startPractice && (
          <InterviewRoom
-        activeSection={activeSection}
+  
         currentIndex={currentIndex}
         questions={questions}
-        computedSection={computedSection}
+        computedSection={currentSection}
         isSpeaking={isSpeaking}
          isRecording={isRecording}
          startRecording={startRecording}
@@ -414,7 +390,7 @@ setShowQuestionsUI={setShowQuestionsUI}
          mediaRecorderRef={mediaRecorderRef}
          setIsRecording={setIsRecording}
          setCurrentIndex={setCurrentIndex}
-         SetActiveSection={SetActiveSection} />  )}
+         />  )}
       </div>
 
 

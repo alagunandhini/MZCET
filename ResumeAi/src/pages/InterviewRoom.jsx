@@ -24,6 +24,7 @@ const InterviewRoom = ({
 
   const totalQuestions = questions[computedSection]?.length || 0;
 
+
   const progress =
     totalQuestions > 0
       ? ((currentIndex + 1) / totalQuestions) * 100
@@ -39,7 +40,7 @@ const InterviewRoom = ({
         {/* HEADER - always stays at the very top */}
         <div className="w-full text-center">
           <p className="  text-xl font-bold bg-sky-300 p-2 text-gray-50">
-            {activeSection} Round
+            {computedSection} Round
           </p>
         </div>
 
@@ -243,4 +244,4 @@ ${isRecording
 }
 
 
-export default InterviewRoom;
+export default InterviewRoom;  
