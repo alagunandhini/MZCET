@@ -39,14 +39,14 @@ const RoundDashboard = ({
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      <div className="flex gap-8 h-full">
+    <div className="min-h-screen bg-gray-50 p-3 sm:p-4 md:p-6">
+      <div className="flex flex-col md:flex-row gap-4 md:gap-8 h-full">
         {/* LEFT ROBOT SECTION */}
 
-        <div className="w-[25%] bg-white rounded-2xl shadow-sm flex flex-col items-center justify-center p-5">
+        <div className="w-full md:w-[25%] bg-white rounded-2xl shadow-sm flex flex-row md:flex-col items-center justify-start md:justify-center p-4 md:p-5 gap-3 md:gap-0">
           <motion.img
             src="/robot.png"
-            className="w-60 h-60 object-contain"
+            className="w-16 h-16 sm:w-20 sm:h-20 md:w-60 md:h-60 object-contain"
             animate={{
               scale: [1, 1.05, 1],
             }}
@@ -56,35 +56,38 @@ const RoundDashboard = ({
             }}
           />
 
-          <h2 className="text-xl font-semibold text-gray-700 mt-5">
-            Hi, I'm Pinkyy 💗
-          </h2>
+          <div className="text-left md:text-center md:mt-5">
+            <h2 className="text-base sm:text-lg md:text-xl font-semibold text-gray-700">
+              Hi, I'm Pinkyy 💗
+            </h2>
 
-          <p className="text-gray-500 text-center mt-2">
-            Your interview preparation partner.
-          </p>
+            <p className="text-gray-500 text-sm md:text-base md:mt-2">
+              Your interview preparation partner.
+            </p>
+          </div>
         </div>
 
         {/* RIGHT DASHBOARD */}
 
-        <div className="w-[75%]">
+        <div className="w-full md:w-[75%]">
           {/* HEADER */}
 
-          <div className="bg-white rounded-2xl p-5 shadow-sm flex justify-between items-center mb-6">
+          <div className="bg-white rounded-2xl p-4 md:p-5 shadow-sm flex flex-col sm:flex-row justify-between sm:items-center gap-3 sm:gap-4 mb-4 md:mb-6">
             <div>
-              <h1 className="text-2xl font-bold text-gray-700">
+              <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-700">
                 Interview Dashboard
               </h1>
 
-              <p className="text-gray-500">
+              <p className="text-gray-500 text-xs sm:text-sm md:text-base">
                 Complete your rounds and improve your score
               </p>
             </div>
 
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 sm:gap-4">
               <button
                 className="
-px-5 py-2 
+px-3 sm:px-5 py-1.5 sm:py-2 
+text-xs sm:text-sm
 rounded-xl
 border
 border-gray-200
@@ -96,7 +99,8 @@ hover:bg-gray-100
 
               <button
                 className="
-px-5 py-2 
+px-3 sm:px-5 py-1.5 sm:py-2 
+text-xs sm:text-sm
 rounded-xl
 border
 border-gray-200
@@ -108,11 +112,13 @@ hover:bg-gray-100
 
               <div
                 className="
-px-5 py-2 
+px-3 sm:px-5 py-1.5 sm:py-2 
+text-xs sm:text-sm
 rounded-xl
 bg-pink-100
 text-pink-500
 font-bold
+whitespace-nowrap
 "
               >
                 ⭐ 320
@@ -122,7 +128,7 @@ font-bold
 
           {/* ROUND CARDS */}
 
-          <div className="grid grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
             {rounds.map((round) => 
             {
 
@@ -137,7 +143,7 @@ font-bold
                 className={`
 bg-white
 rounded-2xl
-p-6
+p-4 md:p-6
 shadow-sm
 border
 hover:shadow-lg
@@ -145,28 +151,28 @@ transition
 ${isLocked ? "opacity-70" : ""}
 `}
               >
-                <div className="flex justify-between">
-                  <h2 className="text-xl font-bold text-gray-700">
+                <div className="flex justify-between items-center">
+                  <h2 className="text-lg md:text-xl font-bold text-gray-700">
                     {round.title}
                   </h2>
 
                
 
                   {!isLocked && (
-                    <span className="text-green-500 font-semibold">
+                    <span className="text-green-500 font-semibold text-xs sm:text-sm">
                       🟢 Ready
                     </span>
                   )}
 
                   {isLocked && (
-                    <span className="text-gray-400">🔒 Locked</span>
+                    <span className="text-gray-400 text-xs sm:text-sm">🔒 Locked</span>
                   )}
 
                 </div>
 
-                <p className="mt-3 text-gray-600">{round.name}</p>
+                <p className="mt-2 md:mt-3 text-gray-600 text-sm md:text-base">{round.name}</p>
 
-                <div className="mt-5 space-y-2 text-sm text-gray-600">
+                <div className="mt-4 md:mt-5 space-y-1.5 md:space-y-2 text-xs sm:text-sm text-gray-600">
                   <p>
                     ⏱ Duration :
                     <span className="font-semibold">{round.time}</span>
@@ -189,9 +195,10 @@ ${isLocked ? "opacity-70" : ""}
                   disabled={isLocked}
                   onClick={() => startRound(round)}
                   className={`
-mt-6
+mt-4 md:mt-6
 w-full
-py-3
+py-2.5 md:py-3
+text-sm md:text-base
 rounded-xl
 font-semibold
 transition
@@ -213,7 +220,7 @@ ${
 
           {/* BACK BUTTON */}
 
-          <div className="flex justify-end mt-6">
+          <div className="flex justify-end mt-4 md:mt-6">
             <button
               onClick={() => {
                 setTransitionText("Back To Upload Page...");
@@ -227,8 +234,9 @@ ${
                 }, 2000);
               }}
               className="
-px-8
-py-3
+px-6 md:px-8
+py-2.5 md:py-3
+text-sm md:text-base
 rounded-full
 border-2
 border-pink-200
