@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 
 const RoundDashboard = ({
+    questions,
   completedRounds,
   setCurrentIndex,
   setTransitionLoading,
@@ -9,41 +10,16 @@ const RoundDashboard = ({
   setSectionIndex,
   setShowQuestionsUI,
 }) => {
-  const rounds = [
-    {
-      id: 0,
-      title: "Round 1",
-      name: "HR Interview",
-      time: "10 Minutes",
-      questions: 5,
-      attempts: 3,
-    },
-    {
-      id: 1,
-      title: "Round 2",
-      name: "Technical Interview",
-      time: "15 Minutes",
-      questions: 5,
-      attempts: 3,
-    },
-    {
-      id: 2,
-      title: "Round 3",
-      name: "Stress Interview",
-      time: "10 Minutes",
-      questions: 5,
-      attempts: 3,
-    },
-    {
-      id: 3,
-      title: "Round 4",
-      name: "Scenario Interview",
-      time: "12 Minutes",
-      questions: 5,
-      attempts: 3,
-    },
-  ];
-
+  
+  const rounds = Object.keys(questions).map((key,index)=>({
+  id:index,
+  key:key,
+  title:`Round ${index+1}`,
+  name:questions[key].name,
+  questions:questions[key].questions.length,
+  time:"10 Minutes",
+  attempts:3
+}));
   const startRound = (round) => {
     //check whether completed rounds are in array , if not then it is locked
     const isLocked = round.id !== 0 && !completedRounds.includes(round.id - 1);

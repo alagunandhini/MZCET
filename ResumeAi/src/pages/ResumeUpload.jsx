@@ -18,6 +18,7 @@ const ResumeUpload = ({
   const navigate = useNavigate();
 
   const [resumeText, setResumeText] = useState("");
+  const [jobDescription, setJobDescription] = useState("");
   const [file, setFile] = useState(null);
 
   // Function 1 - Drag & Drop
@@ -108,10 +109,12 @@ const ResumeUpload = ({
 
         body: JSON.stringify({
           text: resumeText,
+           jobDescription
         }),
       });
 
       const data = await response.json();
+      console.log("BACKEND RESPONSE:", data);
 
       if (data.success) {
 
@@ -169,12 +172,12 @@ const ResumeUpload = ({
 
           <div
             {...getRootProps()}
-            className="border-2 border-dashed border-sky-300 rounded-xl h-[38vh] max-w-2xl w-full mx-auto flex flex-col items-center justify-center cursor-pointer hover:border-sky-400 hover:bg-sky-50"
+            className="border-2 border-dashed border-sky-300 rounded-xl h-[32vh]  max-w-2xl w-full mx-auto flex flex-col items-center justify-center cursor-pointer hover:border-sky-400 hover:bg-sky-50"
           >
 
             <input {...getInputProps()} />
 
-            <img src="blue border.png" className="w-28 mb-4 opacity-30 grayscale brightness-125" alt="" />
+            <img src="blue border.png" className="w-24 mb-4 opacity-30 grayscale brightness-125" alt="" />
 
             <p className="font-semibold text-gray-500">
               Upload your resume
@@ -192,9 +195,24 @@ const ResumeUpload = ({
             </p>
           )}
 
+          <div className="mt-8 max-w-2xl mx-auto w-full">
+  <label className="block text-gray-700 font-semibold mb-2">
+    Job Description (Optional)
+  </label>
+
+  <textarea
+   rows={1}
+  maxLength={8000}
+    value={jobDescription}
+    onChange={(e) => setJobDescription(e.target.value)}
+    placeholder="Paste the company's job description here..."
+    className="w-full border border-gray-300 rounded-lg p-4 focus:outline-none focus:ring-2 focus:ring-sky-400  resize-none"
+  />
+</div>
+
           <button
             onClick={analyzeInterview}
-            className="mt-8 self-center bg-sky-400 text-white px-10 py-4 rounded-lg hover:bg-sky-500"
+            className="mt-4 self-center bg-sky-400 text-white px-10 py-4 rounded-lg hover:bg-sky-500"
           >
             Generate Questions
           </button>

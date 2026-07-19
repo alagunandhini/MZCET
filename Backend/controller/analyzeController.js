@@ -2,58 +2,63 @@ const User=require("../models/users");
 const analyzeResume = async (req, res) => {
   try {
     // getting resume text from from frontend
-    const { text } = req.body;
+    const { text, jobDescription } = req.body;
     const userId = req.userId;
 
-await User.findByIdAndUpdate(userId, {
-    resumeText: text,
-});
+
        console.log("Sending response:", text);
  
 
     if (!text) {
       return res.status(400).json({ error: "No resume text received" });
     }
+const prompt = `
+You are an AI Interview Preparation Assistant.
 
-    const prompt = `
-      You are an AI Interview Preparation Assistant.
-      Analyze the following resume:
+Candidate Resume:
+${text}
 
-      --- RESUME TEXT ---
-      ${text}
-      --------------------
+Job Description:
+${jobDescription || "Not Provided"}
 
-      Generate the following results in clean, structured sections:
+Instructions:
 
-      1️⃣ **10 Technical Interview Questions**
-          - Based ONLY on the skills, education, and projects in the resume
-          - Provide short, interview-style answers a fresher should tell
+- If a Job Description is provided, generate interview questions mainly based on it while also considering the resume.
 
-      2️⃣ **10 HR Interview Questions**
-          - Provide correct sample answers
+- If no Job Description is provided, analyze the resume and infer the most suitable job role.
 
-      3️⃣ **5 Project-Based Questions**
-          - Based on the projects found in the resume
-          - Provide “best way to answer”
+Generate exactly four interview rounds.
 
-      4️⃣ **2 Stress Interview Questions**
-          - Provide strong, composed answers
+Each round should contain 15 questions with ideal answers.
 
-      5️⃣ **3 Scenario-Based Questions**
-          - Provide realistic situational answers
+Return ONLY valid JSON.
 
-      Output Format (VERY IMPORTANT):
+Output Format:
+
+{
+  "Round1": {
+    "name": "",
+    "questions": [
       {
-        "Technical": [ {"q": "", "a": ""}, ... ],
-        "HR": [ {"q": "", "a": ""}, ... ],
-        "Project": [ {"q": "", "a": ""}, ... ],
-        "Stress": [ {"q": "", "a": ""}, ... ],
-        "Scenario": [ {"q": "", "a": ""}, ... ]
+        "q": "",
+        "a": ""
       }
-
-      Return ONLY valid JSON. No markdown, no headings, no text outside JSON.
-
-    `;
+    ]
+  },
+  "Round2": {
+    "name": "",
+    "questions": []
+  },
+  "Round3": {
+    "name": "",
+    "questions": []
+  },
+  "Round4": {
+    "name": "",
+    "questions": []
+  }
+}
+`;
 
     const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
       method: "POST",
@@ -63,6 +68,13 @@ await User.findByIdAndUpdate(userId, {
       },
       body: JSON.stringify({
         model: "llama-3.3-70b-versatile",
+          temperature: 0.3,
+
+  max_tokens: 8000,
+
+  response_format: {
+    type: "json_object"
+  },
         messages: [
           { role: "user", content: prompt }
         ]
@@ -88,6 +100,24 @@ await User.findByIdAndUpdate(userId, {
       // it will taje only required response format 
       analysis = data.choices[0].message.content;
     }
+
+    let parsedQuestions = {};
+
+try {
+  parsedQuestions = JSON.parse(analysis);
+} catch (err) {
+  return res.status(500).json({
+    success: false,
+    message: "AI returned invalid JSON",
+  });
+}
+
+await User.findByIdAndUpdate(userId, {
+  resumeText: text,
+  jobDescription,
+  questions: parsedQuestions,
+  hasResume: true,
+});
 
   
   // now response send back to frontend 

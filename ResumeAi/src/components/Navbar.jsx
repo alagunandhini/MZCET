@@ -11,6 +11,7 @@ const Navbar = () => {
   const [user, setUser] = useState(null);
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
+    if(!storedUser || storedUser==="undefined") return;
     if (storedUser) {
       setUser(JSON.parse(storedUser));
     }
