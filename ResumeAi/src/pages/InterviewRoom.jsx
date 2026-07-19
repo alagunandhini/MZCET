@@ -5,6 +5,7 @@ import { v4 as uuidv4 } from "uuid";
 
 
 const InterviewRoom = ({
+   sectionName,
   activeSection,
   currentIndex,
   questions,
@@ -22,7 +23,7 @@ const InterviewRoom = ({
   SetActiveSection
 }) => {
 
-  const totalQuestions = questions[computedSection]?.length || 0;
+const totalQuestions = questions[computedSection]?.questions?.length || 0;
 
 
   const progress =
@@ -40,7 +41,7 @@ const InterviewRoom = ({
         {/* HEADER - always stays at the very top */}
         <div className="w-full text-center">
           <p className="  text-xl font-bold bg-sky-300 p-2 text-gray-50">
-            {computedSection} Round
+            {sectionName} Round
           </p>
         </div>
 
@@ -178,7 +179,7 @@ const InterviewRoom = ({
                     className="text-sm sm:text-base md:text-xl font-semibold text-gray-800"
                   >
                     Q{currentIndex + 1}.{" "}
-                    {questions[computedSection]?.[currentIndex]?.q}
+                   {questions[computedSection]?.questions?.[currentIndex]?.q}
                   </motion.p>
                 </AnimatePresence>
               </div>

@@ -70,12 +70,7 @@ const token = localStorage.getItem("token");
 
 }, []);
 
-const [questions, setQuestions] = useState({
-  HR: [],
-  Technical: [],
-  Stress: [],
-  Scenario: []
-});// store generated questions
+const [questions, setQuestions] = useState({});// store generated questions
   const [loading, setLoading] = useState(false);
   const [showQuestionsUI, setShowQuestionsUI] = useState(false);
   const [transitionLoading, setTransitionLoading] = useState(false);
@@ -84,7 +79,7 @@ const [questions, setQuestions] = useState({
   const [questionStatus, setQuestionStatus] = useState({});
   const [showFeedback, setShowFeedback] = useState(false);
 const { speakText, isSpeaking } = useSpeech();
-  const sections = ["HR", "Technical", "Stress", "Scenario"];
+  const sections = Object.keys(questions);
 
   const [startPractice, setStartPractice] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -92,12 +87,11 @@ const { speakText, isSpeaking } = useSpeech();
   const [sessionId, setSessionId] = useState(uuidv4());
   const [feedback, setFeedback] = useState(null);
  
-  const [sectionIndex, setSectionIndex] = useState();
+  const [sectionIndex, setSectionIndex] = useState(0);
   const [selectedRound, setSelectedRound] = useState(0);
 const currentSection = sections[sectionIndex];
 const [completedRounds, setCompletedRounds] = useState([]);
-const question =
-questions[currentSection]?.[currentIndex]?.q;
+const question = questions[currentSection]?.questions?.[currentIndex]?.q;
   const hydrated = useInterviewStorage({
   showQuestionsUI,
   startPractice,
@@ -120,7 +114,7 @@ questions[currentSection]?.[currentIndex]?.q;
 useEffect(() => {
   if (!startPractice) return;
 
-  const question = questions[currentSection]?.[currentIndex]?.q;
+ const question = questions[currentSection]?.questions?.[currentIndex]?.q
 
   if (question) {
     speakText(question);
@@ -160,11 +154,11 @@ useEffect(() => {
       // send these data to backend to save in db and also convert audio into text
       const formData = new FormData();
       formData.append("audio", audioBlob, "answer.webm");
-      formData.append("question", questions[currentSection][currentIndex]?.q);
+      formData.append("question", questions[currentSection]?.questions?.[currentIndex]?.q);
       formData.append("sessionId", sessionId);
 
       const isLastQuestion =
-        currentIndex === questions[currentSection].length - 1
+        currentIndex === questions[currentSection]?.questions?.length - 1
 
       try {
         if (isLastQuestion) {
@@ -244,7 +238,7 @@ useEffect(() => {
 
 // funstion to move question
 const next = () => {
-  const totalQuestions = questions[currentSection]?.length || 0;
+ const totalQuestions = questions[currentSection]?.questions?.length || 0;
   // move to next question
   if (currentIndex < totalQuestions - 1) {
     setCurrentIndex((prev) => prev + 1);
@@ -349,7 +343,7 @@ console.log("questions:", questions);
 {/* Page 2 - Generate question  */}
     {showQuestionsUI && !startPractice && (
 <RoundDashboard
-
+questions={questions}
 completedRounds={completedRounds}
 
 setCompletedRounds={setCompletedRounds}
@@ -379,6 +373,10 @@ setShowQuestionsUI={setShowQuestionsUI}
   
         currentIndex={currentIndex}
         questions={questions}
+         sectionName={
+   questions[currentSection]?.name
+ }
+
         computedSection={currentSection}
         isSpeaking={isSpeaking}
          isRecording={isRecording}
