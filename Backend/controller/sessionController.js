@@ -1,9 +1,10 @@
 const InterviewSession = require("../models/InterviewSession");
 const { generateGroqFeedback } = require("./groqFeedback");
+const User=require("../models/users");
 
 exports.endSession = async (req, res) => {
   try {
-    const { sessionId } = req.body;
+    const { sessionId,round } = req.body;
     
     if (!sessionId) {
       return res.status(400).json({ error: "Session ID missing" });
@@ -13,8 +14,8 @@ exports.endSession = async (req, res) => {
     const session = await InterviewSession.findOne({ sessionId });
     console.log( session );
 
-    if (!session) {
-      return res.status(404).json({ error: "Session not found" });
+    if (!session || !round) {
+      return res.status(404).json({ error: "Session or round not found" });
     }
 
     // User refreshes feedback page ,Avoid calling AI again ,Saves API cost
@@ -34,9 +35,23 @@ exports.endSession = async (req, res) => {
       .join("\n\n");
       console.log("Combined Text:", combinedText);
 
+      console.log("req.userId:", req.userId);
+console.log("round:", round);
 
     // generate Ai feedback
  const feedback = await generateGroqFeedback(combinedText);
+ await User.findByIdAndUpdate(
+  req.userId,
+  {
+    $set: {
+      [`roundResults.${round}`]: {
+        score: feedback.overallScore,
+        result: feedback.result
+      }
+    }
+  },
+  { new: true }
+);
 
  // HARD VALIDATION — MUST EXIST
 if (

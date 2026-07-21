@@ -42,6 +42,11 @@ const userSchema = new mongoose.Schema({
         type: [Number],
         default: [],
     },
+    
+    roundResults: {
+    type: Object,
+    default: {}
+},
 
 });
 
