@@ -200,7 +200,7 @@ useEffect(() => {
     mediaRecorderRef.current.stop();
     mediaRecorderRef.current.stream
       .getTracks()
-      .forEach((track) => track.stop()); // 🔴 IMPORTANT
+      .forEach((track) => track.stop()); // 
     setIsRecording(false);
   };
 
