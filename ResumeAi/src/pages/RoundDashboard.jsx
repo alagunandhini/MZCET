@@ -2,7 +2,7 @@ import { motion } from "framer-motion";
 import { Clock, HelpCircle, RotateCcw, Star, Lock, CheckCircle2, ChevronLeft } from "lucide-react";
 
 const RoundDashboard = ({
-    questions,
+  questions,
   completedRounds,
   setCurrentIndex,
   setTransitionLoading,
@@ -11,16 +11,16 @@ const RoundDashboard = ({
   setSectionIndex,
   setShowQuestionsUI,
 }) => {
-  
-  const rounds = Object.keys(questions).map((key,index)=>({
-  id:index,
-  key:key,
-  title:`Round ${index+1}`,
-  name:questions[key].name,
-  questions:questions[key].questions.length,
-  time:"10 Minutes",
-  attempts:3
-}));
+
+  const rounds = Object.keys(questions).map((key, index) => ({
+    id: index,
+    key: key,
+    title: `Round ${index + 1}`,
+    name: questions[key].name,
+    questions: questions[key].questions.length,
+    time: "10 Minutes",
+    attempts: 3
+  }));
   const startRound = (round) => {
     //check whether completed rounds are in array , if not then it is locked
     const isLocked = round.id !== 0 && !completedRounds.includes(round.id - 1);
@@ -62,7 +62,7 @@ const RoundDashboard = ({
 
             <div className="text-left md:text-center md:mt-5">
               <h2 className="text-base sm:text-lg md:text-xl font-semibold text-gray-700">
-                Hi, I'm 
+                Hi, I'm
               </h2>
 
               <p className="text-gray-500 text-sm md:text-base md:mt-2">
@@ -86,7 +86,7 @@ const RoundDashboard = ({
                   <p className="text-xs text-gray-400 font-semibold uppercase tracking-wide mb-3 self-start">
                     Your Progress
                   </p>
-                  <div className="relative w-36 h-65">
+                  <div className="relative w-36 h-60">
                     <svg className="w-full h-full transform -rotate-90">
                       <circle
                         cx="50%"
@@ -112,10 +112,16 @@ const RoundDashboard = ({
                     <div className="absolute inset-0 flex flex-col items-center justify-center">
                       <span className="text-2xl font-bold text-sky-500">{Math.round(percent)}%</span>
                       <span className="text-xs text-gray-400 font-medium mt-1">
-                        {completed}/{totalRounds} Rounds
+                        {Math.round(percent)}/100
                       </span>
                     </div>
                   </div>
+
+                  {percent === 100 && (
+                    <p className="text-gray-500 text-sm font-semibold text-center ">
+                      🎉 Congrats! You've completed the interview
+                    </p>
+                  )}
                 </>
               );
             })()}
@@ -193,19 +199,18 @@ whitespace-nowrap
           {/* ROUND CARDS */}
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
-            {rounds.map((round) => 
-            {
+            {rounds.map((round) => {
 
-  const isLocked =
-    round.id !== 0 &&
-    !completedRounds.includes(round.id - 1);
+              const isLocked =
+                round.id !== 0 &&
+                !completedRounds.includes(round.id - 1);
 
-    return(
-              
-              <motion.div
-                key={round.id}
-                whileHover={!isLocked ? { y: -3 } : {}}
-                className={`
+              return (
+
+                <motion.div
+                  key={round.id}
+                  whileHover={!isLocked ? { y: -3 } : {}}
+                  className={`
 bg-white
 rounded-2xl
 p-4 md:p-6
@@ -214,49 +219,49 @@ border
 transition-all
 ${isLocked ? "border-gray-100 opacity-60" : "border-sky-100 hover:shadow-lg hover:border-sky-200"}
 `}
-              >
-                <div className="flex justify-between items-center">
-                  <h2 className="text-lg md:text-xl font-bold text-gray-800">
-                    {round.title}
-                  </h2>
+                >
+                  <div className="flex justify-between items-center">
+                    <h2 className="text-lg md:text-xl font-bold text-gray-800">
+                      {round.title}
+                    </h2>
 
-                  {!isLocked && (
-                    <span className="flex items-center gap-1 text-emerald-500 font-semibold text-xs sm:text-sm bg-emerald-50 px-2.5 py-1 rounded-full">
-                      <CheckCircle2 size={14} /> Ready
-                    </span>
-                  )}
+                    {!isLocked && (
+                      <span className="flex items-center gap-1 text-emerald-500 font-semibold text-xs sm:text-sm bg-emerald-50 px-2.5 py-1 rounded-full">
+                        <CheckCircle2 size={14} /> Ready
+                      </span>
+                    )}
 
-                  {isLocked && (
-                    <span className="flex items-center gap-1 text-gray-400 text-xs sm:text-sm bg-gray-50 px-2.5 py-1 rounded-full">
-                      <Lock size={12} /> Locked
-                    </span>
-                  )}
+                    {isLocked && (
+                      <span className="flex items-center gap-1 text-gray-400 text-xs sm:text-sm bg-gray-50 px-2.5 py-1 rounded-full">
+                        <Lock size={12} /> Locked
+                      </span>
+                    )}
 
-                </div>
+                  </div>
 
-                <p className="mt-2 md:mt-3 text-gray-500 text-sm md:text-base">{round.name}</p>
+                  <p className="mt-2 md:mt-3 text-gray-500 text-sm md:text-base">{round.name}</p>
 
-                <div className="mt-4 md:mt-5 space-y-2 md:space-y-2.5 text-xs sm:text-sm text-gray-600">
-                  <p className="flex items-center gap-2">
-                    <Clock size={14} className="text-sky-400 shrink-0" />
-                    Duration : <span className="font-semibold text-gray-700">{round.time}</span>
-                  </p>
+                  <div className="mt-4 md:mt-5 space-y-2 md:space-y-2.5 text-xs sm:text-sm text-gray-600">
+                    <p className="flex items-center gap-2">
+                      <Clock size={14} className="text-sky-400 shrink-0" />
+                      Duration : <span className="font-semibold text-gray-700">{round.time}</span>
+                    </p>
 
-                  <p className="flex items-center gap-2">
-                    <HelpCircle size={14} className="text-sky-400 shrink-0" />
-                    Questions : <span className="font-semibold text-gray-700">{round.questions}</span>
-                  </p>
+                    <p className="flex items-center gap-2">
+                      <HelpCircle size={14} className="text-sky-400 shrink-0" />
+                      Questions : <span className="font-semibold text-gray-700">{round.questions}</span>
+                    </p>
 
-                  <p className="flex items-center gap-2">
-                    <RotateCcw size={14} className="text-sky-400 shrink-0" />
-                    Attempts Left : <span className="font-semibold text-sky-500">{round.attempts}</span>
-                  </p>
-                </div>
+                    <p className="flex items-center gap-2">
+                      <RotateCcw size={14} className="text-sky-400 shrink-0" />
+                      Attempts Left : <span className="font-semibold text-sky-500">{round.attempts}</span>
+                    </p>
+                  </div>
 
-                <button
-                  disabled={isLocked}
-                  onClick={() => startRound(round)}
-                  className={`
+                  <button
+                    disabled={isLocked}
+                    onClick={() => startRound(round)}
+                    className={`
 mt-4 md:mt-6
 w-full
 py-2.5 md:py-3
@@ -267,19 +272,18 @@ border-none
 transition
 shadow-sm
 
-${
-  isLocked
-    ? "bg-gray-100 text-gray-400 cursor-not-allowed shadow-none"
-    : "bg-sky-400 text-white hover:bg-sky-500 hover:shadow-md"
-}
+${isLocked
+                        ? "bg-gray-100 text-gray-400 cursor-not-allowed shadow-none"
+                        : "bg-sky-400 text-white hover:bg-sky-500 hover:shadow-md"
+                      }
 
 `}
-                >
-                  {isLocked? "Locked" : "Start Round"}
-                </button>
-              </motion.div>
-            );
-})}
+                  >
+                    {isLocked ? "Locked" : "Start Round"}
+                  </button>
+                </motion.div>
+              );
+            })}
           </div>
 
           {/* BACK BUTTON */}
