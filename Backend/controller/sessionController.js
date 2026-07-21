@@ -40,6 +40,9 @@ console.log("round:", round);
 
     // generate Ai feedback
  const feedback = await generateGroqFeedback(combinedText);
+
+ // $set stores or updates the score and result for the current round.
+ //$addToSet records that the round has been completed, without adding duplicates.
  await User.findByIdAndUpdate(
   req.userId,
   {
@@ -47,8 +50,11 @@ console.log("round:", round);
       [`roundResults.${round}`]: {
         score: feedback.overallScore,
         result: feedback.result
-      }
-    }
+      },
+    },
+     $addToSet: {
+      completedRounds: round,
+    },
   },
   { new: true }
 );

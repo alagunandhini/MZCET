@@ -39,7 +39,7 @@ const userSchema = new mongoose.Schema({
     },
 
     completedRounds: {
-        type: [Number],
+        type: [String],
         default: [],
     },
     
