@@ -6,7 +6,7 @@ const authMiddleware=(req,res,next)=>{
    if(!auth) return res.json({message:"no token provided"});
    
     const token=auth.split(" ")[1];
-     if(!auth) return res.json({message:"Invalid Token format"});
+     if(!token) return res.json({message:"Invalid Token format"});
 
 
     try{

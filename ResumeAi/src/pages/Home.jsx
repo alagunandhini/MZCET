@@ -1,10 +1,12 @@
 import { useState } from "react";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
+import { useNavigate } from "react-router-dom";
 
 
 const Home = () => {
     const [open, setOpen] = useState(null);
+    const navigate=useNavigate();
 
 
     return (
@@ -41,7 +43,7 @@ const Home = () => {
                     </p>
 
                     <div className="flex items-center gap-4">
-                        <button className="bg-sky-500 text-white px-8 py-3 rounded-lg hover:bg-sky-600 transition duration-300 shadow-md">
+                        <button  onClick={()=>navigate("/resume")} className="bg-sky-500 text-white px-8 py-3 rounded-lg hover:bg-sky-600 transition duration-300 shadow-md">
                             Get Started →
                         </button>
 
