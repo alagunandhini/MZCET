@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 const InterviewCompleted = ({ answered, skipped, onNextRound, feedback }) => {
-  const total = answered + skipped;
+
   const [showFeedback, setShowFeedback] = useState(false);
   const [showConfetti, setShowConfetti] = useState(true);
   const navigate = useNavigate();
@@ -38,18 +38,29 @@ const InterviewCompleted = ({ answered, skipped, onNextRound, feedback }) => {
               className="w-40 md:w-56 mx-auto -mt-20 md:-mt-28 mb-2 animate-float drop-shadow-md"
             />
 
-            <h1 className="text-2xl md:text-3xl font-bold text-gray-800 mb-1">
-              Well Done 🎉
-            </h1>
+            {(() => {
+              const isPass = feedback ? feedback.result?.toLowerCase().includes("pass") : true;
 
-            <p className="text-gray-500 mb-6 md:mb-8 text-sm md:text-base">
-              You’ve completed your Interview
-            </p>
+              return (
+                <>
+                  
 
-            <div className="grid grid-cols-3 gap-2 md:gap-4 mb-8">
-              <StatCard label="Answered" value={answered} />
-              <StatCard label="Skipped" value={skipped} />
-              <StatCard label="Total" value={total} />
+                  <h1 className="text-2xl md:text-3xl font-bold text-gray-800 mb-1">
+                    {isPass ? "Well Done 🎉" : "Try Again :("}
+                  </h1>
+
+                  <p className="text-gray-500 mb-6 md:mb-8 text-sm md:text-base">
+                    {isPass
+                      ? "You've completed your Interview"
+                      : "Don't worry — you can retry this round."}
+                  </p>
+                </>
+              );
+            })()}
+            
+            <div className="grid grid-cols-2 gap-2 md:gap-4 mb-8">
+              <StatCard label="Score" value={feedback ? `${feedback.overallScore}` : "--"} />
+              <StatCard label="Result" value={feedback ? feedback.result : "--"} />
             </div>
 
             <div className="flex flex-col sm:flex-row gap-3 md:gap-4 mt-5 justify-center">
