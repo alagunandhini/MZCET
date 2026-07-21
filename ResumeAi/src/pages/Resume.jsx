@@ -204,37 +204,51 @@ useEffect(() => {
     setIsRecording(false);
   };
 
-  const endInterview = async () => {
-    try {
-      const res = await fetch("http://localhost:3007/end-session", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ sessionId }),
-      });
+// this function executes , when last question of each round
+const endInterview = async () => {
+  const token = localStorage.getItem("token");
 
-      const data = await res.json();
-       speakText(
-      "Well done , You have completed your Interview . Click to view Feedback"
-    );
-      if (data.success) {
-        setFeedback(data.feedback);
-         
-        // unlock next round
+  console.log("Token:", token);
+
+  try {
+    const res = await fetch("http://localhost:3007/end-session", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        sessionId,
+        round: currentSection,
+      }),
+    });
+
+    const data = await res.json();
+
+    console.log("Status:", res.status);
+    console.log("Response:", data);
+
+    if (!res.ok) {
+      throw new Error(data.message || "Request failed");
+    }
+
+    if (data.success) {
+      setFeedback(data.feedback);
+      // unlock next round
   setCompletedRounds(prev => [
     ...prev,
     sectionIndex
   ]);
-
-        // show completion screen
-        setShowCompletionScreen(true);
-      }
-    } catch (err) {
-      console.log("failed in fetching data");
-    } finally {
-      // stop loader
-      setIsAnalyzing(false);
+      setShowCompletionScreen(true);
     }
-  };
+  } catch (err) {
+    console.error("END SESSION ERROR:", err);
+  } finally {
+    setIsAnalyzing(false);
+  }
+};
+
+
 
 // funstion to move question
 const next = () => {

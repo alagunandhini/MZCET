@@ -3,39 +3,66 @@ const axios = require("axios");
 exports.generateGroqFeedback= async(combinedText) =>{
 
 const prompt = `
-You are an AI Interview Feedback Generator used in a production system.
+You are an experienced professional interviewer and interview evaluator.
 
 TASK:
-You will receive multiple interview questions with user answers.
-You MUST generate feedback for EVERY question provided.
+Evaluate the candidate's interview using the provided interview data.
 
-INPUT INTERVIEW DATA:
+The interview may belong to ANY professional domain. Use the interview questions, reference answers, candidate answers, resume, and job description (if available) to understand the interview context before evaluating.
+
+INTERVIEW DATA:
 ${combinedText}
 
-STRICT RULES (VERY IMPORTANT):
-1. Each question in the input MUST appear exactly once in qa_feedback.
-2. DO NOT SKIP any question, even if:
-   - the answer is empty
-   - the answer is incorrect
-   - the answer is irrelevant
-3. qa_feedback array length MUST equal the number of questions in the input.
-4. Use the EXACT user answer as user_answer (even if it is empty or weak).
-5. improved_answer must be:
-   - professional
-   - clear
-   - suitable for a Full Stack Developer interview
-6. If user_answer is empty, generate a complete improved answer.
-7. Output MUST be valid JSON only.
-8. Do NOT add explanations, comments, markdown, or extra text.
-9. Do NOT rename any keys.
-10. Ensure all required fields are present.
+EVALUATION RULES:
 
-OUTPUT FORMAT (FOLLOW EXACTLY):
+1. Evaluate EVERY question exactly once.
+2. Never skip any question, even if the answer is empty, incorrect, or irrelevant.
+3. Use the candidate's exact answer as user_answer.
+4. Treat the reference answer as guidance only. Do NOT compare answers word-for-word.
+5. Accept different approaches if they are technically or professionally correct.
+6. Evaluate each answer like a real interviewer by considering:
+   - Understanding of the question
+   - Technical or domain correctness
+   - Relevance
+   - Completeness
+   - Conceptual understanding
+   - Practical applicability (when appropriate)
+   - Clarity of communication
+7. Penalize:
+   - Incorrect facts
+   - Irrelevant answers
+   - Hallucinated information
+   - Very vague or incomplete responses
+8. Do not reward lengthy answers unless they provide meaningful and correct information.
+9. Score each answer fairly and calculate ONE overallScore out of 100 based on the candidate's complete interview performance.
+10. Do not inflate scores. Award scores above 90 only for exceptional interview performance.
+11. Determine the result:
+    - overallScore >= 70 → PASS
+    - overallScore < 70 → FAIL
+12. For every question, generate an improved_answer that:
+    - Is based on the candidate's original answer.
+    - Preserves the candidate's intent whenever possible.
+    - Corrects technical, factual, or logical mistakes.
+    - Adds important missing information.
+    - Removes incorrect or irrelevant content.
+    - Improves clarity, structure, grammar, and professionalism.
+    - Represents how the candidate could have answered better in a real interview.
+    - If the answer is empty or completely incorrect, generate the best professional answer instead.
+13. overall_feedback should summarize the candidate's strengths, weaknesses, and key improvement areas in 3–5 concise sentences.
+
+STRICT RULES:
+
+- Return ONLY valid JSON.
+- Do NOT add markdown, explanations, comments, or extra text.
+- Do NOT rename any keys.
+- Ensure qa_feedback contains every interview question exactly once.
+
+OUTPUT FORMAT:
 
 {
-  "performance_label": "Extraordinary | Good | Average | Bad",
-  "attempted_questions": 0,
-  "skipped_questions": 0,
+  "overallScore": 0,
+  "result": "PASS",
+  "performance_label": "Excellent | Good | Average | Bad",
   "communication": {
     "confidence_percentage": 0,
     "clarity_percentage": 0
@@ -54,14 +81,7 @@ OUTPUT FORMAT (FOLLOW EXACTLY):
     }
   ]
 }
-
-FINAL SELF-CHECK BEFORE RESPONDING:
-- Count the total number of questions in the input
-- Ensure qa_feedback contains ALL of them
-- Ensure JSON is valid and complete
-- Return ONLY the JSON object
 `;
-
 
 
 const response = await axios.post( "https://api.groq.com/openai/v1/chat/completions",
@@ -80,6 +100,8 @@ const response = await axios.post( "https://api.groq.com/openai/v1/chat/completi
 )
 
 const raw=response.data.choices[0].message.content
+console.log("feedback response:");
+console.log(raw);
 
 const start =raw.indexOf('{');
 const end=raw.lastIndexOf('}');
