@@ -94,7 +94,7 @@ const { speakText, isSpeaking } = useSpeech();
 const currentSection = sections[sectionIndex];
 const [completedRounds, setCompletedRounds] = useState([]);
 const question = questions[currentSection]?.questions?.[currentIndex]?.q;
-  const hydrated = useInterviewStorage({
+const hydrated = useInterviewStorage({
   showQuestionsUI,
   startPractice,
   questions,
@@ -102,6 +102,8 @@ const question = questions[currentSection]?.questions?.[currentIndex]?.q;
   sectionIndex,
 
   sessionId,
+  showCompletionScreen,
+  feedback,
 
   setShowQuestionsUI,
   setStartPractice,
@@ -111,6 +113,8 @@ const question = questions[currentSection]?.questions?.[currentIndex]?.q;
   setSectionIndex,
 
   setSessionId,
+  setShowCompletionScreen,
+  setFeedback,
 });
 
 useEffect(() => {
@@ -246,7 +250,7 @@ const endInterview = async () => {
       if (isPass) {
         setCompletedRounds(prev => [...prev, sectionIndex]);
       }
-
+       setStartPractice(false);
       setShowCompletionScreen(true);
     }
   } catch (err) {

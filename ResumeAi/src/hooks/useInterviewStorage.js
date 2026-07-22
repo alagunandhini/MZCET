@@ -8,6 +8,8 @@ const useInterviewStorage = ({
   currentIndex,
   sectionIndex,
   sessionId,
+  showCompletionScreen,
+  feedback,
 
   setShowQuestionsUI,
   setStartPractice,
@@ -15,6 +17,8 @@ const useInterviewStorage = ({
   setCurrentIndex,
   setSectionIndex,
   setSessionId,
+  setShowCompletionScreen,
+  setFeedback,
 }) => {
   const [hydrated, setHydrated] = useState(false);
 
@@ -22,13 +26,16 @@ const useInterviewStorage = ({
   useEffect(() => {
     if (!hydrated) return;
 
-    const appState = {
+   
+ const appState = {
       showQuestionsUI,
       startPractice,
       questions,
       currentIndex,
       sectionIndex,
       sessionId,
+      showCompletionScreen,
+      feedback,
     };
 
     localStorage.setItem("interviewState", JSON.stringify(appState));
@@ -40,6 +47,8 @@ const useInterviewStorage = ({
     currentIndex,
     sectionIndex,
     sessionId,
+    showCompletionScreen,
+    feedback,
   ]);
 
   // Restore state after refresh
@@ -49,12 +58,14 @@ const useInterviewStorage = ({
     if (savedState) {
       const state = JSON.parse(savedState);
 
-      setShowQuestionsUI(state.showQuestionsUI ?? false);
+    setShowQuestionsUI(state.showQuestionsUI ?? false);
       setStartPractice(state.startPractice ?? false);
       setQuestions(state.questions || []);
       setCurrentIndex(state.currentIndex ?? 0);
       setSectionIndex(state.sectionIndex ?? 0);
       setSessionId(state.sessionId || uuidv4());
+      setShowCompletionScreen(state.showCompletionScreen ?? false);
+      setFeedback(state.feedback ?? null);
     }
 
     setHydrated(true);
@@ -65,6 +76,8 @@ const useInterviewStorage = ({
     setCurrentIndex,
     setSectionIndex,
     setSessionId,
+    setShowCompletionScreen,
+    setFeedback,
   ]);
 
   return hydrated;
