@@ -23,7 +23,7 @@ const RoundDashboard = ({
   }));
   const startRound = (round) => {
     //check whether completed rounds are in array , if not then it is locked
-    const isLocked = round.id !== 0 && !completedRounds.includes(round.id - 1);
+const isLocked = round.id !== 0 && !completedRounds.includes(rounds[round.id - 1]?.key);
     if (isLocked) return;
     setSectionIndex(round.id);
     setCurrentIndex(0);
@@ -201,9 +201,7 @@ whitespace-nowrap
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
             {rounds.map((round) => {
 
-              const isLocked =
-                round.id !== 0 &&
-                !completedRounds.includes(round.id - 1);
+            const isLocked = round.id !== 0 && !completedRounds.includes(rounds[round.id - 1]?.key);
 
               return (
 

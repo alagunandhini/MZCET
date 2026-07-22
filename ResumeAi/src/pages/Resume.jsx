@@ -49,9 +49,11 @@ const token = localStorage.getItem("token");
         }
       );
 
-      if (res.data.hasResume) {
-        setShowQuestionsUI(true);
-      }
+     if (res.data.hasResume) {
+  setShowQuestionsUI(true);
+  setQuestions(res.data.questions || {});
+  setCompletedRounds(res.data.completedRounds || []);
+}
 
     } catch (err) {
       console.log(err);

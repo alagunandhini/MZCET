@@ -90,7 +90,9 @@ router.get("/resume-status", authMiddleware, async (req, res) => {
     res.json({
       success: true,
       hasResume: !!user.resumeText,
-      resumeText: user.resumeText
+      resumeText: user.resumeText,
+        questions: user.questions,
+        completedRounds: user.completedRounds
     });
 
   } catch (err) {
