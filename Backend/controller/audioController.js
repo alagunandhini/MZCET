@@ -36,6 +36,7 @@ const response = await axios.post(
     },
   }
 );
+console.log("Deepgram raw response:", JSON.stringify(response.data, null, 2));
 
 const transcript =
   response.data?.results?.channels?.[0]?.alternatives?.[0]?.transcript || "";
@@ -59,7 +60,7 @@ const transcript =
     await session.save();
 
     // delete uploaded audio after processing
-    fs.unlink(audioPath, () => {});
+    // fs.unlink(audioPath, () => {});
 
     return res.json({
       success: true,

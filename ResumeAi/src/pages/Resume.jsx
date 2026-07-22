@@ -132,6 +132,11 @@ useEffect(() => {
   // for start recording
   const startRecording = async () => {
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const audioTrack = stream.getAudioTracks()[0];
+  console.log("Track label:", audioTrack.label);
+  console.log("Track settings:", audioTrack.getSettings());
+  console.log("Track muted?", audioTrack.muted);
+  console.log("Track enabled?", audioTrack.enabled);
 
     mediaRecorderRef.current = new MediaRecorder(stream);
     audioChunks.current = [];
