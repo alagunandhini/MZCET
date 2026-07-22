@@ -239,20 +239,24 @@ const endInterview = async () => {
 
     if (data.success) {
       setFeedback(data.feedback);
-      // unlock next round
-  setCompletedRounds(prev => [
-    ...prev,
-    sectionIndex
-  ]);
+
+      const isPass = data.feedback.result?.toLowerCase().includes("pass");
+      if (isPass) {
+        setCompletedRounds(prev => [...prev, sectionIndex]);
+      }
+
       setShowCompletionScreen(true);
     }
   } catch (err) {
     console.error("END SESSION ERROR:", err);
+    showToast("Something went wrong generating your feedback. Please try again.", "error");
+    // don't leave them stuck on InterviewRoom - send them back to the dashboard instead
+    setShowQuestionsUI(true);
+    setStartPractice(false);
   } finally {
     setIsAnalyzing(false);
   }
 };
-
 
 
 // funstion to move question
