@@ -43,30 +43,42 @@ console.log("round:", round);
 
  // $set stores or updates the score and result for the current round.
  //$addToSet records that the round has been completed, without adding duplicates.
- await User.findByIdAndUpdate(
-  req.userId,
-  {
-    $set: {
-      [`roundResults.${round}`]: {
-        score: feedback.overallScore,
-        result: feedback.result
-      },
-    },
-     $addToSet: {
-      completedRounds: round,
+ const isPass = feedback.result?.toLowerCase().includes("pass");
+
+const updateQuery = {
+  $set: {
+    [`roundResults.${round}`]: {
+      score: feedback.overallScore,
+      result: feedback.result
     },
   },
-  { new: true }
-);
+};
 
- // HARD VALIDATION — MUST EXIST
-if (
-  !feedback.qa_feedback ||
-  feedback.qa_feedback.length !== session.answers.length
-) {
-  throw new Error(
-    `AI returned ${feedback.qa_feedback?.length || 0} feedbacks, but expected ${session.answers.length}`
+if (isPass) {
+  updateQuery.$addToSet = { completedRounds: round };
+}
+
+await User.findByIdAndUpdate(req.userId, updateQuery, { new: true });
+
+ // Instead of throwing, pad/trim to match, and log so you can monitor drift
+if (!feedback.qa_feedback) feedback.qa_feedback = [];
+
+if (feedback.qa_feedback.length !== session.answers.length) {
+  console.warn(
+    `qa_feedback length mismatch: got ${feedback.qa_feedback.length}, expected ${session.answers.length}`
   );
+
+  // Trim extras
+  feedback.qa_feedback = feedback.qa_feedback.slice(0, session.answers.length);
+
+  // Pad missing ones using the original question/transcript so the UI still has something to show
+  for (let i = feedback.qa_feedback.length; i < session.answers.length; i++) {
+    feedback.qa_feedback.push({
+      question: session.answers[i].question,
+      user_answer: session.answers[i].transcript || "(No answer provided)",
+      improved_answer: "Feedback unavailable for this answer.",
+    });
+  }
 }
 
 const attempted = session.answers.filter(

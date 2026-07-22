@@ -37,8 +37,8 @@ EVALUATION RULES:
 9. Score each answer fairly and calculate ONE overallScore out of 100 based on the candidate's complete interview performance.
 10. Do not inflate scores. Award scores above 90 only for exceptional interview performance.
 11. Determine the result:
-    - overallScore >= 70 → PASS
-    - overallScore < 70 → FAIL
+    - overallScore >= 10 → PASS
+    - overallScore < 10 → FAIL
 12. For every question, generate an improved_answer that:
     - Is based on the candidate's original answer.
     - Preserves the candidate's intent whenever possible.

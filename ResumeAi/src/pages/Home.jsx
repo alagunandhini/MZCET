@@ -56,22 +56,7 @@ function AnnouncementBanner() {
   if (!open) return null;
   return (
     <div className="relative w-full bg-gradient-to-r from-sky-500 via-blue-500 to-indigo-500 text-white">
-      {/* <div className="mx-auto flex max-w-7xl items-center justify-center gap-2 px-4 py-2.5 text-center text-sm font-medium">
-        <span>🎉 New: AI-powered feedback reports are here →</span>
-        <a
-          href="#features"
-          className="hidden underline-offset-2 hover:underline sm:inline-flex"
-        >
-          Learn more
-        </a>
-        <button
-          onClick={() => setOpen(false)}
-          aria-label="Dismiss announcement"
-          className="absolute right-4 top-1/2 -translate-y-1/2 rounded-full p-1 transition hover:bg-white/20"
-        >
-          <X className="h-4 w-4" />
-        </button>
-      </div> */}
+      {/* announcement content intentionally disabled */}
     </div>
   );
 }
@@ -284,34 +269,25 @@ function Hero() {
       <div className="mx-auto grid max-w-7xl items-center gap-12 px-4 py-16 sm:px-6 md:grid-cols-2 md:py-24 lg:py-28">
         {/* Copy */}
         <div className="text-center md:text-left">
-          <motion.span
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            className="inline-flex items-center gap-1.5 rounded-full border border-sky-200 bg-sky-50 px-3 py-1 text-xs font-semibold text-sky-700"
-          >
-            <Sparkles className="h-3.5 w-3.5" />
-            AI-powered interview prep
-          </motion.span>
-
           <motion.h1
             initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.05 }}
-            className="mt-5 text-3xl font-extrabold leading-[1.15] tracking-tight text-slate-900 sm:text-4xl lg:text-5xl"
+            className="mt-2 leading-[1.1] tracking-tight text-slate-900"
           >
-            
-            <span className="bg-gradient-to-r from-sky-400 to-blue-600 bg-clip-text text-transparent">
-              AI-powered
-            </span>{" "}
-            practice
+            <span className="block bg-gradient-to-r from-sky-400 to-blue-600 bg-clip-text text-4xl font-extrabold text-transparent sm:text-5xl lg:text-6xl">
+              Mount Zion
+            </span>
+            <span className="mt-2 block text-lg font-semibold text-slate-600 sm:text-xl">
+              AI-powered practice
+            </span>
           </motion.h1>
 
           <motion.p
             initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.15 }}
-            className="mx-auto mt-5 max-w-xl text-lg leading-relaxed text-slate-600 md:mx-0"
+            className="mx-auto mt-4 max-w-xl text-sm leading-relaxed text-slate-600 sm:text-base md:mx-0"
           >
             Upload your resume and get mock
             interviews across HR, Technical, Stress, and Scenario rounds.
@@ -321,22 +297,22 @@ function Hero() {
             initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.25 }}
-            className="mt-8 flex flex-col items-center gap-3 sm:flex-row md:justify-start"
+            className="mt-6 flex flex-col items-center gap-3 sm:flex-row md:justify-start"
           >
             <button
               onClick={() => navigate("/resume")}
-              className="group inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-sky-500 px-6 py-3.5 text-base font-semibold text-white shadow-lg shadow-sky-500/25 transition hover:-translate-y-0.5 hover:bg-sky-600 hover:shadow-xl sm:w-auto"
+              className="group inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-sky-500 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-sky-500/25 transition hover:-translate-y-0.5 hover:bg-sky-600 hover:shadow-xl sm:w-auto"
             >
               Start Free Practice
-              <ArrowRight className="h-5 w-5 transition group-hover:translate-x-0.5" />
+              <ArrowRight className="h-4 w-4 transition group-hover:translate-x-0.5" />
             </button>
-            <a
-              href="#how"
-              className="inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-slate-300 bg-white px-6 py-3.5 text-base font-semibold text-slate-700 transition hover:-translate-y-0.5 hover:border-slate-400 hover:shadow-md sm:w-auto"
+            <Link
+              to="/resume"
+              className="inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-slate-300 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition hover:-translate-y-0.5 hover:border-slate-400 hover:shadow-md sm:w-auto"
             >
-              <Play className="h-5 w-5 text-sky-500" />
+              <Play className="h-4 w-4 text-sky-500" />
               Watch Demo
-            </a>
+            </Link>
           </motion.div>
 
           
@@ -968,14 +944,14 @@ function Footer() {
             </p>
             <div className="mt-5 flex gap-3">
               {[Globe, MessageCircle, Share2].map((Icon, i) => (
-                <a
+                <Link
                   key={i}
-                  href="#"
+                  to="/"
                   aria-label="social link"
                   className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 text-slate-500 transition hover:border-sky-300 hover:bg-sky-50 hover:text-sky-600"
                 >
                   <Icon className="h-4 w-4" />
-                </a>
+                </Link>
               ))}
             </div>
           </div>
@@ -987,12 +963,12 @@ function Footer() {
               <ul className="mt-4 space-y-2.5">
                 {c.links.map((l) => (
                   <li key={l}>
-                    <a
-                      href="#"
+                    <Link
+                      to="/"
                       className="text-sm text-slate-500 transition hover:text-slate-900"
                     >
                       {l}
-                    </a>
+                    </Link>
                   </li>
                 ))}
               </ul>
