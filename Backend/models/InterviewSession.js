@@ -2,7 +2,7 @@ const mongoose = require("mongoose");
 
 const QAFeedbackSchema = new mongoose.Schema({
   question: { type: String, required: true },
-  user_answer: { type: String,default:""},
+  user_answer: { type: String, default: "" },
   improved_answer: { type: String, required: true },
 });
 
@@ -12,6 +12,8 @@ const CommunicationSchema = new mongoose.Schema({
 });
 
 const FeedbackSchema = new mongoose.Schema({
+  overallScore: { type: Number, required: true },
+  result: { type: String, enum: ["PASS", "FAIL"], required: true },
   performance_label: { type: String, enum: ["Extraordinary", "Good", "Average", "Bad"], required: true },
   attempted_questions: { type: Number, required: true },
   skipped_questions: { type: Number, required: true },
@@ -23,16 +25,20 @@ const FeedbackSchema = new mongoose.Schema({
 
 const AnswerSchema = new mongoose.Schema({
   question: { type: String, required: true },
-  transcript: { type: String},
+  transcript: { type: String },
+  round: { type: String, required: true },
 });
 
 const InterviewSessionSchema = new mongoose.Schema({
   sessionId: { type: String, required: true, unique: true },
   answers: [AnswerSchema],
-  feedback: FeedbackSchema,
-  completed: { type: Boolean, default: false },
+  feedbackByRound: {
+    type: Map,
+    of: FeedbackSchema,
+    default: {},
+  },
+  completedRoundsInSession: [{ type: String }],
   createdAt: { type: Date, default: Date.now },
 });
 
 module.exports = mongoose.model("InterviewSession", InterviewSessionSchema);
-
