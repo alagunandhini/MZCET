@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const multer = require("multer");
 const { processAudio } = require("../controller/audioController");
+const authMiddleware = require("../midleware/authMiddleware");
 
 // store uploaded audio
 const storage = multer.diskStorage({
@@ -14,7 +15,7 @@ const storage = multer.diskStorage({
 const upload = multer({ storage });
 
 // POST: audio + question
-router.post("/", upload.single("audio"), processAudio);
+router.post("/", authMiddleware, upload.single("audio"), processAudio);
 
 module.exports = router;
 

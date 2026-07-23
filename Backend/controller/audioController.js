@@ -13,6 +13,7 @@ exports.processAudio = async (req, res) => {
     const question = req.body.question;
     const sessionId = req.body.sessionId;
     const round = req.body.round;
+    const mimeType = req.body.mimeType || "audio/webm";
 
     if (!sessionId) {
       return res.status(400).json({ error: "Session ID missing" });
@@ -33,7 +34,7 @@ exports.processAudio = async (req, res) => {
       {
         headers: {
           Authorization: `Token ${process.env.DEEPGRAM_API_KEY}`,
-          "Content-Type": "audio/webm",
+          "Content-Type":mimeType,
         },
       }
     );

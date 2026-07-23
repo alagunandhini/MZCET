@@ -136,23 +136,38 @@ useEffect(() => {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
 
   // for start recording
-  const startRecording = async () => {
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+const startRecording = async () => {
+ 
+  // clean up the raw mic signal before it's even recorded — this matters a lot in a noisy classroom.
+    const stream = await navigator.mediaDevices.getUserMedia({
+      audio: {
+        echoCancellation: true,
+        noiseSuppression: true,
+        autoGainControl: true,
+      },
+    });
+
       const audioTrack = stream.getAudioTracks()[0];
   console.log("Track label:", audioTrack.label);
   console.log("Track settings:", audioTrack.getSettings());
   console.log("Track muted?", audioTrack.muted);
   console.log("Track enabled?", audioTrack.enabled);
 
-    mediaRecorderRef.current = new MediaRecorder(stream);
-    audioChunks.current = [];
 
+// mimeType check picks a codec the browser actually supports and remembers it, instead of letting the browser silently pick its own default.
+    const mimeType = MediaRecorder.isTypeSupported("audio/webm;codecs=opus")
+      ? "audio/webm;codecs=opus"
+      : "audio/webm";
+
+    mediaRecorderRef.current = new MediaRecorder(stream, { mimeType });
+    mediaRecorderRef.current.chosenMimeType = mimeType;
+    audioChunks.current = [];
     mediaRecorderRef.current.ondataavailable = (e) => {
       audioChunks.current.push(e.data);
     };
 
-    mediaRecorderRef.current.onstop = async () => {
-      const audioBlob = new Blob(audioChunks.current, { type: "audio/webm" });
+  mediaRecorderRef.current.onstop = async () => {
+      const audioBlob = new Blob(audioChunks.current, { type: mediaRecorderRef.current.chosenMimeType });
       const key = `${currentSection}-${currentIndex}`;
       
 
@@ -168,9 +183,12 @@ useEffect(() => {
       formData.append("question", questions[currentSection]?.questions?.[currentIndex]?.q);
       formData.append("sessionId", sessionId);
       formData.append("round", currentSection);
+     formData.append("mimeType", mediaRecorderRef.current.chosenMimeType);
 
       const isLastQuestion =
         currentIndex === questions[currentSection]?.questions?.length - 1
+
+      const token = localStorage.getItem("token");
 
       try {
         if (isLastQuestion) {
@@ -179,6 +197,7 @@ useEffect(() => {
           // WAIT for LAST answer to save
           const res = await fetch("http://localhost:3007/upload-audio", {
             method: "POST",
+            headers: { Authorization: `Bearer ${token}` },
             body: formData,
           });
 
@@ -191,6 +210,7 @@ useEffect(() => {
           //  Fire & forget for normal questions
           fetch("http://localhost:3007/upload-audio", {
             method: "POST",
+            headers: { Authorization: `Bearer ${token}` },
             body: formData,
           }).catch((err) => console.error("Backend audio save failed", err));
 
@@ -199,6 +219,8 @@ useEffect(() => {
         }
       } catch (err) {
         console.error("Audio upload failed", err);
+        setIsAnalyzing(false);
+        showToast("Upload failed. Please check your internet and try answering again.", "error");
       }
     };
 
