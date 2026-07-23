@@ -130,3 +130,61 @@ exports.endSession = async (req, res) => {
     res.status(500).json({ error: "Failed to end session" });
   }
 };
+
+exports.terminateRound = async (req, res) => {
+  try {
+    const { sessionId, round } = req.body;
+
+    if (!sessionId || !round) {
+      return res.status(400).json({ error: "Session ID or round missing" });
+    }
+
+    const user = await User.findById(req.userId);
+    const alreadyPassed = user.completedRounds.includes(round);
+    const attemptsUsed = user.roundAttempts?.[round] || 0;
+
+    if (alreadyPassed) {
+      // Nothing to terminate — they've already passed this round
+      return res.json({ success: true, message: "Round already passed" });
+    }
+
+    if (attemptsUsed >= 3) {
+      return res.status(403).json({ error: "No attempts remaining for this round" });
+    }
+
+    const existingResult = user.roundResults?.[round];
+    // A termination is always treated as a 0-score fail — it only overwrites
+    // the saved result if there's no better (real) attempt already on record.
+    const isNewScoreBetter = !existingResult || 0 > existingResult.score;
+
+    const updateQuery = {
+      $inc: {
+        [`roundAttempts.${round}`]: 1,
+      },
+    };
+
+    if (isNewScoreBetter) {
+      updateQuery.$set = {
+        [`roundResults.${round}`]: {
+          score: 0,
+          result: "FAIL",
+        },
+      };
+    }
+
+    await User.findByIdAndUpdate(req.userId, updateQuery, { new: true });
+
+    // Mark the session itself as terminated, for your own records
+    const session = await InterviewSession.findOne({ sessionId });
+    if (session) {
+      session.terminatedForViolation = true;
+      await session.save();
+    }
+
+    res.json({ success: true, message: "Round terminated due to violations" });
+
+  } catch (err) {
+    console.error("terminate round error:", err);
+    res.status(500).json({ error: "Failed to terminate round" });
+  }
+};

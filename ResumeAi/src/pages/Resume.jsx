@@ -92,6 +92,8 @@ const { speakText, isSpeaking } = useSpeech();
  
   const [sectionIndex, setSectionIndex] = useState(0);
   const [selectedRound, setSelectedRound] = useState(0);
+   const [violationCount, setViolationCount] = useState(0);
+  const intentionalExitRef = useRef(false);
 const currentSection = sections[sectionIndex];
 const [completedRounds, setCompletedRounds] = useState([]);
 const [roundAttempts, setRoundAttempts] = useState({});
@@ -119,6 +121,54 @@ const hydrated = useInterviewStorage({
   setShowCompletionScreen,
   setFeedback,
 });
+
+// Fullscreen + tab-switch violation detection, active only while a round is in progress
+  useEffect(() => {
+    if (!startPractice) return;
+
+    setViolationCount(0);
+    intentionalExitRef.current = false;
+
+    const MAX_VIOLATIONS = 4; // 3 warnings, 4th terminates
+
+    const registerViolation = (reason) => {
+      if (intentionalExitRef.current) return; // we caused this ourselves — not a violation
+
+      setViolationCount((prev) => {
+        const next = prev + 1;
+
+        if (next >= MAX_VIOLATIONS) {
+          terminateForViolation();
+        } else {
+          showToast(
+            `Warning: ${reason}. ${MAX_VIOLATIONS - next} warning(s) left before this round ends.`,
+            "error"
+          );
+        }
+        return next;
+      });
+    };
+
+    const handleFullscreenChange = () => {
+      if (!document.fullscreenElement) {
+        registerViolation("you exited fullscreen");
+      }
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        registerViolation("you switched tabs/windows");
+      }
+    };
+
+    document.addEventListener("fullscreenchange", handleFullscreenChange);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      document.removeEventListener("fullscreenchange", handleFullscreenChange);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, [startPractice]);
 
 useEffect(() => {
   if (!startPractice) return;
@@ -277,7 +327,12 @@ const endInterview = async () => {
       throw new Error(data.message || "Request failed");
     }
 
-    if (data.success) {
+   if (data.success) {
+      intentionalExitRef.current = true;
+      if (document.fullscreenElement) {
+        document.exitFullscreen?.().catch(() => {});
+      }
+
       setFeedback(data.feedback);
 
       const isPass = data.feedback.result?.toLowerCase().includes("pass");
@@ -295,6 +350,7 @@ const endInterview = async () => {
 
         setStartPractice(false); 
       setShowCompletionScreen(true);
+
     }
   } catch (err) {
     console.error("END SESSION ERROR:", err);
@@ -306,6 +362,53 @@ const endInterview = async () => {
     setIsAnalyzing(false);
   }
 };
+
+// terminate the interview , when violate
+const terminateForViolation = async () => {
+    const token = localStorage.getItem("token");
+
+    // Stop recording/speaking immediately
+    if (isRecording) {
+      mediaRecorderRef.current?.stop();
+      setIsRecording(false);
+    }
+    window.speechSynthesis.cancel();
+
+    intentionalExitRef.current = true;
+    if (document.fullscreenElement) {
+      document.exitFullscreen?.().catch(() => {});
+    }
+
+    try {
+      const res = await fetch("http://localhost:3007/terminate-round", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ sessionId, round: currentSection }),
+      });
+      const data = await res.json();
+
+      if (res.status === 403) {
+        showToast("This round already has no attempts remaining.", "error");
+      } else if (data.success) {
+        setRoundAttempts((prev) => ({
+          ...prev,
+          [currentSection]: (prev[currentSection] || 0) + 1,
+        }));
+        showToast("Round ended due to repeated violations. This counted as a failed attempt.", "error");
+      }
+    } catch (err) {
+      console.error("Terminate round failed", err);
+    } finally {
+      setStartPractice(false);
+      setShowQuestionsUI(true);
+      setCurrentIndex(0);
+      setQuestionStatus({});
+      setSessionId(uuidv4());
+    }
+  };
 
 
 // funstion to move question
@@ -360,6 +463,10 @@ const next = () => {
 };
 
 const handleExitPractice = () => {
+  intentionalExitRef.current = true;
+  if (document.fullscreenElement) {
+    document.exitFullscreen?.().catch(() => {});
+  }
   setShowExitModal(false);
   setTransitionText("Returning to questions…");
   setTransitionLoading(true);
