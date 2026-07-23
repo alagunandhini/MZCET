@@ -1,6 +1,4 @@
 import { useEffect, useState } from "react";
-import { v4 as uuidv4 } from "uuid";
-
 const useInterviewStorage = ({
   showQuestionsUI,
   startPractice,
@@ -26,8 +24,7 @@ const useInterviewStorage = ({
   useEffect(() => {
     if (!hydrated) return;
 
-   
- const appState = {
+    const appState = {
       showQuestionsUI,
       startPractice,
       questions,
@@ -58,7 +55,7 @@ const useInterviewStorage = ({
     if (savedState) {
       const state = JSON.parse(savedState);
 
-    setShowQuestionsUI(state.showQuestionsUI ?? false);
+      setShowQuestionsUI(state.showQuestionsUI ?? false);
       setStartPractice(state.startPractice ?? false);
       setQuestions(state.questions || []);
       setCurrentIndex(state.currentIndex ?? 0);

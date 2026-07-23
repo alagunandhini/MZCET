@@ -1,9 +1,12 @@
 import { motion } from "framer-motion";
-import { Clock, HelpCircle, RotateCcw, Star, Lock, CheckCircle2, ChevronLeft } from "lucide-react";
+import { Clock, HelpCircle, RotateCcw, Star, Lock, CheckCircle2, ChevronLeft, XCircle } from "lucide-react";
+
+const MAX_ATTEMPTS = 3;
 
 const RoundDashboard = ({
   questions,
   completedRounds,
+  roundAttempts,
   setCurrentIndex,
   setTransitionLoading,
   setTransitionText,
@@ -19,22 +22,44 @@ const RoundDashboard = ({
     name: questions[key].name,
     questions: questions[key].questions.length,
     time: "10 Minutes",
-    attempts: 3
   }));
-  const startRound = (round) => {
-    //check whether completed rounds are in array , if not then it is locked
-const isLocked = round.id !== 0 && !completedRounds.includes(rounds[round.id - 1]?.key);
-    if (isLocked) return;
+
+  // Shared helper: figure out a round's real state from real data
+
+  const isRoundFinalized = (roundKey) => {
+    // A round is "done" — for the purpose of unlocking the next one — if
+    // the student passed it, OR they've used all 3 attempts (even if failed).
+    // This stops a hard round from permanently blocking the rest of the interview.
+    const isPassed = completedRounds.includes(roundKey);
+    const attemptsUsed = roundAttempts?.[roundKey] || 0;
+    return isPassed || attemptsUsed >= MAX_ATTEMPTS;
+  };
+
+  const getRoundState = (round) => {
+    const isPassed = completedRounds.includes(round.key);
+    const attemptsUsed = roundAttempts?.[round.key] || 0;
+    const attemptsLeft = Math.max(MAX_ATTEMPTS - attemptsUsed, 0);
+    const isOutOfAttempts = !isPassed && attemptsUsed >= MAX_ATTEMPTS;
+
+    // Locked because the PREVIOUS round isn't finalized yet (passed OR exhausted)
+    const prevRoundLocked =
+      round.id !== 0 && !isRoundFinalized(rounds[round.id - 1]?.key);
+
+    return { isPassed, attemptsUsed, attemptsLeft, isOutOfAttempts, prevRoundLocked };
+  };
+
+const startRound = (round) => {
+    const { prevRoundLocked, isOutOfAttempts, isPassed } = getRoundState(round);
+    if (prevRoundLocked || isOutOfAttempts || isPassed) return;
+
     setSectionIndex(round.id);
     setCurrentIndex(0);
 
     setTransitionText(`${round.title} Starting...`);
-
     setTransitionLoading(true);
 
     setTimeout(() => {
       setTransitionLoading(false);
-
       setStartPractice(true);
     }, 2000);
   };
@@ -71,12 +96,12 @@ const isLocked = round.id !== 0 && !completedRounds.includes(rounds[round.id - 1
             </div>
           </div>
 
-          {/* PROGRESS CARD - separate box, sized to fit content only */}
+          {/* PROGRESS CARD */}
           <div className="bg-white rounded-2xl shadow-sm border border-sky-100 flex flex-col items-center p-5 md:p-6">
             {(() => {
               const totalRounds = rounds.length;
-              const completed = completedRounds.length;
-              const percent = totalRounds > 0 ? (completed / totalRounds) * 100 : 0;
+              const completed = new Set(completedRounds).size;
+              const percent = totalRounds > 0 ? Math.min((completed / totalRounds) * 100, 100) : 0;
               const radius = 55;
               const circumference = 2 * Math.PI * radius;
               const offset = circumference - (percent / 100) * circumference;
@@ -201,7 +226,8 @@ whitespace-nowrap
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
             {rounds.map((round) => {
 
-            const isLocked = round.id !== 0 && !completedRounds.includes(rounds[round.id - 1]?.key);
+              const { isPassed, attemptsLeft, isOutOfAttempts, prevRoundLocked } = getRoundState(round);
+              const isLocked = prevRoundLocked || isOutOfAttempts;
 
               return (
 
@@ -223,15 +249,27 @@ ${isLocked ? "border-gray-100 opacity-60" : "border-sky-100 hover:shadow-lg hove
                       {round.title}
                     </h2>
 
-                    {!isLocked && (
+                    {isPassed && (
                       <span className="flex items-center gap-1 text-emerald-500 font-semibold text-xs sm:text-sm bg-emerald-50 px-2.5 py-1 rounded-full">
+                        <CheckCircle2 size={14} /> Passed
+                      </span>
+                    )}
+
+                    {!isPassed && !isLocked && (
+                      <span className="flex items-center gap-1 text-sky-500 font-semibold text-xs sm:text-sm bg-sky-50 px-2.5 py-1 rounded-full">
                         <CheckCircle2 size={14} /> Ready
                       </span>
                     )}
 
-                    {isLocked && (
+                    {!isPassed && prevRoundLocked && (
                       <span className="flex items-center gap-1 text-gray-400 text-xs sm:text-sm bg-gray-50 px-2.5 py-1 rounded-full">
                         <Lock size={12} /> Locked
+                      </span>
+                    )}
+
+                    {!isPassed && isOutOfAttempts && (
+                      <span className="flex items-center gap-1 text-red-500 text-xs sm:text-sm bg-red-50 px-2.5 py-1 rounded-full">
+                        <XCircle size={12} /> Failed
                       </span>
                     )}
 
@@ -252,12 +290,12 @@ ${isLocked ? "border-gray-100 opacity-60" : "border-sky-100 hover:shadow-lg hove
 
                     <p className="flex items-center gap-2">
                       <RotateCcw size={14} className="text-sky-400 shrink-0" />
-                      Attempts Left : <span className="font-semibold text-sky-500">{round.attempts}</span>
+                      Attempts Left : <span className="font-semibold text-sky-500">{isPassed ? "-" : attemptsLeft}</span>
                     </p>
                   </div>
 
                   <button
-                    disabled={isLocked}
+                    disabled={isLocked || isPassed}
                     onClick={() => startRound(round)}
                     className={`
 mt-4 md:mt-6
@@ -270,14 +308,20 @@ border-none
 transition
 shadow-sm
 
-${isLocked
+${isLocked || isPassed
                         ? "bg-gray-100 text-gray-400 cursor-not-allowed shadow-none"
                         : "bg-sky-400 text-white hover:bg-sky-500 hover:shadow-md"
                       }
 
 `}
                   >
-                    {isLocked ? "Locked" : "Start Round"}
+                  {isPassed
+                      ? "Completed"
+                      : isOutOfAttempts
+                      ? "No Attempts Left"
+                      : prevRoundLocked
+                      ? "Locked"
+                      : "Start Round"}
                   </button>
                 </motion.div>
               );
@@ -290,12 +334,9 @@ ${isLocked
             <button
               onClick={() => {
                 setTransitionText("Back To Upload Page...");
-
                 setTransitionLoading(true);
-
                 setTimeout(() => {
                   setTransitionLoading(false);
-
                   setShowQuestionsUI(false);
                 }, 2000);
               }}

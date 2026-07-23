@@ -53,6 +53,7 @@ const token = localStorage.getItem("token");
   setShowQuestionsUI(true);
   setQuestions(res.data.questions || {});
   setCompletedRounds(res.data.completedRounds || []);
+    setRoundAttempts(res.data.roundAttempts || {});
 }
 
     } catch (err) {
@@ -93,6 +94,8 @@ const { speakText, isSpeaking } = useSpeech();
   const [selectedRound, setSelectedRound] = useState(0);
 const currentSection = sections[sectionIndex];
 const [completedRounds, setCompletedRounds] = useState([]);
+const [roundAttempts, setRoundAttempts] = useState({});
+
 const question = questions[currentSection]?.questions?.[currentIndex]?.q;
 const hydrated = useInterviewStorage({
   showQuestionsUI,
@@ -245,7 +248,7 @@ const endInterview = async () => {
   console.log("Token:", token);
 
   try {
-    const res = await fetch("http://localhost:3007/end-session", {
+   const res = await fetch("http://localhost:3007/end-session", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -262,6 +265,14 @@ const endInterview = async () => {
     console.log("Status:", res.status);
     console.log("Response:", data);
 
+    // Special case: backend rejected because all 3 attempts are already used
+    if (res.status === 403) {
+      showToast("You've used all attempts for this round.", "error");
+      setShowQuestionsUI(true);
+      setStartPractice(false);
+      return;
+    }
+
     if (!res.ok) {
       throw new Error(data.message || "Request failed");
     }
@@ -271,9 +282,18 @@ const endInterview = async () => {
 
       const isPass = data.feedback.result?.toLowerCase().includes("pass");
       if (isPass) {
-        setCompletedRounds(prev => [...prev, currentSection]);
+        setCompletedRounds(prev => prev.includes(currentSection) ? prev : [...prev, currentSection]);
       }
-       setStartPractice(false);
+
+      // Reflect the attempt that was just used, immediately — matches what
+      // the backend just incremented, so the dashboard is correct without
+      // needing a refresh to re-fetch /resume-status.
+      setRoundAttempts(prev => ({
+        ...prev,
+        [currentSection]: (prev[currentSection] || 0) + 1,
+      }));
+
+        setStartPractice(false); 
       setShowCompletionScreen(true);
     }
   } catch (err) {
@@ -397,6 +417,7 @@ console.log("questions:", questions);
 <RoundDashboard
 questions={questions}
 completedRounds={completedRounds}
+roundAttempts={roundAttempts}
 
 setCompletedRounds={setCompletedRounds}
 
