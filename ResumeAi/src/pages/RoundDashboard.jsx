@@ -51,6 +51,9 @@ const RoundDashboard = ({
 const startRound = (round) => {
     const { prevRoundLocked, isOutOfAttempts, isPassed } = getRoundState(round);
     if (prevRoundLocked || isOutOfAttempts || isPassed) return;
+     document.documentElement.requestFullscreen?.().catch((err) => {
+      console.warn("Fullscreen request failed/denied:", err);
+    });
 
     setSectionIndex(round.id);
     setCurrentIndex(0);
