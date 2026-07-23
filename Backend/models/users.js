@@ -47,6 +47,11 @@ const userSchema = new mongoose.Schema({
     type: Object,
     default: {}
 },
+    // tracks how many times each round has been submitted/graded, e.g. { Round1: 2, Round2: 0 }
+    roundAttempts: {
+        type: Object,
+        default: {}
+    },
 
 });
 

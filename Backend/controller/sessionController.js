@@ -17,6 +17,18 @@ exports.endSession = async (req, res) => {
       return res.status(404).json({ error: "Session or round not found" });
     }
 
+
+    // ---- ATTEMPT LIMIT CHECK ----
+    const user = await User.findById(req.userId);
+    const alreadyPassed = user.completedRounds.includes(round);
+    const attemptsUsed = user.roundAttempts?.[round] || 0;
+
+    if (!alreadyPassed && attemptsUsed >= 3) {
+      return res.status(403).json({
+        error: "No attempts remaining for this round",
+      });
+    }
+
     // --- PIECE A: don't re-grade a round that's already been graded ---
     // Checked per round (not per whole session) since one session covers all 4 rounds.
     if (
@@ -52,19 +64,30 @@ exports.endSession = async (req, res) => {
     // --- PIECE E: save the score onto the student's profile ---
     const isPass = feedback.result?.toLowerCase().includes("pass");
 
+    const existingResult = user.roundResults?.[round];
+    const isNewScoreBetter = !existingResult || feedback.overallScore > existingResult.score;
+
     const updateQuery = {
-      $set: {
+      $inc: {
+        [`roundAttempts.${round}`]: 1,
+      },
+    };
+
+    // Only overwrite the saved result if this attempt is the best one so far
+    if (isNewScoreBetter) {
+      updateQuery.$set = {
         [`roundResults.${round}`]: {
           score: feedback.overallScore,
           result: feedback.result,
         },
-      },
-    };
+      };
+    }
 
     if (isPass) {
       updateQuery.$addToSet = { completedRounds: round };
     }
 
+   
     await User.findByIdAndUpdate(req.userId, updateQuery, { new: true });
 
     // --- PIECE F: safety net if AI returns wrong number of answers ---
