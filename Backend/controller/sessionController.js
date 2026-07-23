@@ -1,107 +1,109 @@
 const InterviewSession = require("../models/InterviewSession");
 const { generateGroqFeedback } = require("./groqFeedback");
-const User=require("../models/users");
+const User = require("../models/users");
 
 exports.endSession = async (req, res) => {
   try {
-    const { sessionId,round } = req.body;
-    
+    const { sessionId, round } = req.body;
+
     if (!sessionId) {
       return res.status(400).json({ error: "Session ID missing" });
     }
 
-// finding session in db
     const session = await InterviewSession.findOne({ sessionId });
-    console.log( session );
+    console.log(session);
 
     if (!session || !round) {
       return res.status(404).json({ error: "Session or round not found" });
     }
 
-    // User refreshes feedback page ,Avoid calling AI again ,Saves API cost
-      if (session.completed && session.feedback) {
+    // --- PIECE A: don't re-grade a round that's already been graded ---
+    // Checked per round (not per whole session) since one session covers all 4 rounds.
+    if (
+      session.completedRoundsInSession.includes(round) &&
+      session.feedbackByRound.get(round)
+    ) {
       return res.json({
         success: true,
-        feedback: session.feedback,
+        feedback: session.feedbackByRound.get(round),
       });
     }
 
-    // Combine all transcripts
-      const combinedText = session.answers
-      .map(
-        (a, index) =>
-          `Q${index + 1}: ${a.question}\nA: ${a.transcript}`
-      )
+    // --- PIECE B: pull out ONLY this round's answers ---
+    // session.answers has answers from every round mixed together —
+    // this filters down to just the round that just finished.
+    const roundAnswers = session.answers.filter((a) => a.round === round);
+
+    if (roundAnswers.length === 0) {
+      return res.status(400).json({ error: "No answers found for this round" });
+    }
+
+    // --- PIECE C: build the text block to send to the AI ---
+    const combinedText = roundAnswers
+      .map((a, index) => `Q${index + 1}: ${a.question}\nA: ${a.transcript}`)
       .join("\n\n");
-      console.log("Combined Text:", combinedText);
+    console.log("Combined Text:", combinedText);
+    console.log("req.userId:", req.userId);
+    console.log("round:", round);
 
-      console.log("req.userId:", req.userId);
-console.log("round:", round);
+    // --- PIECE D: call Groq to grade it ---
+    const feedback = await generateGroqFeedback(combinedText);
 
-    // generate Ai feedback
- const feedback = await generateGroqFeedback(combinedText);
+    // --- PIECE E: save the score onto the student's profile ---
+    const isPass = feedback.result?.toLowerCase().includes("pass");
 
- // $set stores or updates the score and result for the current round.
- //$addToSet records that the round has been completed, without adding duplicates.
- const isPass = feedback.result?.toLowerCase().includes("pass");
+    const updateQuery = {
+      $set: {
+        [`roundResults.${round}`]: {
+          score: feedback.overallScore,
+          result: feedback.result,
+        },
+      },
+    };
 
-const updateQuery = {
-  $set: {
-    [`roundResults.${round}`]: {
-      score: feedback.overallScore,
-      result: feedback.result
-    },
-  },
-};
+    if (isPass) {
+      updateQuery.$addToSet = { completedRounds: round };
+    }
 
-if (isPass) {
-  updateQuery.$addToSet = { completedRounds: round };
-}
+    await User.findByIdAndUpdate(req.userId, updateQuery, { new: true });
 
-await User.findByIdAndUpdate(req.userId, updateQuery, { new: true });
+    // --- PIECE F: safety net if AI returns wrong number of answers ---
+    if (!feedback.qa_feedback) feedback.qa_feedback = [];
 
- // Instead of throwing, pad/trim to match, and log so you can monitor drift
-if (!feedback.qa_feedback) feedback.qa_feedback = [];
+    if (feedback.qa_feedback.length !== roundAnswers.length) {
+      console.warn(
+        `qa_feedback length mismatch: got ${feedback.qa_feedback.length}, expected ${roundAnswers.length}`
+      );
+      feedback.qa_feedback = feedback.qa_feedback.slice(0, roundAnswers.length);
+      for (let i = feedback.qa_feedback.length; i < roundAnswers.length; i++) {
+        feedback.qa_feedback.push({
+          question: roundAnswers[i].question,
+          user_answer: roundAnswers[i].transcript || "(No answer provided)",
+          improved_answer: "Feedback unavailable for this answer.",
+        });
+      }
+    }
 
-if (feedback.qa_feedback.length !== session.answers.length) {
-  console.warn(
-    `qa_feedback length mismatch: got ${feedback.qa_feedback.length}, expected ${session.answers.length}`
-  );
+    // --- PIECE G: count answered vs skipped questions ---
+    const attempted = roundAnswers.filter(
+      (a) => a.transcript && a.transcript.trim().length > 0
+    ).length;
+    const skipped = roundAnswers.length - attempted;
 
-  // Trim extras
-  feedback.qa_feedback = feedback.qa_feedback.slice(0, session.answers.length);
+    feedback.attempted_questions = attempted;
+    feedback.skipped_questions = skipped;
 
-  // Pad missing ones using the original question/transcript so the UI still has something to show
-  for (let i = feedback.qa_feedback.length; i < session.answers.length; i++) {
-    feedback.qa_feedback.push({
-      question: session.answers[i].question,
-      user_answer: session.answers[i].transcript || "(No answer provided)",
-      improved_answer: "Feedback unavailable for this answer.",
-    });
-  }
-}
-
-const attempted = session.answers.filter(
-  a => a.transcript && a.transcript.trim().length > 0
-).length;
-
-const skipped = session.answers.length - attempted;
-
-feedback.attempted_questions = attempted;
-feedback.skipped_questions = skipped;
-
-
-// save feedback in db
-    session.feedback = feedback;
-    session.completed = true;
+    // --- PIECE H: save this round's result into its own slot ---
+    session.feedbackByRound.set(round, feedback);
+    if (!session.completedRoundsInSession.includes(round)) {
+      session.completedRoundsInSession.push(round);
+    }
     await session.save();
 
     res.json({ success: true, feedback });
 
   } catch (err) {
-    console.error("end session error:",err);
+    console.error("end session error:", err);
     res.status(500).json({ error: "Failed to end session" });
   }
 };
-
-

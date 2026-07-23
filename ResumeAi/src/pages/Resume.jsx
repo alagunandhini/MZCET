@@ -163,10 +163,11 @@ useEffect(() => {
 
     
       // send these data to backend to save in db and also convert audio into text
-      const formData = new FormData();
+ const formData = new FormData();
       formData.append("audio", audioBlob, "answer.webm");
       formData.append("question", questions[currentSection]?.questions?.[currentIndex]?.q);
       formData.append("sessionId", sessionId);
+      formData.append("round", currentSection);
 
       const isLastQuestion =
         currentIndex === questions[currentSection]?.questions?.length - 1
@@ -248,7 +249,7 @@ const endInterview = async () => {
 
       const isPass = data.feedback.result?.toLowerCase().includes("pass");
       if (isPass) {
-        setCompletedRounds(prev => [...prev, sectionIndex]);
+        setCompletedRounds(prev => [...prev, currentSection]);
       }
        setStartPractice(false);
       setShowCompletionScreen(true);
