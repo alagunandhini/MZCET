@@ -1,5 +1,18 @@
+import { useState } from "react";
 import { motion } from "framer-motion";
-import { Clock, HelpCircle, RotateCcw, Star, Lock, CheckCircle2, ChevronLeft, XCircle } from "lucide-react";
+import {
+  Clock,
+  HelpCircle,
+  RotateCcw,
+  Star,
+  Lock,
+  CheckCircle2,
+  ChevronLeft,
+  XCircle,
+  User,
+  LogOut,
+  ListChecks,
+} from "lucide-react";
 
 const MAX_ATTEMPTS = 3;
 
@@ -13,7 +26,10 @@ const RoundDashboard = ({
   setStartPractice,
   setSectionIndex,
   setShowQuestionsUI,
+  username,
+  handleLogout,
 }) => {
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
 
   const rounds = Object.keys(questions).map((key, index) => ({
     id: index,
@@ -65,6 +81,17 @@ const startRound = (round) => {
       setTransitionLoading(false);
       setStartPractice(true);
     }, 2000);
+  };
+
+  const handleGoToRounds = () => {
+    setShowProfileMenu(false);
+    // Already on the rounds dashboard — this is a no-op for now, but wired
+    // up so it can navigate here from other pages later.
+  };
+
+  const onLogoutClick = () => {
+    setShowProfileMenu(false);
+    handleLogout?.();
   };
 
   return (
@@ -175,6 +202,7 @@ const startRound = (round) => {
 
             <div className="flex items-center gap-2 sm:gap-3">
               <button
+                onClick={handleGoToRounds}
                 className="
 px-3 sm:px-5 py-1.5 sm:py-2 
 text-xs sm:text-sm
@@ -190,21 +218,47 @@ transition
                 Progress
               </button>
 
-              <button
-                className="
-px-3 sm:px-5 py-1.5 sm:py-2 
-text-xs sm:text-sm
-font-medium
-text-gray-600
-rounded-xl
-border-none
-bg-gray-50
-hover:bg-gray-100
-transition
-"
-              >
-                Profile
-              </button>
+              {/* PROFILE BUTTON + DROPDOWN */}
+              <div className="relative">
+                <button
+                  onClick={() => setShowProfileMenu((v) => !v)}
+                  className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-sky-400 to-blue-600 text-sm font-bold text-white shadow-sm transition hover:opacity-90"
+                >
+                  {username ? username.charAt(0).toUpperCase() : <User className="h-4 w-4" />}
+                </button>
+
+                {showProfileMenu && (
+                  <>
+                    <div className="fixed inset-0 z-40" onClick={() => setShowProfileMenu(false)} />
+                    <div className="absolute right-0 top-full z-50 mt-2 w-56 rounded-2xl border border-slate-200 bg-white p-4 shadow-xl">
+                      <div className="flex flex-col items-center text-center">
+                        <span className="flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-sky-400 to-blue-600 text-xl font-bold text-white">
+                          {username ? username.charAt(0).toUpperCase() : <User className="h-6 w-6" />}
+                        </span>
+                        <p className="mt-2 text-sm font-bold text-slate-900">
+                          {username || "User"}
+                        </p>
+                      </div>
+
+                      {/* <button
+                        onClick={handleGoToRounds}
+                        className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 py-2 text-sm font-semibold text-slate-600 transition hover:border-sky-200 hover:bg-sky-50 hover:text-sky-500"
+                      >
+                        <ListChecks className="h-4 w-4" />
+                        Rounds
+                      </button> */}
+
+                      <button
+                        onClick={onLogoutClick}
+                        className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 py-2 text-sm font-semibold text-slate-600 transition hover:border-red-200 hover:bg-red-50 hover:text-red-500"
+                      >
+                        <LogOut className="h-4 w-4" />
+                        Logout
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
 
               <div
                 className="

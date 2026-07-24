@@ -71,7 +71,8 @@ function Navbar() {
   const navigate = useNavigate();
 
   const token = localStorage.getItem("token");
-  const username = localStorage.getItem("username");
+  const rawUsername = localStorage.getItem("username");
+  const username = rawUsername ? rawUsername.replace(/^"|"$/g, "") : rawUsername;
 
   const handleLogout = () => {
     localStorage.removeItem("token");
@@ -86,15 +87,17 @@ function Navbar() {
   ];
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-slate-200/70 bg-white/80 backdrop-blur-md">
-      <nav className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3.5 sm:px-6">
+    <header className="sticky top-0 z-50 w-full border-b border-slate-200/70 bg-white/80 backdrop-blur-md shadow-sm">
+      <nav className="mx-auto flex max-w-7xl items-center justify-between px-4  sm:px-6">
         {/* Logo (left) */}
         <Link to="/" className="flex items-center gap-2">
-          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-sky-400 to-blue-600 text-white shadow-sm">
-            <Sparkles className="h-5 w-5" />
-          </span>
+          <img
+            src="/mzlogo.png"
+            alt="Mount Zion logo"
+            className="h-18 w-18 rounded-xl object-contain"
+          />
           <span className="text-lg font-bold tracking-tight text-slate-900">
-            Resume<span className="text-sky-500">AI</span>
+            MZ Resume<span className="text-sky-500">AI</span>
           </span>
         </Link>
 
@@ -112,68 +115,57 @@ function Navbar() {
             ))}
           </div>
 
-        {/* Desktop actions */}
-        <div className="hidden items-center gap-3 md:flex">
-          {token ? (
-            <div className="relative">
-              <button
-                onClick={() => setProfileOpen((v) => !v)}
-                className="flex items-center gap-2 rounded-full border border-slate-200 py-1 pl-1 pr-3 transition hover:border-sky-200 hover:bg-sky-50"
-              >
-                <span className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-sky-400 to-blue-600 text-sm font-bold text-white">
+          {/* Desktop actions */}
+          <div className="hidden items-center gap-3 md:flex">
+            {token ? (
+              <div className="relative">
+                <button
+                  onClick={() => setProfileOpen((v) => !v)}
+                  className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-sky-400 to-blue-600 text-sm font-bold text-white shadow-sm transition hover:opacity-90"
+                >
                   {username ? username.charAt(0).toUpperCase() : <User className="h-4 w-4" />}
-                </span>
-                <span className="text-sm font-medium text-slate-700">
-                  {username || "Profile"}
-                </span>
-                <ChevronDown className={`h-4 w-4 text-slate-400 transition ${profileOpen ? "rotate-180" : ""}`} />
-              </button>
-
-              {profileOpen && (
-                <>
-                  {/* click-away overlay */}
-                  <div
-                    className="fixed inset-0 z-40"
-                    onClick={() => setProfileOpen(false)}
-                  />
-                  <div className="absolute right-0 top-full z-50 mt-2 w-56 rounded-2xl border border-slate-200 bg-white p-4 shadow-xl">
-                    <div className="flex flex-col items-center text-center">
-                      <span className="flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-sky-400 to-blue-600 text-xl font-bold text-white">
-                        {username ? username.charAt(0).toUpperCase() : <User className="h-6 w-6" />}
-                      </span>
-                      <p className="mt-2 text-sm font-bold text-slate-900">
-                        {username || "User"}
-                      </p>
+                </button>
+                {profileOpen && (
+                  <>
+                    <div className="fixed inset-0 z-40" onClick={() => setProfileOpen(false)} />
+                    <div className="absolute right-0 top-full z-50 mt-2 w-56 rounded-2xl border border-slate-200 bg-white p-4 shadow-xl">
+                      <div className="flex flex-col items-center text-center">
+                        <span className="flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-sky-400 to-blue-600 text-xl font-bold text-white">
+                          {username ? username.charAt(0).toUpperCase() : <User className="h-6 w-6" />}
+                        </span>
+                        <p className="mt-2 text-sm font-bold text-slate-900">
+                          {username || "User"}
+                        </p>
+                      </div>
+                      <button
+                        onClick={handleLogout}
+                        className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 py-2 text-sm font-semibold text-slate-600 transition hover:border-red-200 hover:bg-red-50 hover:text-red-500"
+                      >
+                        <LogOut className="h-4 w-4" />
+                        Logout
+                      </button>
                     </div>
-                    <button
-                      onClick={handleLogout}
-                      className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 py-2 text-sm font-semibold text-slate-600 transition hover:border-red-200 hover:bg-red-50 hover:text-red-500"
-                    >
-                      <LogOut className="h-4 w-4" />
-                      Logout
-                    </button>
-                  </div>
-                </>
-              )}
-            </div>
-          ) : (
-            <>
-              <Link
-                to="/login"
-                className="text-sm font-medium text-slate-600 transition hover:text-slate-900"
-              >
-                Login
-              </Link>
-              <button
-                onClick={() => navigate("/resume")}
-                className="inline-flex items-center gap-1.5 rounded-xl bg-sky-500 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-sky-600 hover:shadow-md"
-              >
-                Get Started Free
-                <ArrowRight className="h-4 w-4" />
-              </button>
-            </>
-          )}
-        </div>
+                  </>
+                )}
+              </div>
+            ) : (
+              <>
+                <Link
+                  to="/login"
+                  className="text-sm font-medium text-slate-600 transition hover:text-slate-900"
+                >
+                  Login
+                </Link>
+                <button
+                  onClick={() => navigate("/resume")}
+                  className="inline-flex items-center gap-1.5 rounded-xl bg-sky-500 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-sky-600 hover:shadow-md"
+                >
+                  Get Started Free
+                  <ArrowRight className="h-4 w-4" />
+                </button>
+              </>
+            )}
+          </div>
         </div>
 
         {/* Mobile toggle */}
@@ -258,126 +250,61 @@ function Hero() {
   const navigate = useNavigate();
 
   return (
-    <section className="relative overflow-hidden">
-      {/* Background glows */}
-      <div className="pointer-events-none absolute inset-0 -z-10">
-        <div className="absolute -top-24 left-1/2 h-[36rem] w-[36rem] -translate-x-1/2 rounded-full bg-sky-200/40 blur-3xl" />
-        <div className="absolute right-0 top-40 h-72 w-72 rounded-full bg-blue-200/40 blur-3xl" />
-        <div className="absolute left-0 top-60 h-72 w-72 rounded-full bg-indigo-200/30 blur-3xl" />
-      </div>
-
-      <div className="mx-auto grid max-w-7xl items-center gap-12 px-4 py-16 sm:px-6 md:grid-cols-2 md:py-24 lg:py-28">
-        {/* Copy */}
-        <div className="text-center md:text-left">
-          <motion.h1
-            initial={{ opacity: 0, y: 24 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.05 }}
-            className="mt-2 leading-[1.1] tracking-tight text-slate-900"
-          >
-            <span className="block bg-gradient-to-r from-sky-400 to-blue-600 bg-clip-text text-4xl font-extrabold text-transparent sm:text-5xl lg:text-6xl">
-              Mount Zion
-            </span>
-            <span className="mt-2 block text-lg font-semibold text-slate-600 sm:text-xl">
-              AI-powered practice
-            </span>
-          </motion.h1>
-
-          <motion.p
-            initial={{ opacity: 0, y: 24 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.15 }}
-            className="mx-auto mt-4 max-w-xl text-sm leading-relaxed text-slate-600 sm:text-base md:mx-0"
-          >
-            Upload your resume and get mock
-            interviews across HR, Technical, Stress, and Scenario rounds.
-          </motion.p>
-
-          <motion.div
-            initial={{ opacity: 0, y: 24 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.25 }}
-            className="mt-6 flex flex-col items-center gap-3 sm:flex-row md:justify-start"
-          >
-            <button
-              onClick={() => navigate("/resume")}
-              className="group inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-sky-500 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-sky-500/25 transition hover:-translate-y-0.5 hover:bg-sky-600 hover:shadow-xl sm:w-auto"
-            >
-              Start Free Practice
-              <ArrowRight className="h-4 w-4 transition group-hover:translate-x-0.5" />
-            </button>
-            <Link
-              to="/resume"
-              className="inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-slate-300 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition hover:-translate-y-0.5 hover:border-slate-400 hover:shadow-md sm:w-auto"
-            >
-              <Play className="h-4 w-4 text-sky-500" />
-              Watch Demo
-            </Link>
-          </motion.div>
-
-          
-        </div>
-
-        {/* Hero visual */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95, y: 24 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          transition={{ duration: 0.7, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
-          className="relative mx-auto w-full max-w-md md:max-w-none"
+    <section className="bg-white border-b border-slate-100">
+      <div className="mx-auto max-w-3xl px-4 py-24 text-center sm:px-6 sm:py-32">
+        <motion.p
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="text-sm font-semibold uppercase tracking-widest text-sky-600"
         >
-          <div className="relative flex items-center justify-center py-10">
-            {/* Soft glow circle behind image */}
-            <div className="absolute h-72 w-72 rounded-full bg-gradient-to-br from-sky-200 to-blue-200 blur-3xl" />
+          Mount Zion
+        </motion.p>
 
-            <motion.img
-              src="/3d blue.png"
-              alt="ResumeAI mascot"
-              className="relative h-64 w-64 object-contain drop-shadow-xl sm:h-72 sm:w-72"
-              animate={{ y: [0, -12, 0] }}
-              transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-            />
+        <motion.h1
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.08 }}
+          className="mt-4 font-display text-4xl font-bold leading-tight tracking-tight text-slate-900 sm:text-5xl"
+        >
+          AI-powered interview practice
+        </motion.h1>
 
-            {/* Floating stat: Confidence */}
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.4 }}
-              className="absolute -left-2 top-6 rounded-xl border border-slate-100 bg-white px-4 py-2.5 shadow-lg sm:left-4"
-            >
-              <p className="text-[11px] text-slate-500">Confidence</p>
-              <p className="text-lg font-bold text-sky-500">92%</p>
-            </motion.div>
+        <motion.p
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.16 }}
+          className="mx-auto mt-6 max-w-xl text-base leading-relaxed text-slate-600"
+        >
+          Upload your resume and get mock interviews across HR, Technical,
+          Stress, and Scenario rounds — with instant AI feedback after every
+          answer.
+        </motion.p>
 
-            {/* Floating stat: Clarity */}
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.55 }}
-              className="absolute -right-2 top-16 rounded-xl border border-slate-100 bg-white px-4 py-2.5 shadow-lg sm:right-4"
-            >
-              <p className="text-[11px] text-slate-500">Clarity</p>
-              <p className="text-lg font-bold text-blue-500">88%</p>
-            </motion.div>
-
-            {/* Floating badge: AI Feedback */}
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.7 }}
-              className="absolute bottom-4 left-1/2 max-w-[220px] -translate-x-1/2 rounded-xl border border-slate-100 bg-white px-4 py-2.5 text-center shadow-lg"
-            >
-              <p className="text-[11px] text-slate-500">AI Feedback</p>
-              <p className="text-xs font-semibold text-slate-900">
-                Great structure! Add an example.
-              </p>
-            </motion.div>
-          </div>
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.24 }}
+          className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row"
+        >
+          <button
+            onClick={() => navigate("/resume")}
+            className="inline-flex items-center justify-center gap-2 rounded-md bg-sky-500 px-6 py-3 text-sm font-semibold text-white transition hover:bg-sky-600"
+          >
+            Start Free Practice
+            <ArrowRight className="h-4 w-4" />
+          </button>
+          <Link
+            to="/resume"
+            className="inline-flex items-center justify-center gap-2 rounded-md border border-slate-300 px-6 py-3 text-sm font-semibold text-slate-700 transition hover:border-slate-400 hover:bg-slate-50"
+          >
+            Watch Demo
+          </Link>
         </motion.div>
       </div>
     </section>
   );
 }
-
 /* -------------------------------------------------------------------------- */
 /*  Trusted By                                                                 */
 /* -------------------------------------------------------------------------- */
@@ -402,9 +329,8 @@ function TrustedBy() {
             <motion.div
               key={s.label}
               variants={fadeIn}
-              className={`flex items-center gap-3 px-6 sm:px-10 ${
-                i !== 0 ? "sm:border-l sm:border-slate-200" : ""
-              }`}
+              className={`flex items-center gap-3 px-6 sm:px-10 ${i !== 0 ? "sm:border-l sm:border-slate-200" : ""
+                }`}
             >
               <span className="text-xl font-extrabold text-sky-500 sm:text-2xl">
                 {s.value}
@@ -827,11 +753,10 @@ function Pricing() {
               key={t.name}
               variants={fadeUp}
               whileHover={{ y: -6 }}
-              className={`relative rounded-3xl border p-8 transition ${
-                t.highlight
-                  ? "border-sky-300 bg-white shadow-xl shadow-sky-100"
-                  : "border-slate-200 bg-white shadow-sm hover:shadow-md"
-              }`}
+              className={`relative rounded-3xl border p-8 transition ${t.highlight
+                ? "border-sky-300 bg-white shadow-xl shadow-sky-100"
+                : "border-slate-200 bg-white shadow-sm hover:shadow-md"
+                }`}
             >
               {t.highlight && (
                 <span className="absolute -top-3 left-8 rounded-full bg-gradient-to-r from-sky-400 to-blue-600 px-3 py-1 text-xs font-semibold text-white shadow">
@@ -863,11 +788,10 @@ function Pricing() {
               </ul>
               <button
                 onClick={() => navigate("/resume")}
-                className={`mt-8 inline-flex w-full items-center justify-center gap-1.5 rounded-2xl px-5 py-3 text-sm font-semibold transition hover:-translate-y-0.5 ${
-                  t.highlight
-                    ? "bg-sky-500 text-white shadow-lg shadow-sky-500/25 hover:bg-sky-600 hover:shadow-xl"
-                    : "border border-slate-300 text-slate-700 hover:border-slate-400 hover:shadow-md"
-                }`}
+                className={`mt-8 inline-flex w-full items-center justify-center gap-1.5 rounded-2xl px-5 py-3 text-sm font-semibold transition hover:-translate-y-0.5 ${t.highlight
+                  ? "bg-sky-500 text-white shadow-lg shadow-sky-500/25 hover:bg-sky-600 hover:shadow-xl"
+                  : "border border-slate-300 text-slate-700 hover:border-slate-400 hover:shadow-md"
+                  }`}
               >
                 {t.cta}
                 <ArrowRight className="h-4 w-4" />
