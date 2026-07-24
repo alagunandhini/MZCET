@@ -5,7 +5,7 @@ import { CheckCircle } from "lucide-react";
 import { useLocation } from "react-router-dom";
 
 const Login = () => {
-    const [email, setEmail] = useState("")
+    const [registerNumber, setRegisterNumber] = useState("")
     const [password, setPassword] = useState("")
     const navigate = useNavigate();
     const [toast, setToast] = useState({ show: false, message: "", type: "success" })
@@ -13,7 +13,7 @@ const Login = () => {
 
     useEffect(() => {
         if (location.state) {
-            setEmail(location.state.email || "");
+            setRegisterNumber(location.state.registerNumber || "");
             setPassword(location.state.password || "");
         }
     }, [location.state]);
@@ -24,27 +24,35 @@ const Login = () => {
             setToast({ show: false, message: "", type });
         }, 5000)
     }
-
-    const handleSubmit = async (e) => {
+const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            const userdata = await axios.post("http://localhost:3007/users/login", { email, password });
+            const userdata = await axios.post("http://localhost:3007/users/login", { registerNumber, password });
+
+            if (userdata.data.message !== "login Sucessful") {
+                showToast(userdata.data.message || "Failed to login", "error");
+                return;
+            }
+
             const token = userdata.data.token;
             var user = userdata.data.user;
             localStorage.setItem("user", JSON.stringify(user));
             localStorage.setItem("username", JSON.stringify(user.name));
             localStorage.setItem("token", token);
 
-            if (userdata) {
-                showToast("login succesfull", "success");
-                setTimeout(() => {
-                      navigate("/resume", {
-            state: {
-                hasResume: userdata.data.hasResume,
-            },
-        });
-                }, 2000);
-            }
+            showToast("login succesfull", "success");
+            setTimeout(() => {
+                if (userdata.data.isFirstLogin) {
+                    // Must set a new password before going anywhere else
+                    navigate("/set-password");
+                } else {
+                    navigate("/resume", {
+                        state: {
+                            hasResume: userdata.data.hasResume,
+                        },
+                    });
+                }
+            }, 2000);
         } catch (e) {
             showToast("Failed to login", "error");
         }
@@ -77,14 +85,14 @@ const Login = () => {
                             <h2 className='text-4xl font-bold mb-2 text-pink-300'> Log in</h2>
                             <p className='text-gray-400 mb-5'>Don't Have An Account? <Link to="/signup" className='hover:text-black'>Sign up</Link> </p>
 
-                            {/* Email - Changed w-[50vh] to w-full */}
+                       {/* Register Number */}
                             <div className='relative w-full mb-4'>
                                 <input 
-                                    type='email' 
-                                    placeholder='Email' 
-                                    id="email" 
-                                    value={email} 
-                                    onChange={(e) => setEmail(e.target.value)} 
+                                    type='text' 
+                                    placeholder='Register Number' 
+                                    id="registerNumber" 
+                                    value={registerNumber} 
+                                    onChange={(e) => setRegisterNumber(e.target.value)} 
                                     className='w-full p-4 border border-gray-500 rounded-md hover:border-pink-300 focus:outline-none focus:border-pink-300 '
                                 />
                             </div>

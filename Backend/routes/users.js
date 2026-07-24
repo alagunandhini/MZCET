@@ -43,16 +43,16 @@ router.post("/login",async(req,res)=>{
  
   try{
 
-  const {email,password} =req.body;
+  const {registerNumber,password} =req.body;
 
-  const user= await User.findOne({email});
+  const user= await User.findOne({registerNumber});
 
-   if(!user) return res.json({message:"Invalid Email"});
+   if(!user) return res.json({message:"Invalid Register Number"});
 
    // compare User entered password vs DB saved password
    const isCompare= await bcrypt.compare(password,user.password);
 
-   if(!isCompare) return res.json({message:"Invalid Email or Password"});
+   if(!isCompare) return res.json({message:"Invalid Register Number or Password"});
 
    // create token for future acess
    const token = await jwt.sign(
@@ -65,10 +65,12 @@ router.post("/login",async(req,res)=>{
     message:"login Sucessful",
     token,
     hasResume: !!user.resumeText, 
+    isFirstLogin: user.isFirstLogin,
     user:{
       id:user._id,
       name:user.name,
-      email:user.email
+      registerNumber:user.registerNumber,
+      department:user.department
     }
    });
 
@@ -82,6 +84,39 @@ router.post("/login",async(req,res)=>{
   }
 
 })
+
+router.post("/reset-password", authMiddleware, async (req, res) => {
+  try {
+    const { newPassword } = req.body;
+
+    if (!newPassword || newPassword.length < 6) {
+      return res.status(400).json({
+        success: false,
+        message: "Password must be at least 6 characters",
+      });
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+    await User.findByIdAndUpdate(req.userId, {
+      password: hashedPassword,
+      isFirstLogin: false,
+    });
+
+    return res.json({
+      success: true,
+      message: "Password updated successfully",
+    });
+  } catch (err) {
+    console.error("RESET PASSWORD ERROR:", err);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to reset password",
+    });
+  }
+});
+
+
 
 router.get("/resume-status", authMiddleware, async (req, res) => {
   try {
