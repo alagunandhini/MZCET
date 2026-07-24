@@ -4,7 +4,7 @@ const User = require("../models/users");
 
 exports.endSession = async (req, res) => {
   try {
-    const { sessionId, round } = req.body;
+    const { sessionId, round, timeTaken } = req.body;
 
     if (!sessionId) {
       return res.status(400).json({ error: "Session ID missing" });
@@ -30,7 +30,6 @@ exports.endSession = async (req, res) => {
     }
 
     // --- PIECE A: don't re-grade a round that's already been graded ---
-    // Checked per round (not per whole session) since one session covers all 4 rounds.
     if (
       session.completedRoundsInSession.includes(round) &&
       session.feedbackByRound.get(round)
@@ -42,8 +41,6 @@ exports.endSession = async (req, res) => {
     }
 
     // --- PIECE B: pull out ONLY this round's answers ---
-    // session.answers has answers from every round mixed together —
-    // this filters down to just the round that just finished.
     const roundAnswers = session.answers.filter((a) => a.round === round);
 
     if (roundAnswers.length === 0) {
@@ -83,11 +80,17 @@ exports.endSession = async (req, res) => {
       };
     }
 
+    // Time taken is saved for every attempt (not just the best-scoring one),
+    // so it always reflects the most recent attempt's duration.
+    updateQuery.$set = {
+      ...(updateQuery.$set || {}),
+      [`roundTimeTaken.${round}`]: timeTaken || 0,
+    };
+
     if (isPass) {
       updateQuery.$addToSet = { completedRounds: round };
     }
 
-   
     await User.findByIdAndUpdate(req.userId, updateQuery, { new: true });
 
     // --- PIECE F: safety net if AI returns wrong number of answers ---
@@ -115,6 +118,7 @@ exports.endSession = async (req, res) => {
 
     feedback.attempted_questions = attempted;
     feedback.skipped_questions = skipped;
+    feedback.time_taken = timeTaken || 0;
 
     // --- PIECE H: save this round's result into its own slot ---
     session.feedbackByRound.set(round, feedback);
@@ -144,7 +148,6 @@ exports.terminateRound = async (req, res) => {
     const attemptsUsed = user.roundAttempts?.[round] || 0;
 
     if (alreadyPassed) {
-      // Nothing to terminate — they've already passed this round
       return res.json({ success: true, message: "Round already passed" });
     }
 
@@ -153,8 +156,6 @@ exports.terminateRound = async (req, res) => {
     }
 
     const existingResult = user.roundResults?.[round];
-    // A termination is always treated as a 0-score fail — it only overwrites
-    // the saved result if there's no better (real) attempt already on record.
     const isNewScoreBetter = !existingResult || 0 > existingResult.score;
 
     const updateQuery = {
@@ -174,7 +175,6 @@ exports.terminateRound = async (req, res) => {
 
     await User.findByIdAndUpdate(req.userId, updateQuery, { new: true });
 
-    // Mark the session itself as terminated, for your own records
     const session = await InterviewSession.findOne({ sessionId });
     if (session) {
       session.terminatedForViolation = true;
