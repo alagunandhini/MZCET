@@ -5,7 +5,8 @@ import { v4 as uuidv4 } from "uuid";
 
 
 const InterviewRoom = ({
-   sectionName,
+  sectionName,
+  seconds,
   activeSection,
   currentIndex,
   questions,
@@ -23,9 +24,13 @@ const InterviewRoom = ({
   SetActiveSection
 }) => {
 
-const totalQuestions = questions[computedSection]?.questions?.length || 0;
+  const totalQuestions = questions[computedSection]?.questions?.length || 0;
 
-
+  const formatTime = (totalSeconds) => {
+    const mins = Math.floor(totalSeconds / 60).toString().padStart(2, "0");
+    const secs = (totalSeconds % 60).toString().padStart(2, "0");
+    return `${mins}:${secs}`;
+  };
   const progress =
     totalQuestions > 0
       ? ((currentIndex + 1) / totalQuestions) * 100
@@ -38,11 +43,15 @@ const totalQuestions = questions[computedSection]?.questions?.length || 0;
 
       <div className="w-full min-h-screen flex flex-col items-center">
 
+       
         {/* HEADER - always stays at the very top */}
-        <div className="w-full text-center">
-          <p className="  text-xl font-bold bg-sky-300 p-2 text-gray-50">
+        <div className="w-full text-center relative">
+          <p className="text-xl font-bold bg-sky-300 p-2 text-gray-50">
             {sectionName} Round
           </p>
+          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-white/90 text-sky-600 font-bold text-sm px-3 py-1 rounded-full shadow-sm">
+            ⏱ {formatTime(seconds)}
+          </div>
         </div>
 
         {/* TOP SECTION - Progress bar (75%) + buttons (25%) parallel. Stays fixed right under header, not affected by centering below */}
@@ -179,7 +188,7 @@ const totalQuestions = questions[computedSection]?.questions?.length || 0;
                     className="text-sm sm:text-base md:text-xl font-semibold text-gray-800"
                   >
                     Q{currentIndex + 1}.{" "}
-                   {questions[computedSection]?.questions?.[currentIndex]?.q}
+                    {questions[computedSection]?.questions?.[currentIndex]?.q}
                   </motion.p>
                 </AnimatePresence>
               </div>

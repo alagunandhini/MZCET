@@ -98,6 +98,9 @@ const Resume = () => {
   const [completedRounds, setCompletedRounds] = useState([]);
   const [roundAttempts, setRoundAttempts] = useState({});
 
+  // Timer state — how long the user has spent on the current round
+  const [seconds, setSeconds] = useState(0);
+
   const question = questions[currentSection]?.questions?.[currentIndex]?.q;
   const hydrated = useInterviewStorage({
     showQuestionsUI,
@@ -121,6 +124,21 @@ const Resume = () => {
     setShowCompletionScreen,
     setFeedback,
   });
+
+  // Timer: runs while a round is active, resets when a new round starts.
+  // Placed AFTER startPractice/sectionIndex are declared above, since the
+  // dependency array below is evaluated on every render — referencing them
+  // before their `const` declarations would throw a ReferenceError.
+  useEffect(() => {
+    if (!startPractice) return;
+
+    setSeconds(0);
+    const interval = setInterval(() => {
+      setSeconds((prev) => prev + 1);
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [startPractice, sectionIndex]);
 
   // Fullscreen + tab-switch violation detection, active only while a round is in progress
   useEffect(() => {
@@ -307,6 +325,7 @@ const Resume = () => {
         body: JSON.stringify({
           sessionId,
           round: currentSection,
+          timeTaken: seconds,
         }),
       });
 
@@ -563,7 +582,7 @@ const Resume = () => {
 
         {startPractice && (
           <InterviewRoom
-
+            seconds={seconds}
             currentIndex={currentIndex}
             questions={questions}
             sectionName={
