@@ -9,8 +9,8 @@ import Home from './pages/Home';
 import Resume from './pages/Resume';
 import Resources from './pages/Resources';
 import Footer from './components/Footer';
-import SignUp from './pages/SignUp';
 import Login from './pages/Login';
+import SetPassword from './pages/SetPassword';
 import Feedback from './pages/Feedback';
 
 
@@ -23,9 +23,9 @@ function App() {
       <Routes>
         <Route path='/' element={<Home/>}/>
         <Route path='/resume' element={<Resume/>}/>
-        <Route path='/resources' element={<Resources/>}/>
-        <Route path='/signup' element={<SignUp/>}/>
+      <Route path='/resources' element={<Resources/>}/>
         <Route path='/login' element={<Login/>}/>
+        <Route path='/set-password' element={<SetPassword/>}/>
         <Route path='/feedback/:sessionId' element={<Feedback/>}/>
 
 

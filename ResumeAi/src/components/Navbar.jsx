@@ -87,7 +87,7 @@ const Navbar = () => {
                         {user.name}{" "}
                       </p>
                       <p className="text-xs text-gray-400 truncate">
-                        {user.email}
+                        {user.registerNumber}
                       </p>
                     </div>{" "}
                   </div>
@@ -103,11 +103,6 @@ const Navbar = () => {
               </div>
             ) : (
               <div className="flex gap-5">
-                <Link to="/signup">
-                  <button className="bg-sky-500 hover:bg-sky-600 text-white px-4 py-2 rounded-md ">
-                    Sign Up
-                  </button>
-                </Link>
                 <Link to="/login">
                   <button className="border border-gray-700 text-gray-500 px-4 py-2 rounded-md hover:bg-gray-100 hover:text-black">
                     Login
@@ -117,6 +112,7 @@ const Navbar = () => {
             )}
           </div>
 
+        
           {/* Mobile Menu Button */}
           <button
             className="md:hidden cursor-pointer hover:text-gray-300 transition duration-200 mx-5 sm:m-0"
@@ -189,7 +185,7 @@ const Navbar = () => {
                         {user.name}
                       </p>
                       <p className="text-xs text-gray-400 truncate">
-                        {user.email}
+                        {user.registerNumber}
                       </p>
                     </div>
                     <div className="border border-sky-50"></div>
@@ -204,11 +200,6 @@ const Navbar = () => {
               </div>
             ) : (
               <div className="flex gap-5">
-                <Link to="/signup">
-                  <button className="bg-sky-600/50 text-white px-4 py-2 rounded-md hover:bg-sky-400">
-                    Sign Up
-                  </button>
-                </Link>
                 <Link to="/login">
                   <button className="border border-gray-700 text-gray-500 px-4 py-2 rounded-md hover:bg-gray-100 hover:text-black">
                     Login
