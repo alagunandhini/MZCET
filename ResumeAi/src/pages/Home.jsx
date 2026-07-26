@@ -580,7 +580,14 @@ function Testimonials() {
                   <p className="text-sm font-bold" style={{ ...body, color: INK }}>{t.name}</p>
                   <p className="text-xs" style={{ ...body, color: SLATE }}>{t.role}</p>
                 </div>
+              </div>
             </motion.div>
+          ))}
+        </div>
+      </motion.div>
+    </section>
+  );
+}
 
 /* -------------------------------------------------------------------------- */
 /*  Pricing / CTA                                                             */
