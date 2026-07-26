@@ -92,24 +92,25 @@ function WelcomeOverlay({ name, onContinue }) {
         />
 
         <div className="mt-1">
-          <p
-            className="welcome-text flex items-center justify-center gap-1.5 text-xs font-semibold uppercase tracking-widest"
-            style={{ color: BLUE_DARK }}
-          >
-            <GraduationCap className="h-3.5 w-3.5" />
-            Mount Zion
-          </p>
+        <p
+  className=" text-xs font-bold  tracking-[0.35em]"
+  style={{ color: BLUE }}
+>
+  MZ RESUME AI
+</p>
 
-          <h1
-            className="welcome-text mt-2 text-2xl font-extrabold tracking-tight sm:text-3xl"
-            style={{ ...display, color: INK }}
-          >
-            Welcome {firstName}!
-          </h1>
+<h1
+  className=" mt-2 text-2xl font-extrabold tracking-tight"
+  style={{ ...display, color: INK }}
+>Login Successful! 
+</h1>
 
-          <p className="welcome-text mt-2 text-sm" style={{ color: SLATE }}>
-            You're logged in. Ready to pick up where you left off?
-          </p>
+<p
+  className=" mt-4 text-base leading-7"
+  style={{ color: SLATE }}
+>
+  Hi <span className="font-bold" style={{ color: BLUE }}>{firstName} </span>, let's continue your interview journey.
+</p>
 
           <button
             onClick={onContinue}
@@ -199,11 +200,10 @@ const Login = () => {
 
         <Link
           to="/"
-          className="absolute left-4 top-4 inline-flex items-center gap-1.5 rounded-full border bg-white/80 px-3.5 py-2 text-sm font-semibold backdrop-blur-md transition hover:-translate-y-0.5 sm:left-6 sm:top-6"
+          className="absolute left-4 top-4 inline-flex items-center gap-1.5 rounded-full border bg-white/80 px-4 py-4 text-sm font-semibold backdrop-blur-md transition hover:-translate-y-0.5 sm:left-6 sm:top-6"
           style={{ borderColor: BORDER, color: INK }}
         >
-          <ArrowLeft className="h-4 w-4" style={{ color: BLUE }} />
-          Home
+          <GraduationCap className="h-5 w-5" />
         </Link>
 
         <div className="relative w-full max-w-md">
@@ -212,13 +212,13 @@ const Login = () => {
               <img src="mzcet-logo.png" className="h-16 w-16" alt="MZCET Logo" />
               <p className="mt-4 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-widest" style={{ color: BLUE_DARK }}>
                 <GraduationCap className="h-3.5 w-3.5" />
-                Mount Zion
+               MZ Resume AI
               </p>
               <h1 className="mt-2 text-2xl font-extrabold tracking-tight sm:text-3xl" style={{ ...display, color: INK }}>
                 Welcome back
               </h1>
               <p className="mt-1.5 text-sm" style={{ color: SLATE }}>
-                Log in to pick up your interview practice where you left off.
+               Log in to access MZ Resume AI.
               </p>
             </div>
 
@@ -266,9 +266,7 @@ const Login = () => {
           </div>
 
           <p className="mt-6 text-center text-xs leading-relaxed" style={{ color: SLATE }}>
-            By logging in, you agree to our{" "}
-            <span className="cursor-pointer font-semibold underline" style={{ color: INK }}>Terms and Conditions</span> and{" "}
-            <span className="cursor-pointer font-semibold underline" style={{ color: INK }}>Privacy Policy</span>.
+     On your first login, you'll set a new password.
           </p>
         </div>
       </div>
