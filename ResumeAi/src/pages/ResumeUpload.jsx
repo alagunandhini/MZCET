@@ -4,7 +4,7 @@ import {GraduationCap } from "lucide-react";
 import { useNavigate, Link } from "react-router-dom";
 import * as pdfjsLib from "pdfjs-dist/legacy/build/pdf";
 import {
-  ArrowLeft,
+  ArrowRight,ArrowLeft,
   UploadCloud,
   FileText,
   X,
