@@ -8,6 +8,8 @@ const InterviewCompleted = ({ answered, skipped, onNextRound, feedback }) => {
   const [showConfetti, setShowConfetti] = useState(true);
   const navigate = useNavigate();
 
+  const isPass = feedback ? feedback.result?.toLowerCase().includes("pass") : true;
+
   useEffect(() => {
     const timer = setTimeout(() => setShowConfetti(false), 10000);
     return () => clearTimeout(timer);
@@ -16,8 +18,8 @@ const InterviewCompleted = ({ answered, skipped, onNextRound, feedback }) => {
   return (
     <div className="fixed inset-0 z-50 bg-gradient-to-br from-sky-50 via-white to-purple-50 overflow-hidden font-sans">
 
-      {/* 🎉 Confetti */}
-      {showConfetti && (
+      {/* 🎉 Confetti — only on a pass */}
+      {showConfetti && isPass && (
         <Confetti numberOfPieces={180} recycle={false} gravity={0.25} />
       )}
 
@@ -33,18 +35,14 @@ const InterviewCompleted = ({ answered, skipped, onNextRound, feedback }) => {
         >
           <div className="bg-white rounded-3xl border border-sky-100 p-6 md:p-10 w-full max-w-[440px] text-center shadow-xl scale-90 md:scale-100">
             <img
-              src="completed logo.png"
-              alt="Completed"
+              src={isPass ? "completed logo.png" : "failed logo.png"}
+              alt={isPass ? "Completed" : "Failed"}
               className="w-40 md:w-56 mx-auto -mt-20 md:-mt-28 mb-2 animate-float drop-shadow-md"
             />
 
             {(() => {
-              const isPass = feedback ? feedback.result?.toLowerCase().includes("pass") : true;
-
               return (
                 <>
-                  
-
                   <h1 className="text-2xl md:text-3xl font-bold text-gray-800 mb-1">
                     {isPass ? "Well Done 🎉" : "Try Again :("}
                   </h1>
@@ -57,10 +55,14 @@ const InterviewCompleted = ({ answered, skipped, onNextRound, feedback }) => {
                 </>
               );
             })()}
-            
+
             <div className="grid grid-cols-2 gap-2 md:gap-4 mb-8">
               <StatCard label="Score" value={feedback ? `${feedback.overallScore}` : "--"} />
-              <StatCard label="Result" value={feedback ? feedback.result : "--"} />
+              <StatCard
+                label="Result"
+                value={feedback ? feedback.result : "--"}
+                color={feedback ? (isPass ? "text-sky-500" : "text-sky-500") : "text-sky-500"}
+              />
             </div>
 
             <div className="flex flex-col sm:flex-row gap-3 md:gap-4 mt-5 justify-center">
@@ -197,10 +199,10 @@ const InterviewCompleted = ({ answered, skipped, onNextRound, feedback }) => {
   );
 };
 
-const StatCard = ({ label, value }) => (
+const StatCard = ({ label, value, color = "text-sky-500" }) => (
   <div className="rounded-xl border border-sky-100 bg-sky-50/50 py-2 md:py-4">
     <p className="text-[10px] md:text-xs text-gray-500 font-medium">{label}</p>
-    <p className="text-lg md:text-xl font-bold text-sky-500">{value}</p>
+    <p className={`text-lg md:text-xl font-bold ${color}`}>{value}</p>
   </div>
 );
 
@@ -232,4 +234,3 @@ const IconBulb = () => (
 );
 
 export default InterviewCompleted;
-
