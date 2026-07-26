@@ -21,6 +21,10 @@ import useSpeech from "../hooks/useSpeech";
 import useInterviewStorage from "../hooks/useInterviewStorage";
 import axios from "axios";
 
+// Maximum time allowed per round. Once the timer hits this, the round is
+// auto-finalized and graded using whatever answers were already submitted.
+const ROUND_TIME_LIMIT_SECONDS = 30 * 60; // 30 minutes
+
 const Resume = () => {
   const navigate = useNavigate();
   const { toast, showToast } = useToast();
@@ -101,6 +105,11 @@ const Resume = () => {
   // Timer state — how long the user has spent on the current round
   const [seconds, setSeconds] = useState(0);
 
+  // Guards against triggering the time-up finalize logic more than once
+  // per round (the seconds-watcher effect below could otherwise fire
+  // repeatedly for every render once the limit is reached).
+  const timeUpRef = useRef(false);
+
   const question = questions[currentSection]?.questions?.[currentIndex]?.q;
   const hydrated = useInterviewStorage({
     showQuestionsUI,
@@ -133,12 +142,25 @@ const Resume = () => {
     if (!startPractice) return;
 
     setSeconds(0);
+    timeUpRef.current = false;
+
     const interval = setInterval(() => {
       setSeconds((prev) => prev + 1);
     }, 1000);
 
     return () => clearInterval(interval);
   }, [startPractice, sectionIndex]);
+
+  // Time-limit watcher: once the round hits ROUND_TIME_LIMIT_SECONDS,
+  // auto-finalize using whatever answers have already been submitted.
+  useEffect(() => {
+    if (!startPractice) return;
+    if (timeUpRef.current) return;
+    if (seconds < ROUND_TIME_LIMIT_SECONDS) return;
+
+    timeUpRef.current = true;
+    handleTimeUp();
+  }, [seconds, startPractice]);
 
   // Fullscreen + tab-switch violation detection, active only while a round is in progress
   useEffect(() => {
@@ -259,10 +281,15 @@ const Resume = () => {
       const isLastQuestion =
         currentIndex === questions[currentSection]?.questions?.length - 1
 
+      // If time already ran out, treat this exactly like the last question:
+      // wait for the upload to land, then finalize the round instead of
+      // moving on to a "next" question that will never be shown.
+      const shouldFinalizeNow = isLastQuestion || timeUpRef.current;
+
       const token = localStorage.getItem("token");
 
       try {
-        if (isLastQuestion) {
+        if (shouldFinalizeNow) {
           setIsAnalyzing(true);
           speakText("Great! Analyzing your interview. Please wait.");
           // WAIT for LAST answer to save
@@ -309,6 +336,29 @@ const Resume = () => {
     setIsRecording(false);
   };
 
+  // Called once the 30-minute round timer runs out. Stops whatever is
+  // currently happening (speech, an in-progress recording) and finalizes
+  // the round using only the answers already submitted so far.
+  const handleTimeUp = () => {
+    window.speechSynthesis.cancel();
+    showToast("Time's up! Submitting your answers now.", "error");
+
+    if (isRecording) {
+      // Stop the current recording — its onstop handler (above) checks
+      // timeUpRef.current and will call endInterview() once the last
+      // in-progress answer finishes uploading.
+      mediaRecorderRef.current?.stop();
+      mediaRecorderRef.current?.stream
+        ?.getTracks()
+        .forEach((track) => track.stop());
+      setIsRecording(false);
+    } else {
+      // Nothing in progress — finalize immediately with whatever was
+      // already submitted for this round.
+      endInterview();
+    }
+  };
+
   // this function executes , when last question of each round
   const endInterview = async () => {
     const token = localStorage.getItem("token");
@@ -337,6 +387,16 @@ const Resume = () => {
       // Special case: backend rejected because all 3 attempts are already used
       if (res.status === 403) {
         showToast("You've used all attempts for this round.", "error");
+        setShowQuestionsUI(true);
+        setStartPractice(false);
+        return;
+      }
+
+      // Special case: time ran out (or round ended) before any answer was
+      // ever submitted, so there's no session/answers to grade yet.
+      // This isn't a real failure — just nothing to show a scorecard for.
+      if (res.status === 404 || res.status === 400) {
+        showToast("Time's up — no answers were submitted for this round.", "error");
         setShowQuestionsUI(true);
         setStartPractice(false);
         return;
@@ -582,7 +642,7 @@ const Resume = () => {
 
         {startPractice && (
           <InterviewRoom
-            seconds={seconds}
+            seconds={Math.max(ROUND_TIME_LIMIT_SECONDS - seconds, 0)}
             currentIndex={currentIndex}
             questions={questions}
             sectionName={

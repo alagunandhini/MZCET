@@ -36,6 +36,13 @@ const InterviewRoom = ({
       ? ((currentIndex + 1) / totalQuestions) * 100
       : 0;
 
+  // Reused in both the desktop (top row) and mobile (above logo) placements
+  const TimerBadge = () => (
+    <div className="flex items-center gap-1 bg-white text-sky-600 font-bold text-xs sm:text-sm px-3 py-1.5 rounded-full shadow-sm border border-sky-100 whitespace-nowrap">
+      ⏱ {formatTime(seconds)}
+    </div>
+  );
+
   return (
 
     <>
@@ -49,15 +56,14 @@ const InterviewRoom = ({
           <p className="text-xl font-bold bg-sky-300 p-2 text-gray-50">
             {sectionName} Round
           </p>
-          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-white/90 text-sky-600 font-bold text-sm px-3 py-1 rounded-full shadow-sm">
-            ⏱ {formatTime(seconds)}
-          </div>
         </div>
 
-        {/* TOP SECTION - Progress bar (75%) + buttons (25%) parallel. Stays fixed right under header, not affected by centering below */}
-        <div className="w-full flex items-center px-4 md:px-10 pt-3 mt-6 md:pt-2 gap-3">
-          {/* Progress Bar - 75% */}
-          <div className="w-[75%]">
+        {/* TOP SECTION - Progress bar + Timer + Exit button, all in one row on desktop.
+            Stays fixed right under header, not affected by centering below */}
+        <div className="w-full flex items-center px-4 md:px-10 pt-3 mt-6 md:pt-2 gap-3 md:gap-6">
+          {/* Progress Bar — flex-1 so it fills exactly the space left over
+              after the timer and exit button, leaving no dead space at the end */}
+          <div className="flex-1">
             <div className="flex justify-between items-center mb-1 md:mb-2">
               <p className="font-semibold text-gray-700 text-xs sm:text-sm md:text-base">
                 Question {currentIndex + 1} of {totalQuestions}
@@ -74,31 +80,13 @@ const InterviewRoom = ({
             </div>
           </div>
 
-          {/* Buttons - 25% */}
-          <div className="w-[25%] flex justify-end gap-2">
-            {/* <button
-                  onClick={() => {
-                    // stop recording if active
-                    if (isRecording) {
-                      mediaRecorderRef.current?.stop();
-                      setIsRecording(false);
-                    }
+          {/* Timer — desktop only here; shown above the logo on mobile instead */}
+          <div className="hidden md:block shrink-0">
+            <TimerBadge />
+          </div>
 
-                    // stop any speaking voice
-                    window.speechSynthesis.cancel();
-
-                    // NEW interview session
-                    setSessionId(uuidv4());
-
-                    // reset practice state
-                    setCurrentIndex(0);
-                    SetActiveSection(activeSection); // optional but recommended
-                  }}
-                  className="px-3 sm:px-6 py-1.5 sm:py-2 rounded-full text-white bg-sky-300 shadow hover:bg-sky-200 transition text-xs sm:text-sm md:text-base whitespace-nowrap"
-                >
-                  Start Again
-                </button> */}
-
+          {/* Exit button */}
+          <div className="flex justify-end gap-2 shrink-0">
             <button
               onClick={() => setShowExitModal(true)}
               className="px-3 sm:px-6 py-1.5 sm:py-2 rounded-full text-white bg-sky-300 shadow hover:bg-sky-200 transition text-xs sm:text-sm md:text-base"
@@ -107,6 +95,11 @@ const InterviewRoom = ({
               Exit
             </button>
           </div>
+        </div>
+
+        {/* Timer — mobile only, shown just above the logo */}
+        <div className="md:hidden flex justify-center mt-4">
+          <TimerBadge />
         </div>
 
         {/* WRAPPER - only logo, question box, mic, skip go here. This is what moves down / centers on mobile */}
@@ -255,4 +248,4 @@ ${isRecording
 }
 
 
-export default InterviewRoom;  
+export default InterviewRoom;
