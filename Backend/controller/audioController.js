@@ -49,6 +49,7 @@ exports.processAudio = async (req, res) => {
     if (!session) {
       session = new InterviewSession({
         sessionId,
+         userId: req.userId,  
         answers: [],
       });
     }

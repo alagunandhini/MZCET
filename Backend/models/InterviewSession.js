@@ -31,6 +31,7 @@ const AnswerSchema = new mongoose.Schema({
 
 const InterviewSessionSchema = new mongoose.Schema({
   sessionId: { type: String, required: true, unique: true },
+    userId: { type: mongoose.Schema.Types.ObjectId, ref: "user", required: true }, 
     terminatedForViolation: { type: Boolean, default: false },
   answers: [AnswerSchema],
   feedbackByRound: {
