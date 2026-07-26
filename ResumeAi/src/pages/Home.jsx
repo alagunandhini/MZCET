@@ -1,937 +1,471 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { useNavigate, Link } from "react-router-dom";
-import {
-  Sparkles,
-  Menu,
-  X,
-  Mic,
-  FileText,
-  Brain,
-  Layers,
-  ArrowRight,
-  Play,
-  Upload,
-  MessageSquare,
-  BarChart3,
-  Star,
-  Globe,
-  MessageCircle,
-  Share2,
-  Check,
-  User,
-  ChevronDown,
-  LogOut,
-} from "lucide-react";
+import Navbar from "../components/Navbar";
+import Footer from "../components/Footer";
 
-/* -------------------------------------------------------------------------- */
-/*  Shared animation variants                                                  */
-/* -------------------------------------------------------------------------- */
+// Small inline icons for the instructions panel — no external icon package required
+const RuleIcon = ({ path }) => (
+    <svg viewBox="0 0 24 24" className="w-5 h-5 text-sky-600" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        {path}
+    </svg>
+);
 
-const fadeUp = {
-  hidden: { opacity: 0, y: 40 },
-  show: { opacity: 1, y: 0, transition: { duration: 0.6, ease: [0.22, 1, 0.36, 1] } },
+const icons = {
+    upload: <path d="M12 16V4M12 4l-4 4M12 4l4 4M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2" />,
+    lock: <path d="M6 10V7a6 6 0 1112 0v3M5 10h14v10H5V10z" />,
+    attempts: <path d="M9 3v4H5l6 6-6 6h4v4h6v-4h4l-6-6 6-6h-4V3H9z" />,
+    zero: <><circle cx="12" cy="12" r="9" /><path d="M8 16L16 8" /></>,
+    tab: <path d="M4 5h16v14H4V5zm0 4h16M9 9v10" />,
+    warning: <path d="M12 3l9 16H3l9-16zM12 10v4m0 3h.01" />,
+    mic: <path d="M12 15a3 3 0 003-3V6a3 3 0 00-6 0v6a3 3 0 003 3zm-7-3a7 7 0 0014 0M12 19v3" />,
+    session: <><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 3" /></>,
 };
 
-const fadeIn = {
-  hidden: { opacity: 0 },
-  show: { opacity: 1, transition: { duration: 0.6, ease: "easeOut" } },
-};
+const rules = [
+    { icon: "upload", text: <>Upload your <span className="font-semibold text-gray-700">resume only once</span> — it stays attached to this session.</> },
+    { icon: "lock", text: "Questions are generated from that resume only. Re-uploading or regenerating isn't available mid-session." },
+    { icon: "attempts", text: <>Every round gives you <span className="font-semibold text-gray-700">3 attempts</span> — make them count.</> },
+    { icon: "zero", text: <>Run out of attempts and the round scores <span className="font-semibold text-red-500">0</span> automatically.</> },
+    { icon: "tab", text: "Stay on the interview tab. Switching, minimizing, or leaving the page is tracked." },
+    { icon: "warning", text: <><span className="font-semibold text-red-500">5 tab-switch warnings</span> and the interview ends on its own.</> },
+    { icon: "mic", text: "Turn on your microphone before you start — answers are spoken, not typed." },
+    { icon: "session", text: "Finish in one sitting. One continuous session gives the most accurate read on your prep." },
+];
 
-const viewport = { once: true, amount: 0.2 };
+const steps = [
+    {
+        img: "blue step 2.png",
+        title: "Upload your resume",
+        text: "Drop in your resume and let it become the basis for everything that follows.",
+    },
+    {
+        img: "blue step 3.png",
+        title: "Get your questions",
+        text: "AI reads your resume and builds a matching set of technical and HR questions.",
+    },
+    {
+        img: "blue step 1.png",
+        title: "Answer & improve",
+        text: "Speak your answers out loud and get feedback you can act on immediately.",
+    },
+];
 
-const staggerContainer = {
-  hidden: {},
-  show: {
-    transition: { staggerChildren: 0.12 },
-  },
-};
+// Feature cards — each icon reuses the same inline-svg pattern as the instructions panel
+const FeatureIcon = ({ path }) => (
+    <svg viewBox="0 0 24 24" className="w-6 h-6 text-sky-600" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        {path}
+    </svg>
+);
 
-/* -------------------------------------------------------------------------- */
-/*  Announcement Banner                                                        */
-/* -------------------------------------------------------------------------- */
+const features = [
+    {
+        icon: <path d="M12 15a3 3 0 003-3V6a3 3 0 00-6 0v6a3 3 0 003 3zm-7-3a7 7 0 0014 0M12 19v3" />,
+        title: "Real-time speech analysis",
+        text: "Every spoken answer is scored live for confidence and clarity — not just graded after the fact.",
+    },
+    {
+        icon: <path d="M9 3v4H5l6 6-6 6h4v4h6v-4h4l-6-6 6-6h-4V3H9z" />,
+        title: "Round-based practice",
+        text: "Technical and HR rounds generated straight from your resume, three attempts each.",
+    },
+    {
+        icon: <path d="M13 2L3 14h7l-1 8 10-12h-7l1-8z" />,
+        title: "Instant AI feedback",
+        text: "A full performance report the moment you finish — no waiting, no guessing.",
+    },
+    {
+        icon: <path d="M4 19V5m6 14V9m6 10V13" />,
+        title: "Progress tracking",
+        text: "See attempts, scores, and pass/fail history for every round in one dashboard.",
+    },
+];
 
-function AnnouncementBanner() {
-  const [open, setOpen] = useState(true);
-  if (!open) return null;
-  return (
-    <div className="relative w-full bg-gradient-to-r from-sky-500 via-blue-500 to-indigo-500 text-white">
-      {/* announcement content intentionally disabled */}
-    </div>
-  );
-}
+const Home = () => {
+    const [open, setOpen] = useState(null);
 
-/* -------------------------------------------------------------------------- */
-/*  Navbar                                                                     */
-/* -------------------------------------------------------------------------- */
+    // Shared scroll-reveal animation — fades up into view once, doesn't replay on scroll back
+    const fadeUp = {
+        hidden: { opacity: 0, y: 30 },
+        show: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" } },
+    };
 
-function Navbar() {
-  const [open, setOpen] = useState(false);
-  const [profileOpen, setProfileOpen] = useState(false);
-  const navigate = useNavigate();
+    const staggerContainer = {
+        hidden: {},
+        show: { transition: { staggerChildren: 0.12 } },
+    };
 
-  const token = localStorage.getItem("token");
-  const rawUsername = localStorage.getItem("username");
-  const username = rawUsername ? rawUsername.replace(/^"|"$/g, "") : rawUsername;
+    return (
+        <>
+            <Navbar />
 
-  const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("username");
-    localStorage.removeItem("user");
-    navigate("/login");
-  };
+            {/* Hero */}
+            <div className="bg-white w-full min-h-[90vh] grid grid-cols-1 md:grid-cols-2 gap-8 py-8 border-b border-gray-200 overflow-hidden">
 
-  const links = [
-    { label: "Home", to: "/" },
-    { label: "Resume", to: "/resume" },
-  ];
-
-  return (
-    <header className="sticky top-0 z-50 w-full border-b border-slate-200/70 bg-white/80 backdrop-blur-md shadow-sm">
-      <nav className="mx-auto flex max-w-7xl items-center justify-between px-4  sm:px-6">
-        {/* Logo (left) */}
-        <Link to="/" className="flex items-center gap-2">
-          <img
-            src="/mzlogo.png"
-            alt="Mount Zion logo"
-            className="h-18 w-18 rounded-xl object-contain"
-          />
-          <span className="text-lg font-bold tracking-tight text-slate-900">
-            MZ Resume<span className="text-sky-500">AI</span>
-          </span>
-        </Link>
-
-        {/* Links + Profile/Actions (grouped right) */}
-        <div className="flex items-center gap-8">
-          <div className="hidden items-center gap-8 md:flex">
-            {links.map((l) => (
-              <Link
-                key={l.label}
-                to={l.to}
-                className="text-sm font-medium text-slate-600 transition hover:text-slate-900"
-              >
-                {l.label}
-              </Link>
-            ))}
-          </div>
-
-          {/* Desktop actions */}
-          <div className="hidden items-center gap-3 md:flex">
-            {token ? (
-              <div className="relative">
-                <button
-                  onClick={() => setProfileOpen((v) => !v)}
-                  className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-sky-400 to-blue-600 text-sm font-bold text-white shadow-sm transition hover:opacity-90"
+                {/* Left Image — it already carries its own glow + floating stat cards, so let it breathe instead of stacking more UI on top */}
+                <motion.div
+                    initial={{ opacity: 0, scale: 0.92 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: 0.7, ease: "easeOut" }}
+                    className="relative flex items-center justify-center px-6"
                 >
-                  {username ? username.charAt(0).toUpperCase() : <User className="h-4 w-4" />}
-                </button>
-                {profileOpen && (
-                  <>
-                    <div className="fixed inset-0 z-40" onClick={() => setProfileOpen(false)} />
-                    <div className="absolute right-0 top-full z-50 mt-2 w-56 rounded-2xl border border-slate-200 bg-white p-4 shadow-xl">
-                      <div className="flex flex-col items-center text-center">
-                        <span className="flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-sky-400 to-blue-600 text-xl font-bold text-white">
-                          {username ? username.charAt(0).toUpperCase() : <User className="h-6 w-6" />}
+                    <img
+                        src="homeimgfinal.png"
+                        alt="Mz Mock AI — friendly AI interviewer showing live confidence and clarity scores"
+                        className="w-full max-w-xl h-auto object-contain drop-shadow-xl"
+                    />
+                </motion.div>
+
+                {/* Right Content */}
+                <motion.div
+                    initial="hidden"
+                    animate="show"
+                    variants={staggerContainer}
+                    className="flex flex-col justify-center px-8 lg:px-12"
+                >
+
+                    <motion.p variants={fadeUp} className="text-sky-600 font-semibold text-sm tracking-[0.3em] uppercase mb-4">
+                        Mz Mock AI
+                    </motion.p>
+
+                    <motion.h1 variants={fadeUp} className="text-4xl md:text-5xl font-bold text-gray-700 leading-[1.1] mb-6">
+                        Prepare smarter.
+                        <br />
+                        <span className="bg-gradient-to-r from-sky-500 to-sky-400 bg-clip-text text-transparent">
+                            Interview better.
                         </span>
-                        <p className="mt-2 text-sm font-bold text-slate-900">
-                          {username || "User"}
-                        </p>
-                      </div>
-                      <button
-                        onClick={handleLogout}
-                        className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 py-2 text-sm font-semibold text-slate-600 transition hover:border-red-200 hover:bg-red-50 hover:text-red-500"
-                      >
-                        <LogOut className="h-4 w-4" />
-                        Logout
-                      </button>
-                    </div>
-                  </>
-                )}
-              </div>
-            ) : (
-              <>
-                <Link
-                  to="/login"
-                  className="text-sm font-medium text-slate-600 transition hover:text-slate-900"
-                >
-                  Login
-                </Link>
-                <button
-                  onClick={() => navigate("/resume")}
-                  className="inline-flex items-center gap-1.5 rounded-xl bg-sky-500 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-sky-600 hover:shadow-md"
-                >
-                  Get Started Free
-                  <ArrowRight className="h-4 w-4" />
-                </button>
-              </>
-            )}
-          </div>
-        </div>
+                    </motion.h1>
 
-        {/* Mobile toggle */}
-        <button
-          className="rounded-lg p-2 text-slate-700 md:hidden"
-          onClick={() => setOpen((v) => !v)}
-          aria-label="Toggle menu"
-        >
-          {open ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-        </button>
-      </nav>
+                    <motion.p variants={fadeUp} className="text-gray-500 text-lg leading-8 mb-8 max-w-md">
+                        Upload your resume, answer out loud, and get AI feedback on your confidence and clarity — question by question, in real time.
+                    </motion.p>
 
-      {/* Mobile menu */}
-      {open && (
-        <div className="border-t border-slate-200 bg-white px-4 py-4 md:hidden">
-          <div className="flex flex-col gap-3">
-            {links.map((l) => (
-              <Link
-                key={l.label}
-                to={l.to}
-                onClick={() => setOpen(false)}
-                className="rounded-lg px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
-              >
-                {l.label}
-              </Link>
-            ))}
-            <div className="mt-2 flex flex-col gap-2">
-              {token ? (
-                <>
-                  <div className="flex flex-col items-center rounded-xl border border-slate-200 py-4">
-                    <span className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-sky-400 to-blue-600 text-lg font-bold text-white">
-                      {username ? username.charAt(0).toUpperCase() : <User className="h-5 w-5" />}
-                    </span>
-                    <p className="mt-2 text-sm font-bold text-slate-900">
-                      {username || "User"}
-                    </p>
-                  </div>
-                  <button
-                    onClick={() => {
-                      setOpen(false);
-                      handleLogout();
-                    }}
-                    className="flex items-center justify-center gap-2 rounded-xl border border-slate-200 px-4 py-2 text-center text-sm font-semibold text-slate-700"
-                  >
-                    <LogOut className="h-4 w-4" />
-                    Logout
-                  </button>
-                </>
-              ) : (
-                <>
-                  <Link
-                    to="/login"
-                    onClick={() => setOpen(false)}
-                    className="rounded-xl border border-slate-200 px-4 py-2 text-center text-sm font-semibold text-slate-700"
-                  >
-                    Login
-                  </Link>
-                  <button
-                    onClick={() => {
-                      setOpen(false);
-                      navigate("/resume");
-                    }}
-                    className="rounded-xl bg-sky-500 px-4 py-2 text-center text-sm font-semibold text-white"
-                  >
-                    Get Started Free
-                  </button>
-                </>
-              )}
+                    <motion.div variants={fadeUp} className="flex items-center gap-4 mb-10">
+                        <button className="bg-sky-500 text-white px-8 py-3 rounded-lg hover:bg-sky-600 hover:scale-105 transition duration-300 shadow-md shadow-sky-200">
+                            Get Started →
+                        </button>
+                        <button className="text-sky-600 font-semibold px-2 py-3 hover:text-sky-700 transition">
+                            See how it works
+                        </button>
+                    </motion.div>
+
+                    {/* stat strip — echoes the scores shown in the illustration, in words this time */}
+                    <motion.div variants={fadeUp} className="flex items-center gap-8 border-t border-gray-100 pt-6 max-w-md">
+                        <div>
+                            <p className="text-2xl font-bold text-sky-600">92%</p>
+                            <p className="text-gray-400 text-sm">Avg. confidence score</p>
+                        </div>
+                        <div className="w-px h-10 bg-gray-100" />
+                        <div>
+                            <p className="text-2xl font-bold text-sky-600">88%</p>
+                            <p className="text-gray-400 text-sm">Avg. clarity score</p>
+                        </div>
+                        <div className="w-px h-10 bg-gray-100" />
+                        <div>
+                            <p className="text-2xl font-bold text-sky-600">Live</p>
+                            <p className="text-gray-400 text-sm">Spoken feedback</p>
+                        </div>
+                    </motion.div>
+
+                </motion.div>
+
             </div>
-          </div>
-        </div>
-      )}
-    </header>
-  );
-}
 
-/* -------------------------------------------------------------------------- */
-/*  Hero                                                                       */
-/* -------------------------------------------------------------------------- */
+            {/* section-2 (steps) */}
+            <div className="min-h-[80vh] py-6 bg-gradient-to-b from-white via-sky-50/40 to-white">
+                <h1 className="font-bold text-2xl md:text-3xl text-center mb-2 text-gray-500 mt-5">
+                    Steps To Use Mz Mock AI
+                </h1>
+                <p className="text-center text-gray-400 mb-20">Three steps, one session, no repeats.</p>
 
-function Hero() {
-  const navigate = useNavigate();
-
-  return (
-    <section className="bg-white border-b border-slate-100">
-      <div className="mx-auto max-w-3xl px-4 py-24 text-center sm:px-6 sm:py-32">
-        <motion.p
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="text-sm font-semibold uppercase tracking-widest text-sky-600"
-        >
-          Mount Zion
-        </motion.p>
-
-        <motion.h1
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.08 }}
-          className="mt-4 font-display text-4xl font-bold leading-tight tracking-tight text-slate-900 sm:text-5xl"
-        >
-          AI-powered interview practice
-        </motion.h1>
-
-        <motion.p
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.16 }}
-          className="mx-auto mt-6 max-w-xl text-base leading-relaxed text-slate-600"
-        >
-          Upload your resume and get mock interviews across HR, Technical,
-          Stress, and Scenario rounds — with instant AI feedback after every
-          answer.
-        </motion.p>
-
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.24 }}
-          className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row"
-        >
-          <button
-            onClick={() => navigate("/resume")}
-            className="inline-flex items-center justify-center gap-2 rounded-md bg-sky-500 px-6 py-3 text-sm font-semibold text-white transition hover:bg-sky-600"
-          >
-            Start Free Practice
-            <ArrowRight className="h-4 w-4" />
-          </button>
-          <Link
-            to="/resume"
-            className="inline-flex items-center justify-center gap-2 rounded-md border border-slate-300 px-6 py-3 text-sm font-semibold text-slate-700 transition hover:border-slate-400 hover:bg-slate-50"
-          >
-            Watch Demo
-          </Link>
-        </motion.div>
-      </div>
-    </section>
-  );
-}
-/* -------------------------------------------------------------------------- */
-/*  Trusted By                                                                 */
-/* -------------------------------------------------------------------------- */
-
-function TrustedBy() {
-  const stats = [
-    { value: "10,000+", label: "Questions generated" },
-    { value: "4", label: "Interview rounds" },
-    { value: "AI-powered", label: "Feedback in seconds" },
-  ];
-  return (
-    <section className="border-y border-slate-100 bg-slate-50/60">
-      <motion.div
-        variants={staggerContainer}
-        initial="hidden"
-        whileInView="show"
-        viewport={viewport}
-        className="mx-auto max-w-7xl px-4 py-8 sm:px-6"
-      >
-        <div className="flex flex-wrap items-center justify-center gap-x-2 gap-y-4 sm:gap-x-0">
-          {stats.map((s, i) => (
-            <motion.div
-              key={s.label}
-              variants={fadeIn}
-              className={`flex items-center gap-3 px-6 sm:px-10 ${i !== 0 ? "sm:border-l sm:border-slate-200" : ""
-                }`}
-            >
-              <span className="text-xl font-extrabold text-sky-500 sm:text-2xl">
-                {s.value}
-              </span>
-              <span className="text-sm font-medium text-slate-500">
-                {s.label}
-              </span>
-            </motion.div>
-          ))}
-        </div>
-      </motion.div>
-    </section>
-  );
-}
-
-/* -------------------------------------------------------------------------- */
-/*  Section heading helper                                                     */
-/* -------------------------------------------------------------------------- */
-
-function SectionHeading({ eyebrow, title, subtitle }) {
-  return (
-    <div className="mx-auto max-w-2xl text-center">
-      <motion.span
-        variants={fadeUp}
-        className="inline-flex items-center gap-1.5 rounded-full border border-sky-200 bg-sky-50 px-3 py-1 text-xs font-semibold text-sky-700"
-      >
-        {eyebrow}
-      </motion.span>
-      <motion.h2
-        variants={fadeUp}
-        className="mt-4 text-3xl font-extrabold tracking-tight text-slate-900 sm:text-4xl"
-      >
-        {title}
-      </motion.h2>
-      {subtitle && (
-        <motion.p
-          variants={fadeUp}
-          className="mt-4 text-lg leading-relaxed text-slate-600"
-        >
-          {subtitle}
-        </motion.p>
-      )}
-    </div>
-  );
-}
-
-/* -------------------------------------------------------------------------- */
-/*  Features                                                                   */
-/* -------------------------------------------------------------------------- */
-
-function Features() {
-  const features = [
-    {
-      icon: FileText,
-      title: "Resume-based questions",
-      desc: "Upload your resume and our AI instantly generates questions tailored to your experience and target role.",
-    },
-    {
-      icon: Mic,
-      title: "Voice mock interviews",
-      desc: "Answer out loud with real-time recording. We transcribe and analyze your speech, tone, and pacing.",
-    },
-    {
-      icon: Brain,
-      title: "Real-time AI feedback",
-      desc: "Get confidence and clarity scores plus concrete suggestions to sharpen every answer instantly.",
-    },
-    {
-      icon: Layers,
-      title: "Four interview rounds",
-      desc: "Practice HR, Technical, Stress, and Scenario rounds so you're ready for any stage of the process.",
-    },
-  ];
-  return (
-    <section id="features" className="py-20 sm:py-28">
-      <motion.div
-        variants={staggerContainer}
-        initial="hidden"
-        whileInView="show"
-        viewport={viewport}
-        className="mx-auto max-w-7xl px-4 sm:px-6"
-      >
-        <SectionHeading
-          eyebrow="Features"
-          title={
-            <>
-              Everything you need to{" "}
-              <span className="bg-gradient-to-r from-sky-400 to-blue-600 bg-clip-text text-transparent">
-                interview with confidence
-              </span>
-            </>
-          }
-          subtitle="ResumeAI turns your resume into a personalized practice arena with AI coaching at every step."
-        />
-
-        <div className="mt-14 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-          {features.map((f) => (
-            <motion.div
-              key={f.title}
-              variants={fadeUp}
-              whileHover={{ y: -6 }}
-              className="group rounded-3xl border border-slate-200 bg-white p-6 shadow-sm transition hover:border-sky-200 hover:shadow-xl hover:shadow-sky-100"
-            >
-              <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-sky-50 to-blue-100 text-sky-600 transition group-hover:from-sky-400 group-hover:to-blue-600 group-hover:text-white">
-                <f.icon className="h-6 w-6" />
-              </span>
-              <h3 className="mt-5 text-lg font-bold text-slate-900">
-                {f.title}
-              </h3>
-              <p className="mt-2 text-sm leading-relaxed text-slate-600">
-                {f.desc}
-              </p>
-            </motion.div>
-          ))}
-        </div>
-      </motion.div>
-    </section>
-  );
-}
-
-/* -------------------------------------------------------------------------- */
-/*  How It Works                                                               */
-/* -------------------------------------------------------------------------- */
-
-function HowItWorks() {
-  const steps = [
-    {
-      icon: Upload,
-      title: "Upload your resume",
-      desc: "Drop in your PDF or LinkedIn profile. Our AI reads your experience in seconds.",
-    },
-    {
-      icon: MessageSquare,
-      title: "Practice with AI",
-      desc: "Answer tailored questions out loud across four interview rounds, anytime.",
-    },
-    {
-      icon: BarChart3,
-      title: "Get detailed feedback",
-      desc: "Receive confidence and clarity scores, transcripts, and improvement tips.",
-    },
-  ];
-  return (
-    <section id="how" className="bg-slate-50/70 py-20 sm:py-28">
-      <motion.div
-        variants={staggerContainer}
-        initial="hidden"
-        whileInView="show"
-        viewport={viewport}
-        className="mx-auto max-w-7xl px-4 sm:px-6"
-      >
-        <SectionHeading
-          eyebrow="How it works"
-          title={
-            <>
-              Three steps to{" "}
-              <span className="bg-gradient-to-r from-sky-400 to-blue-600 bg-clip-text text-transparent">
-                interview-ready
-              </span>
-            </>
-          }
-          subtitle="From resume to refined answers in minutes — no coaching calls, no scheduling."
-        />
-
-        <div className="relative mt-14 grid gap-10 md:grid-cols-3">
-          {/* connecting line */}
-          <div className="pointer-events-none absolute left-0 right-0 top-10 hidden h-px bg-gradient-to-r from-sky-200 via-blue-200 to-sky-200 md:block" />
-          {steps.map((s, i) => (
-            <motion.div
-              key={s.title}
-              variants={fadeUp}
-              className="relative flex flex-col items-center text-center"
-            >
-              <div className="flex h-20 w-20 items-center justify-center rounded-3xl border border-sky-100 bg-white text-sky-600 shadow-md shadow-sky-100">
-                <s.icon className="h-8 w-8" />
-              </div>
-              <span className="mt-4 text-xs font-bold uppercase tracking-widest text-sky-500">
-                Step {i + 1}
-              </span>
-              <h3 className="mt-2 text-xl font-bold text-slate-900">
-                {s.title}
-              </h3>
-              <p className="mt-2 max-w-xs text-sm leading-relaxed text-slate-600">
-                {s.desc}
-              </p>
-            </motion.div>
-          ))}
-        </div>
-      </motion.div>
-    </section>
-  );
-}
-
-/* -------------------------------------------------------------------------- */
-/*  Stats                                                                      */
-/* -------------------------------------------------------------------------- */
-
-function Stats() {
-  const scores = [
-    { label: "Confidence", value: 92, color: "#38bdf8" },
-    { label: "Clarity", value: 88, color: "#6366f1" },
-  ];
-
-  return (
-    <section className="py-20 sm:py-28">
-      <motion.div
-        variants={staggerContainer}
-        initial="hidden"
-        whileInView="show"
-        viewport={viewport}
-        className="mx-auto max-w-7xl px-4 sm:px-6"
-      >
-        <SectionHeading
-          eyebrow="See your progress"
-          title={
-            <>
-              A{" "}
-              <span className="bg-gradient-to-r from-sky-400 to-blue-600 bg-clip-text text-transparent">
-                sample feedback report
-              </span>
-            </>
-          }
-          subtitle="After every mock interview, ResumeAI breaks down exactly how you did — and how to improve."
-        />
-
-        <motion.div
-          variants={fadeUp}
-          className="mx-auto mt-14 max-w-2xl rounded-3xl border border-slate-200 bg-white p-8 shadow-xl shadow-slate-200/50"
-        >
-          <div className="flex items-center justify-between">
-            <h3 className="text-sm font-bold uppercase tracking-wide text-slate-400">
-              Technical Round Report
-            </h3>
-            <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-600">
-              Completed
-            </span>
-          </div>
-
-          <div className="mt-8 flex justify-center gap-10 sm:gap-16">
-            {scores.map((s) => {
-              const radius = 42;
-              const circumference = 2 * Math.PI * radius;
-              const offset = circumference - (s.value / 100) * circumference;
-              return (
-                <div key={s.label} className="flex flex-col items-center gap-2">
-                  <div className="relative h-28 w-28">
-                    <svg className="h-full w-full -rotate-90">
-                      <circle cx="50%" cy="50%" r={radius} stroke="#e2e8f0" strokeWidth="8" fill="transparent" />
-                      <circle
-                        cx="50%" cy="50%" r={radius}
-                        stroke={s.color} strokeWidth="8" fill="transparent"
-                        strokeDasharray={circumference}
-                        strokeDashoffset={offset}
-                        strokeLinecap="round"
-                      />
-                    </svg>
-                    <div className="absolute inset-0 flex items-center justify-center text-xl font-bold text-slate-900">
-                      {s.value}%
+                <div className="max-w-7xl mx-auto px-4">
+                    {/* connector line behind the numbered badges — the steps are a real sequence */}
+                    <div className="hidden md:block relative h-0">
+                        <div className="absolute top-[-2.5rem] left-[16.6%] right-[16.6%] border-t-2 border-dashed border-sky-200" />
                     </div>
-                  </div>
-                  <span className="text-sm font-semibold text-slate-500">{s.label}</span>
-                </div>
-              );
-            })}
-          </div>
 
-          <div className="mt-8 rounded-2xl bg-sky-50 p-4">
-            <p className="text-xs font-bold uppercase tracking-wide text-sky-600">Key Improvement</p>
-            <p className="mt-1 text-sm text-slate-700">
-              Great structure in your answers — try adding a specific example next time to make it even stronger.
-            </p>
-          </div>
-        </motion.div>
-      </motion.div>
-    </section>
-  );
-}
-/* -------------------------------------------------------------------------- */
-/*  Testimonials                                                               */
-/* -------------------------------------------------------------------------- */
-
-function Testimonials() {
-  const items = [
-    {
-      quote:
-        "I went from stuttering through HR rounds to confidently handling stress questions. The AI feedback pinpointed exactly what to fix.",
-      name: "Aisha Patel",
-      role: "CS Senior, Stanford",
-    },
-    {
-      quote:
-        "ResumeAI generated technical questions straight from my resume. It felt like a real interview — minus the panic.",
-      name: "Marcus Lee",
-      role: "Bootcamp grad, Georgia Tech",
-    },
-    {
-      quote:
-        "The clarity score pushed me to slow down and structure my answers. I landed my dream offer at a FAANG company.",
-      name: "Sofia Ramirez",
-      role: "SWE Intern, Berkeley",
-    },
-  ];
-  return (
-    <section id="reviews" className="py-20 sm:py-28">
-      <motion.div
-        variants={staggerContainer}
-        initial="hidden"
-        whileInView="show"
-        viewport={viewport}
-        className="mx-auto max-w-7xl px-4 sm:px-6"
-      >
-        <SectionHeading
-          eyebrow="Reviews"
-          title={
-            <>
-              Loved by{" "}
-              <span className="bg-gradient-to-r from-sky-400 to-blue-600 bg-clip-text text-transparent">
-                ambitious candidates
-              </span>
-            </>
-          }
-          subtitle="Thousands of students use ResumeAI to prepare smarter and interview calmer."
-        />
-
-        <div className="mt-14 grid gap-6 md:grid-cols-3">
-          {items.map((t) => (
-            <motion.div
-              key={t.name}
-              variants={fadeUp}
-              className="flex flex-col rounded-3xl border border-slate-200 bg-white p-7 shadow-sm transition hover:shadow-lg"
-            >
-              <div className="flex gap-0.5 text-amber-400">
-                {Array.from({ length: 5 }).map((_, i) => (
-                  <Star key={i} className="h-4 w-4 fill-current" />
-                ))}
-              </div>
-              <p className="mt-4 flex-1 text-base leading-relaxed text-slate-700">
-                "{t.quote}"
-              </p>
-              <div className="mt-6 flex items-center gap-3">
-                <span className="flex h-11 w-11 items-center justify-center rounded-full bg-gradient-to-br from-sky-400 to-blue-600 text-sm font-bold text-white">
-                  {t.name.charAt(0)}
-                </span>
-                <div>
-                  <p className="text-sm font-bold text-slate-900">{t.name}</p>
-                  <p className="text-xs text-slate-500">{t.role}</p>
-                </div>
-              </div>
-            </motion.div>
-          ))}
-        </div>
-      </motion.div>
-    </section>
-  );
-}
-
-/* -------------------------------------------------------------------------- */
-/*  Pricing / CTA                                                              */
-/* -------------------------------------------------------------------------- */
-
-function Pricing() {
-  const navigate = useNavigate();
-
-  const tiers = [
-    {
-      name: "Free",
-      price: "$0",
-      period: "forever",
-      desc: "Everything you need to start practicing today.",
-      features: [
-        "1 resume upload",
-        "HR round practice",
-        "Basic AI feedback",
-        "5 mock interviews / month",
-      ],
-      cta: "Start Free",
-      highlight: false,
-    },
-    {
-      name: "Pro",
-      price: "$19",
-      period: "per month",
-      desc: "Unlimited practice with full AI coaching.",
-      features: [
-        "Unlimited resumes",
-        "All 4 interview rounds",
-        "Detailed feedback reports",
-        "Unlimited mock interviews",
-        "Priority support",
-      ],
-      cta: "Go Pro",
-      highlight: true,
-    },
-  ];
-  return (
-    <section id="pricing" className="bg-slate-50/70 py-20 sm:py-28">
-      <motion.div
-        variants={staggerContainer}
-        initial="hidden"
-        whileInView="show"
-        viewport={viewport}
-        className="mx-auto max-w-7xl px-4 sm:px-6"
-      >
-        <SectionHeading
-          eyebrow="Pricing"
-          title={
-            <>
-              Simple pricing,{" "}
-              <span className="bg-gradient-to-r from-sky-400 to-blue-600 bg-clip-text text-transparent">
-                serious results
-              </span>
-            </>
-          }
-          subtitle="Start free and upgrade when you're ready to go all-in on interview prep."
-        />
-
-        <div className="mx-auto mt-14 grid max-w-4xl gap-6 md:grid-cols-2">
-          {tiers.map((t) => (
-            <motion.div
-              key={t.name}
-              variants={fadeUp}
-              whileHover={{ y: -6 }}
-              className={`relative rounded-3xl border p-8 transition ${t.highlight
-                ? "border-sky-300 bg-white shadow-xl shadow-sky-100"
-                : "border-slate-200 bg-white shadow-sm hover:shadow-md"
-                }`}
-            >
-              {t.highlight && (
-                <span className="absolute -top-3 left-8 rounded-full bg-gradient-to-r from-sky-400 to-blue-600 px-3 py-1 text-xs font-semibold text-white shadow">
-                  Most popular
-                </span>
-              )}
-              <h3 className="text-lg font-bold text-slate-900">{t.name}</h3>
-              <p className="mt-1 text-sm text-slate-500">{t.desc}</p>
-              <div className="mt-5 flex items-end gap-1">
-                <span className="text-4xl font-extrabold text-slate-900">
-                  {t.price}
-                </span>
-                <span className="mb-1 text-sm text-slate-500">
-                  /{t.period}
-                </span>
-              </div>
-              <ul className="mt-6 space-y-3">
-                {t.features.map((f) => (
-                  <li
-                    key={f}
-                    className="flex items-center gap-2 text-sm text-slate-700"
-                  >
-                    <span className="flex h-5 w-5 items-center justify-center rounded-full bg-sky-100 text-sky-600">
-                      <Check className="h-3.5 w-3.5" />
-                    </span>
-                    {f}
-                  </li>
-                ))}
-              </ul>
-              <button
-                onClick={() => navigate("/resume")}
-                className={`mt-8 inline-flex w-full items-center justify-center gap-1.5 rounded-2xl px-5 py-3 text-sm font-semibold transition hover:-translate-y-0.5 ${t.highlight
-                  ? "bg-sky-500 text-white shadow-lg shadow-sky-500/25 hover:bg-sky-600 hover:shadow-xl"
-                  : "border border-slate-300 text-slate-700 hover:border-slate-400 hover:shadow-md"
-                  }`}
-              >
-                {t.cta}
-                <ArrowRight className="h-4 w-4" />
-              </button>
-            </motion.div>
-          ))}
-        </div>
-
-        {/* Closing CTA banner */}
-        <motion.div
-          variants={fadeUp}
-          className="relative mt-16 overflow-hidden rounded-3xl bg-gradient-to-r from-sky-500 via-blue-500 to-indigo-500 px-6 py-14 text-center shadow-xl sm:px-12"
-        >
-          <div className="pointer-events-none absolute inset-0 opacity-20">
-            <div className="absolute -left-10 top-0 h-40 w-40 rounded-full bg-white blur-3xl" />
-            <div className="absolute -right-10 bottom-0 h-40 w-40 rounded-full bg-white blur-3xl" />
-          </div>
-          <h2 className="relative text-3xl font-extrabold tracking-tight text-white sm:text-4xl">
-            Ready to land your dream job?
-          </h2>
-          <p className="relative mx-auto mt-3 max-w-xl text-base text-sky-50">
-            Start practicing today and walk into your next interview with
-            total confidence.
-          </p>
-          <button
-            onClick={() => navigate("/resume")}
-            className="relative mt-7 inline-flex items-center gap-2 rounded-2xl bg-white px-6 py-3.5 text-base font-semibold text-sky-600 shadow-lg transition hover:-translate-y-0.5 hover:shadow-xl"
-          >
-            Start practicing today
-            <ArrowRight className="h-5 w-5" />
-          </button>
-        </motion.div>
-      </motion.div>
-    </section>
-  );
-}
-
-/* -------------------------------------------------------------------------- */
-/*  Footer                                                                     */
-/* -------------------------------------------------------------------------- */
-
-function Footer() {
-  const columns = [
-    {
-      title: "Product",
-      links: ["Features", "Pricing", "Reviews", "Changelog"],
-    },
-    {
-      title: "Company",
-      links: ["About", "Careers", "Blog", "Contact"],
-    },
-    {
-      title: "Legal",
-      links: ["Privacy", "Terms", "Security", "Cookies"],
-    },
-  ];
-  return (
-    <footer className="border-t border-slate-200 bg-white">
-      <div className="mx-auto max-w-7xl px-4 py-14 sm:px-6">
-        <div className="grid gap-10 md:grid-cols-5">
-          {/* Brand */}
-          <div className="md:col-span-2">
-            <Link to="/" className="flex items-center gap-2">
-              <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-sky-400 to-blue-600 text-white">
-                <Sparkles className="h-5 w-5" />
-              </span>
-              <span className="text-lg font-bold tracking-tight text-slate-900">
-                Resume<span className="text-sky-500">AI</span>
-              </span>
-            </Link>
-            <p className="mt-4 max-w-xs text-sm leading-relaxed text-slate-500">
-              AI-powered mock interviews that turn your resume into confident,
-              interview-ready answers.
-            </p>
-            <div className="mt-5 flex gap-3">
-              {[Globe, MessageCircle, Share2].map((Icon, i) => (
-                <Link
-                  key={i}
-                  to="/"
-                  aria-label="social link"
-                  className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 text-slate-500 transition hover:border-sky-300 hover:bg-sky-50 hover:text-sky-600"
-                >
-                  <Icon className="h-4 w-4" />
-                </Link>
-              ))}
-            </div>
-          </div>
-
-          {/* Link columns */}
-          {columns.map((c) => (
-            <div key={c.title}>
-              <h4 className="text-sm font-bold text-slate-900">{c.title}</h4>
-              <ul className="mt-4 space-y-2.5">
-                {c.links.map((l) => (
-                  <li key={l}>
-                    <Link
-                      to="/"
-                      className="text-sm text-slate-500 transition hover:text-slate-900"
+                    <motion.div
+                        initial="hidden"
+                        whileInView="show"
+                        viewport={{ once: true, amount: 0.2 }}
+                        variants={staggerContainer}
+                        className="grid grid-cols-1 md:grid-cols-3 gap-20"
                     >
-                      {l}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
+                        {steps.map((step, i) => (
+                            <motion.div
+                                key={step.title}
+                                variants={fadeUp}
+                                whileHover={{ y: -6 }}
+                                transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                                className="bg-white flex flex-col justify-center p-6 shadow-lg rounded-t-4xl rounded-s-4xl rounded-e-sm relative"
+                            >
+                                <div className="bg-white ring-4 ring-sky-100 rounded-full text-xl font-semibold text-sky-600 w-12 h-12 flex items-center justify-center mb-4 absolute -top-6">
+                                    {i + 1}
+                                </div>
+                                <div className="max-w-4xl mx-auto">
+                                    <img
+                                        src={step.img}
+                                        className="h-40 w-40 border border-sky-300/10 bg-sky-300/10 rounded-full p-3 mt-10 object-cover"
+                                    />
+                                </div>
+                                <h2 className="font-bold text-xl text-gray-700 mt-6">{step.title}</h2>
+                                <p className="text-gray-400 mt-2">{step.text}</p>
+                            </motion.div>
+                        ))}
+                    </motion.div>
+                </div>
             </div>
-          ))}
-        </div>
 
-        <div className="mt-12 flex flex-col items-center justify-between gap-3 border-t border-slate-100 pt-6 sm:flex-row">
-          <p className="text-xs text-slate-500">
-            © {new Date().getFullYear()} ResumeAI. All rights reserved.
-          </p>
-          <p className="text-xs text-slate-500">
-            Built with ♥ for ambitious candidates.
-          </p>
-        </div>
-      </div>
-    </footer>
-  );
+            {/* Instructions */}
+            <motion.div
+                initial="hidden"
+                whileInView="show"
+                viewport={{ once: true, amount: 0.15 }}
+                variants={staggerContainer}
+                className="w-full bg-gray-50 border border-sky-100 rounded-2xl p-8 shadow-sm mt-10 max-w-7xl mx-auto"
+            >
+                <motion.h2 variants={fadeUp} className="text-3xl font-bold text-sky-600 mb-2 text-center">
+                    Interview Instructions
+                </motion.h2>
+                <motion.p variants={fadeUp} className="text-center text-gray-400 mb-8">Read this once, before you hit start.</motion.p>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 max-w-5xl mx-auto">
+                    {rules.map((rule, i) => (
+                        <motion.div
+                            key={i}
+                            variants={fadeUp}
+                            className="flex items-start gap-3 bg-white rounded-xl border border-gray-100 p-4 shadow-sm"
+                        >
+                            <span className="shrink-0 mt-0.5 bg-sky-50 rounded-lg p-2">
+                                <RuleIcon path={icons[rule.icon]} />
+                            </span>
+                            <p className="text-gray-600 leading-7">{rule.text}</p>
+                        </motion.div>
+                    ))}
+                </div>
+            </motion.div>
+
+            {/* Feature Cards */}
+            <div className="max-w-7xl mx-auto px-4 mt-24">
+                <motion.h2
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.5 }}
+                    className="font-bold text-2xl md:text-3xl text-center mb-2 text-gray-500"
+                >
+                    Why Mz Mock AI
+                </motion.h2>
+                <motion.p
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.5, delay: 0.1 }}
+                    className="text-center text-gray-400 mb-12"
+                >
+                    Everything you need to walk into the real interview prepared.
+                </motion.p>
+
+                <motion.div
+                    initial="hidden"
+                    whileInView="show"
+                    viewport={{ once: true, amount: 0.2 }}
+                    variants={staggerContainer}
+                    className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6"
+                >
+                    {features.map((feature) => (
+                        <motion.div
+                            key={feature.title}
+                            variants={fadeUp}
+                            whileHover={{ y: -6, boxShadow: "0 12px 24px -8px rgba(14,165,233,0.25)" }}
+                            transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                            className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6"
+                        >
+                            <div className="bg-sky-50 w-12 h-12 rounded-xl flex items-center justify-center mb-4">
+                                <FeatureIcon path={feature.icon} />
+                            </div>
+                            <h3 className="font-semibold text-lg text-gray-700 mb-2">{feature.title}</h3>
+                            <p className="text-gray-400 leading-6">{feature.text}</p>
+                        </motion.div>
+                    ))}
+                </motion.div>
+            </div>
+
+            {/* Product Preview */}
+            <div className="max-w-7xl mx-auto px-4 mt-24 mb-10">
+                <motion.h2
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.5 }}
+                    className="font-bold text-2xl md:text-3xl text-center mb-2 text-gray-500"
+                >
+                    See It In Action
+                </motion.h2>
+                <motion.p
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.5, delay: 0.1 }}
+                    className="text-center text-gray-400 mb-12"
+                >
+                    A quick look at your scorecard after a round.
+                </motion.p>
+
+                {/* Browser-chrome mockup wrapping a scaled-down InterviewCompleted-style scorecard */}
+                <motion.div
+                    initial={{ opacity: 0, y: 40, scale: 0.97 }}
+                    whileInView={{ opacity: 1, y: 0, scale: 1 }}
+                    viewport={{ once: true, amount: 0.2 }}
+                    transition={{ duration: 0.7, ease: "easeOut" }}
+                    className="max-w-3xl mx-auto rounded-2xl border border-gray-200 shadow-xl overflow-hidden"
+                >
+                    {/* fake browser top bar */}
+                    <div className="bg-gray-100 border-b border-gray-200 px-4 py-3 flex items-center gap-2">
+                        <span className="w-3 h-3 rounded-full bg-red-400" />
+                        <span className="w-3 h-3 rounded-full bg-amber-400" />
+                        <span className="w-3 h-3 rounded-full bg-emerald-400" />
+                        <span className="ml-4 text-xs text-gray-400">mzmockai.com/interview</span>
+                    </div>
+
+                    {/* mock scorecard content */}
+                    <div className="bg-gradient-to-br from-sky-50 via-white to-purple-50 p-8 sm:p-12 flex justify-center">
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.9 }}
+                            whileInView={{ opacity: 1, scale: 1 }}
+                            viewport={{ once: true }}
+                            transition={{ duration: 0.5, delay: 0.3 }}
+                            className="bg-white rounded-3xl border border-sky-100 p-6 sm:p-10 w-full max-w-md text-center shadow-xl"
+                        >
+                            <h3 className="text-2xl font-bold text-gray-800 mb-1">Well Done 🎉</h3>
+                            <p className="text-gray-500 mb-6 text-sm">You've completed your Interview</p>
+
+                            <div className="grid grid-cols-2 gap-4 mb-6">
+                                <div className="rounded-xl border border-sky-100 bg-sky-50/50 py-4">
+                                    <p className="text-xs text-gray-500 font-medium">Score</p>
+                                    <p className="text-xl font-bold text-sky-500">86</p>
+                                </div>
+                                <div className="rounded-xl border border-sky-100 bg-sky-50/50 py-4">
+                                    <p className="text-xs text-gray-500 font-medium">Result</p>
+                                    <p className="text-xl font-bold text-emerald-500">PASS</p>
+                                </div>
+                            </div>
+
+                            <button className="py-3 px-8 rounded-full bg-sky-400 text-white text-sm font-semibold shadow-sm hover:bg-sky-500 hover:scale-105 transition">
+                                View Feedback
+                            </button>
+                        </motion.div>
+                    </div>
+                </motion.div>
+            </div>
+
+            <Footer />
+
+            {/* Earlier drafts (AI assistant intro, premium upsell, FAQ) kept below, commented out,
+                so nothing already written is lost — revisit these when ready. */}
+
+            {/* section-3
+            <div className="min-h-[80vh] flex items-center py-10 bg-white  ">
+                <div className="grid  grid-cols-1 md:grid-cols-2 max-w-6xl mx-auto">
+                    {/* left-img */}
+            {/* <div className="flex justify-center items-center">
+                        <img src="res.png" className="max-w-[90%]  max-h-[50vh] object-contain mt-8 md:mt-0" />
+                    </div>
+                    {/* right-content */}
+            {/* <div className="flex flex-col justify-center items-center md:items-start px-10 md:px-0">
+                        <h2 className="font-bold text-3xl text-gray-700 mb-3">AI-Powered Interview Assistant</h2>
+                        <p className=" text-gray-600 text-lg mb-5 ">
+                            Upload your resume and get tailored HR questions with sample answers. Prepare smartly with instant AI feedback and voice-based mock interviews to boost your confidence and land your dream job.
+                        </p>
+                        <ul className="list-disc list-inside text-gray-600 space-y-2">
+                            <li>Get instant feedback on your resume and key skills.</li>
+                            <li>Receive personalized HR interview questions.</li>
+                            <li>Practice answers via voice and get AI-reviewed suggestions.</li>
+                            <li>Build confidence and improve your chances of success.</li>
+
+                        </ul>
+
+                    </div> */}
+
+
+            {/* 
+                </div>
+            </div> */}
+
+            {/* section-4 (premium)*/}
+            {/* <div className="bg-pink-300/10 min-h-[40vh] mb-5 grid grid-cols-1 md:grid-cols-2   flex justify-center items-center">
+                <div className="p-8 md:p-0 mx-0 md:ms-50 ">
+                    <h1 className="text-3xl font-bold mb-3 text-gray-600">Premium AI Tools - Elevate Your Career</h1>
+                    <p className="mb-4">Prepare smarter for interviews with AI. Go Premium for personalized help and exclusive tools to get ahead</p>
+                    <div>  <button className="bg-pink-600/50 border border-gray-300 rounded-full py-2 w-40  text-white mt-2 cursor-pointer hover:bg-pink-400 ">Go To Premium</button></div>
+
+                </div>
+                <div className="flex justify-end ">
+                    <img src="premium.png" className="w-90 h-90" />
+                </div>
+
+            </div>
+
+            {/* section-5 (FAQ) */}
+            {/* <div className="min-h-[90vh] md:min-h-[80vh] bg-white">
+                <div className="max-w-4xl mx-auto p-6">
+                    <h2 className=" text-4xl font-bold text-center mb-8 text-gray-700 ">Frequently Asked Questions (FAQs)</h2>
+                    {/* Question-1 */}
+            {/* <div className="bg-white shadow-md  p-5 rounded-lg border border-gray-300 mt-5">
+                        <button className="flex justify-between items-center w-full text-left " onClick={() => setOpen(open === 1 ? null : 1)}>
+                            <h3 className="text-lg font-semibold text-gray-500"> Is this tool free to use?</h3>
+                            <span className="text-2xl text-pink-300">{open === 1 ? "×" : "+"}</span>
+                        </button>
+                        {open === 1 && (
+                            <p className="text-gray-600 mt-2"> Yes! Our basic AI resume based interview prep is completely free. Premium features will be available soon.
+                            </p> */}
+            {/* )}
+
+                    </div> */}
+
+            {/* Question-2 */}
+            {/* <div className="bg-white shadow-md  p-5 rounded-lg border border-gray-300 mt-5">
+                        <button className="flex justify-between items-center w-full text-left " onClick={() => setOpen(open === 2 ? null : 2)}>
+                            <h3 className="text-lg font-semibold text-gray-500">What file formats are supported?</h3> */}
+            {/* <span className="text-2xl text-pink-300">{open === 2 ? "×" : "+"}</span>
+                        </button>
+                        {open === 2 && (
+                            <p className="text-gray-600 mt-2"> You should upload resumes in PDF only</p>
+                        )} */}
+
+            {/* </div> */}
+
+            {/* Question-3 */}
+            {/* <div className="bg-white shadow-md  p-5 rounded-lg border border-gray-300 mt-5">
+                        <button className="flex justify-between items-center w-full text-left " onClick={() => setOpen(open === 3 ? null : 3)}>
+                            <h3 className="text-lg font-semibold text-gray-500"> How accurate is the AI review?</h3>
+                            <span className="text-2xl text-pink-300">{open === 3 ? "×" : "+"}</span>
+                        </button>
+                        {open === 3 && (
+                            <p className="text-gray-600 mt-2"> Our AI provides 90% accurate feedback</p>
+                        )}
+
+                    </div> */}
+
+            {/* Question-4 */}
+            {/* <div className="bg-white shadow-md  p-5 rounded-lg border border-gray-300 mt-5">
+                        <button className="flex justify-between items-center w-full text-left " onClick={() => setOpen(open === 4 ? null : 4)}>
+                            <h3 className="text-lg font-semibold text-gray-500"> Can I practice multiple times?</h3>
+                            <span className="text-2xl text-pink-300">{open === 4 ? "×" : "+"}</span>
+                        </button>
+                        {open === 4 && (
+                            <p className="text-gray-600 mt-2"> Yes! You can repeat mock interviews and get AI feedback each time to improve.</p>
+                        )}
+
+                    </div>
+
+
+                </div> */}
+
+            {/* 
+            </div> */}
+
+        </>
+    )
+
 }
-
-/* -------------------------------------------------------------------------- */
-/*  Home (default export)                                                      */
-/* -------------------------------------------------------------------------- */
-
-export default function Home() {
-  return (
-    <div className="min-h-screen bg-white font-sans text-slate-900">
-      <AnnouncementBanner />
-      <Navbar />
-      <main>
-        <Hero />
-        <TrustedBy />
-        <Features />
-        <HowItWorks />
-        <Stats />
-        <Testimonials />
-        <Pricing />
-      </main>
-      <Footer />
-    </div>
-  );
-}
+export default Home;

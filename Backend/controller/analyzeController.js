@@ -112,11 +112,19 @@ try {
   });
 }
 
+// A fresh resume upload means a fresh start — wipe every round-progress
+// field alongside the new resumeText/questions, so nothing from the
+// previous resume (completed rounds, scores, attempts, timings) carries
+// over into this new set of questions.
 await User.findByIdAndUpdate(userId, {
   resumeText: text,
   jobDescription,
   questions: parsedQuestions,
   hasResume: true,
+  completedRounds: [],
+  roundResults: {},
+  roundAttempts: {},
+  roundTimeTaken: {},
 });
 
   
@@ -133,6 +141,3 @@ await User.findByIdAndUpdate(userId, {
 };
 
 module.exports = analyzeResume;
-
-
-
