@@ -1,11 +1,12 @@
 const InterviewSession = require("../models/InterviewSession");
 
+
 exports.getFeedback = async (req, res) => {
   try {
     const { sessionId } = req.params;
     const { round } = req.query; // now requires ?round=Round1 in the URL
 
-    const session = await InterviewSession.findOne({ sessionId });
+    const session = await InterviewSession.findOne({ sessionId,userId: req.userId });
     const feedback = round ? session?.feedbackByRound?.get(round) : null;
 
     if (!session || !feedback) {
