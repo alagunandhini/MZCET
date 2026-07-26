@@ -1,7 +1,32 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { CheckCircle } from "lucide-react";
+import { CheckCircle, AlertCircle, GraduationCap } from "lucide-react";
+
+/* -------------------------------------------------------------------------- */
+/*  Design tokens — shared with Home.jsx / Login.jsx                         */
+/* -------------------------------------------------------------------------- */
+
+const BLUE = "#0EA5E9";
+const BLUE_DARK = "#0284C7";
+const BLUE_LIGHT = "#E0F2FE";
+const INK = "#0F172A";
+const SLATE = "#64748B";
+const BORDER = "#E2E8F0";
+const BG = "#F8FAFC";
+
+const display = { fontFamily: "'Sora', system-ui, sans-serif" };
+const body = { fontFamily: "'Inter', system-ui, sans-serif" };
+
+function FontLoader() {
+  return (
+    <style>{`
+      @import url('https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
+      .field:focus { outline: none; border-color: ${BLUE}; box-shadow: 0 0 0 4px ${BLUE_LIGHT}; }
+      @media (prefers-reduced-motion: reduce) { * { animation-duration: 0.01ms !important; } }
+    `}</style>
+  );
+}
 
 const SetPassword = () => {
     const [newPassword, setNewPassword] = useState("");
@@ -65,49 +90,87 @@ const SetPassword = () => {
 
     return (
         <>
-            <div className="min-h-screen bg-white w-full flex items-center justify-center px-4">
-                <div className="w-full max-w-md bg-pink-300/5 border border-pink-100 rounded-2xl p-8 md:p-10">
-                    <h2 className="text-3xl font-bold mb-2 text-pink-300 text-center">Set Your Password</h2>
-                    <p className="text-gray-400 mb-8 text-center text-sm">
-                        This is your first login. Please set a new password to continue — you won't be able to use the default password again.
+            <FontLoader />
+            <div
+                className="relative flex min-h-screen w-full items-center justify-center px-4 py-10"
+                style={{ background: BG, ...body }}
+            >
+                {/* soft ambient blobs, kept behind the card — matches Login.jsx */}
+                <div className="pointer-events-none absolute -left-24 -top-24 h-72 w-72 rounded-full opacity-70" style={{ background: BLUE_LIGHT, filter: "blur(60px)" }} />
+                <div className="pointer-events-none absolute -right-20 bottom-0 h-64 w-64 rounded-full opacity-60" style={{ background: "#EDE9FE", filter: "blur(60px)" }} />
+
+                <div className="relative w-full max-w-md">
+                    <div className="rounded-3xl border bg-white p-8 shadow-xl shadow-slate-200/60 sm:p-10" style={{ borderColor: BORDER }}>
+                        {/* brand mark */}
+                        <div className="flex flex-col items-center text-center">
+                            <img src="mzcet-logo.png" className="h-16 w-16" />
+                            <p className="mt-4 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-widest" style={{ color: BLUE_DARK }}>
+                                <GraduationCap className="h-3.5 w-3.5" />
+                                Mount Zion
+                            </p>
+                            <h1 className="mt-2 text-2xl font-extrabold tracking-tight sm:text-3xl" style={{ ...display, color: INK }}>
+                                Set your password
+                            </h1>
+                            <p className="mt-1.5 text-sm leading-relaxed" style={{ color: SLATE }}>
+                               Set your new password to continue 
+                            </p>
+                        </div>
+
+                        <form className="mt-8 flex flex-col gap-4" onSubmit={handleSubmit}>
+                            <div>
+                                <label htmlFor="newPassword" className="mb-1.5 block text-xs font-semibold uppercase tracking-wide" style={{ color: SLATE }}>
+                                    New password
+                                </label>
+                                <input
+                                    type="password"
+                                    placeholder="Enter a new password"
+                                    id="newPassword"
+                                    value={newPassword}
+                                    onChange={(e) => setNewPassword(e.target.value)}
+                                    className="field w-full rounded-xl border px-4 py-3 text-sm transition"
+                                    style={{ borderColor: BORDER, color: INK }}
+                                />
+                            </div>
+
+                            <div>
+                                <label htmlFor="confirmPassword" className="mb-1.5 block text-xs font-semibold uppercase tracking-wide" style={{ color: SLATE }}>
+                                    Confirm new password
+                                </label>
+                                <input
+                                    type="password"
+                                    placeholder="Re-enter your new password"
+                                    id="confirmPassword"
+                                    value={confirmPassword}
+                                    onChange={(e) => setConfirmPassword(e.target.value)}
+                                    className="field w-full rounded-xl border px-4 py-3 text-sm transition"
+                                    style={{ borderColor: BORDER, color: INK }}
+                                />
+                            </div>
+
+                            <button
+                                type="submit"
+                                disabled={submitting}
+                                className="mt-2 w-full rounded-xl py-3.5 text-sm font-semibold text-white shadow-lg transition hover:-translate-y-0.5 hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0"
+                                style={{ background: BLUE, boxShadow: `0 10px 20px -8px ${BLUE}80`, ...body }}
+                            >
+                                {submitting ? "Saving..." : "Set password & continue"}
+                            </button>
+                        </form>
+                    </div>
+
+                    <p className="mt-6 text-center text-xs leading-relaxed" style={{ color: SLATE }}>
+                        Use at least 6 characters. You can change this again later from your profile settings.
                     </p>
-
-                    <form onSubmit={handleSubmit}>
-                        <div className='relative w-full mb-4'>
-                            <input
-                                type='password'
-                                placeholder='New Password'
-                                value={newPassword}
-                                onChange={(e) => setNewPassword(e.target.value)}
-                                className='w-full p-4 border border-gray-500 rounded-md hover:border-pink-300 focus:outline-none focus:border-pink-300'
-                            />
-                        </div>
-
-                        <div className='relative w-full mb-6'>
-                            <input
-                                type='password'
-                                placeholder='Confirm New Password'
-                                value={confirmPassword}
-                                onChange={(e) => setConfirmPassword(e.target.value)}
-                                className='w-full p-4 border border-gray-500 rounded-md hover:border-pink-300 focus:outline-none focus:border-pink-300'
-                            />
-                        </div>
-
-                        <button
-                            type="submit"
-                            disabled={submitting}
-                            className='w-full bg-pink-300 text-white px-6 py-3 rounded-full cursor-pointer hover:bg-pink-400 transition-all duration-200 disabled:opacity-50'
-                        >
-                            {submitting ? "Saving..." : "Set Password & Continue"}
-                        </button>
-                    </form>
                 </div>
             </div>
 
             {toast.show && (
-                <div className="fixed bottom-5 right-5 left-5 md:left-auto z-[100] animate-slideIn">
-                    <div className={`px-8 py-3 rounded-lg shadow-lg text-sm ${toast.type === "success" ? "bg-pink-400 " : "bg-gray-900"} text-white flex gap-3`}>
-                        {toast.type === "success" ? (<CheckCircle size={18} className="text-pink-500" />) : (<span className="font-extrabold text-red-500">!</span>)}
+                <div className="fixed bottom-5 left-5 right-5 z-[100] md:left-auto">
+                    <div
+                        className="flex items-center gap-3 rounded-xl px-5 py-3.5 text-sm font-medium text-white shadow-lg"
+                        style={{ background: toast.type === "success" ? BLUE_DARK : "#B91C1C" }}
+                    >
+                        {toast.type === "success" ? <CheckCircle className="h-5 w-5" /> : <AlertCircle className="h-5 w-5" />}
                         {toast.message}
                     </div>
                 </div>
