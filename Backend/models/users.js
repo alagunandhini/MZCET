@@ -3,104 +3,105 @@ const mongoose = require("mongoose");
 const userSchema = new mongoose.Schema({
 
   name: {
-        type: String,
-        required: true,
-    },
+    type: String,
+    required: true,
+  },
 
-    registerNumber: {
-        type: String,
-        required: true,
-        unique: true,
-    },
+  registerNumber: {
+    type: String,
+    required: true,
+    unique: true,
+  },
 
   department: {
-        type: String,
-        default: "",
-    },
+    type: String,
+    default: "",
+  },
 
-    sprNo: {
-        type: String,
-        default: "",
-    },
+  sprNo: {
+    type: String,
+    default: "",
+  },
 
-    year: {
-        type: String,
-        default: "",
-    },
+  // e.g. "1st Year", "2nd Year", "2023" — whatever format your admin
+  // uses when adding students. Used for filtering in the admin dashboard.
+  year: {
+    type: String,
+    default: "",
+  },
 
-    section: {
-        type: String,
-        default: "",
-    },
+  section: {
+    type: String,
+    default: "",
+  },
 
-    gender: {
-        type: String,
-        default: "",
-    },
+  gender: {
+    type: String,
+    default: "",
+  },
 
-    dateOfBirth: {
-        type: String,
-        default: "",
-    },
-    
-    email: {
-        type: String,
-        unique: true,
-        sparse: true,
-    },
+  dateOfBirth: {
+    type: String,
+    default: "",
+  },
 
-    password: {
-        type: String,
-        required: true,
-    },
+  email: {
+    type: String,
+    unique: true,
+    sparse: true,
+  },
 
-    isFirstLogin: {
-        type: Boolean,
-        default: true,
-    },
+  password: {
+    type: String,
+    required: true,
+  },
 
-    resumeText: {
-        type: String,
-        default: "",
-    },
+  isFirstLogin: {
+    type: Boolean,
+    default: true,
+  },
 
-    jobDescription: {
-        type: String,
-        default: "",
-    },
+  resumeText: {
+    type: String,
+    default: "",
+  },
 
-    questions: {
-        type: Object,
-        default: {},
-    },
+  jobDescription: {
+    type: String,
+    default: "",
+  },
 
-    hasResume: {
-        type: Boolean,
-        default: false,
-    },
+  questions: {
+    type: Object,
+    default: {},
+  },
 
-    completedRounds: {
-        type: [String],
-        default: [],
-    },
+  hasResume: {
+    type: Boolean,
+    default: false,
+  },
 
-    roundResults: {
-        type: Object,
-        default: {}
-    },
-    // tracks how many times each round has been submitted/graded, e.g. { Round1: 2, Round2: 0 }
-    roundAttempts: {
-        type: Object,
-        default: {}
-    },
+  completedRounds: {
+    type: [String],
+    default: [],
+  },
 
-    // tracks time spent (in seconds) on the most recent attempt of each round, e.g. { Round1: 142 }
-    roundTimeTaken: {
-        type: Object,
-        default: {}
-    },
+  roundResults: {
+    type: Object,
+    default: {}
+  },
 
+  // tracks how many times each round has been submitted/graded, e.g. { Round1: 2, Round2: 0 }
+  roundAttempts: {
+    type: Object,
+    default: {}
+  },
 
+  // tracks time spent (in seconds) on the most recent attempt of each round, e.g. { Round1: 142 }
+  roundTimeTaken: {
+    type: Object,
+    default: {}
+  },
 
 });
 
