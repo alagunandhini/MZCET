@@ -38,6 +38,20 @@ async function run() {
       const registerNumber = String(row.Register_No || "").trim();
       const name = String(row.Student_Name || "").trim();
       const department = String(row.Dept || sheetName).trim();
+      const sprNo = String(row.SPR_No || "").trim();
+      const year = String(row.Year || "").trim();
+      const section = String(row.Sec || "").trim();
+      const gender = String(row.Gender || "").trim();
+
+      // Handle DateOfBirth whether Excel gives it as a string or a Date object
+      let dateOfBirth = "";
+      if (row.DateOfBirth) {
+        if (row.DateOfBirth instanceof Date) {
+          dateOfBirth = row.DateOfBirth.toISOString().split("T")[0]; // YYYY-MM-DD
+        } else {
+          dateOfBirth = String(row.DateOfBirth).trim();
+        }
+      }
 
       if (!registerNumber || !name) {
         console.warn("⚠️  Skipping row with missing register number or name:", row);
@@ -56,6 +70,11 @@ async function run() {
           name,
           registerNumber,
           department,
+          sprNo,
+          year,
+          section,
+          gender,
+          dateOfBirth,
           password: hashedDefaultPassword,
           isFirstLogin: true,
         });

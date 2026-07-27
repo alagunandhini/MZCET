@@ -2,6 +2,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import { useState, useEffect } from 'react';
 import { CheckCircle, AlertCircle, ArrowLeft, GraduationCap, ArrowRight } from "lucide-react";
+import { API_URL } from "../config";
 
 /* -------------------------------------------------------------------------- */
 /* Design tokens — shared with Home.jsx                                       */
@@ -151,7 +152,7 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const userdata = await axios.post("http://localhost:3007/users/login", { registerNumber, password });
+      const userdata = await axios.post(`${API_URL}/users/login`, { registerNumber, password });
 
       if (userdata.data.message !== "login Sucessful") {
         showToast(userdata.data.message || "Failed to login", "error");

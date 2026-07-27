@@ -13,11 +13,36 @@ const userSchema = new mongoose.Schema({
         unique: true,
     },
 
-    department: {
+  department: {
         type: String,
         default: "",
     },
 
+    sprNo: {
+        type: String,
+        default: "",
+    },
+
+    year: {
+        type: String,
+        default: "",
+    },
+
+    section: {
+        type: String,
+        default: "",
+    },
+
+    gender: {
+        type: String,
+        default: "",
+    },
+
+    dateOfBirth: {
+        type: String,
+        default: "",
+    },
+    
     email: {
         type: String,
         unique: true,

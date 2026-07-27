@@ -20,7 +20,7 @@ import useToast from "../hooks/useToast";
 import useSpeech from "../hooks/useSpeech";
 import useInterviewStorage from "../hooks/useInterviewStorage";
 import axios from "axios";
-
+import { API_URL } from "../config";
 // Maximum time allowed per round. Once the timer hits this, the round is
 // auto-finalized and graded using whatever answers were already submitted.
 const ROUND_TIME_LIMIT_SECONDS = 30 * 60; // 30 minutes
@@ -45,7 +45,7 @@ const Resume = () => {
       const token = localStorage.getItem("token");
       try {
         const res = await axios.get(
-          "http://localhost:3007/users/resume-status",
+          `${API_URL}/users/resume-status`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -293,7 +293,7 @@ const Resume = () => {
           setIsAnalyzing(true);
           speakText("Great! Analyzing your interview. Please wait.");
           // WAIT for LAST answer to save
-          const res = await fetch("http://localhost:3007/upload-audio", {
+          const res = await fetch(`${API_URL}/upload-audio`, {
             method: "POST",
             headers: { Authorization: `Bearer ${token}` },
             body: formData,
@@ -306,7 +306,7 @@ const Resume = () => {
           }
         } else {
           //  Fire & forget for normal questions
-          fetch("http://localhost:3007/upload-audio", {
+          fetch(`${API_URL}/upload-audio`, {
             method: "POST",
             headers: { Authorization: `Bearer ${token}` },
             body: formData,
@@ -366,7 +366,7 @@ const Resume = () => {
     console.log("Token:", token);
 
     try {
-      const res = await fetch("http://localhost:3007/end-session", {
+      const res = await fetch(`${API_URL}/end-session`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -459,7 +459,7 @@ const Resume = () => {
     }
 
     try {
-      const res = await fetch("http://localhost:3007/terminate-round", {
+      const res = await fetch(`${API_URL}/terminate-round`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
