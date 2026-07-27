@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {GraduationCap } from "lucide-react";
 import { useNavigate, Link } from "react-router-dom";
 import * as pdfjsLib from "pdfjs-dist/legacy/build/pdf";
+import { API_URL } from "../config";
 import {
   ArrowRight,ArrowLeft,
   UploadCloud,
@@ -531,7 +532,7 @@ const ResumeUpload = ({
     setTransitionLoading?.(true);
 
     try {
-      const response = await fetch("http://localhost:3007/analyze", {
+      const response = await fetch(`${API_URL}/analyze`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
