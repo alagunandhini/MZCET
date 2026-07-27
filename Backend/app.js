@@ -22,6 +22,7 @@ var analyzer=require('./routes/analyze');
 var audioRoute=require("./routes/audio.js");
 const sessionRoutes = require("./routes/sessionRoutes");
 const feedbackRoutes = require("./routes/feedbackRoutes");
+const adminRoutes = require("./routes/adminRoutes");
 
 
 
@@ -46,6 +47,7 @@ app.use("/upload-audio", audioRoute);
 app.use("/", sessionRoutes);
 
 app.use("/feedback", feedbackRoutes);
+app.use("/admin", adminRoutes);
 
 
 

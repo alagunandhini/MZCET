@@ -12,6 +12,7 @@ import Footer from './components/Footer';
 import Login from './pages/Login';
 import SetPassword from './pages/SetPassword';
 import Feedback from './pages/Feedback';
+import AdminDashboard from './pages/AdminDashboard';
 
 
 function App() {
@@ -27,6 +28,7 @@ function App() {
         <Route path='/login' element={<Login/>}/>
         <Route path='/set-password' element={<SetPassword/>}/>
         <Route path='/feedback/:sessionId' element={<Feedback/>}/>
+        <Route path='/admin' element={<AdminDashboard/>}/>
 
 
       </Routes>
