@@ -1,4 +1,4 @@
-const User = require("../models/users");
+const { getPool, sql } = require("../db-sql");
 
 const analyzeResume = async (req, res) => {
   try {
@@ -50,7 +50,7 @@ Output Format:
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: {
+            generationConfig: {
               temperature: 0.3,
               maxOutputTokens: 8000,
               responseMimeType: "application/json",
@@ -67,7 +67,6 @@ Output Format:
     let data = await callGemini();
     let retries = 0;
 
-    // Retry on rate limits or transient errors, same safety net as before
     while (data?.error && retries < 2) {
       console.warn(`Gemini error, retrying (${retries + 1}/2):`, data.error.message);
       await new Promise((resolve) => setTimeout(resolve, 3000));
@@ -107,17 +106,71 @@ Output Format:
     }
 
     // A fresh resume upload means a fresh start — wipe every round-progress
-    // field alongside the new resumeText/questions
-    await User.findByIdAndUpdate(userId, {
-      resumeText: text,
-      jobDescription,
-      questions: parsedQuestions,
-      hasResume: true,
-      completedRounds: [],
-      roundResults: {},
-      roundAttempts: {},
-      roundTimeTaken: {},
-    });
+    // table alongside the new resumeText/questions, all inside one transaction.
+    const pool = getPool();
+    const transaction = new sql.Transaction(pool);
+    await transaction.begin();
+
+    try {
+      // 1. Update the user's resume info
+      await transaction.request()
+        .input("id", sql.Int, userId)
+        .input("resumeText", sql.NVarChar, text)
+        .input("jobDescription", sql.NVarChar, jobDescription || "")
+        .query(`
+          UPDATE Users
+          SET resumeText = @resumeText,
+              jobDescription = @jobDescription,
+              hasResume = 1
+          WHERE id = @id
+        `);
+
+      // 2. Wipe old progress — this user is starting over with a new resume
+      await transaction.request()
+        .input("id", sql.Int, userId)
+        .query("DELETE FROM Questions WHERE userId = @id");
+
+      await transaction.request()
+        .input("id", sql.Int, userId)
+        .query("DELETE FROM CompletedRounds WHERE userId = @id");
+
+      await transaction.request()
+        .input("id", sql.Int, userId)
+        .query("DELETE FROM RoundResults WHERE userId = @id");
+
+      await transaction.request()
+        .input("id", sql.Int, userId)
+        .query("DELETE FROM RoundAttempts WHERE userId = @id");
+
+        await transaction.request()
+  .input("id", sql.Int, userId)
+  .query("DELETE FROM RoundTimeTaken WHERE userId = @id");
+
+      // 3. Insert the newly generated questions
+      for (const roundKey of Object.keys(parsedQuestions)) {
+        const round = parsedQuestions[roundKey];
+        const roundName = round?.name || "";
+        const questions = round?.questions || [];
+
+        for (let i = 0; i < questions.length; i++) {
+          await transaction.request()
+            .input("userId", sql.Int, userId)
+            .input("round", sql.NVarChar, roundKey)
+            .input("roundName", sql.NVarChar, roundName)
+            .input("questionText", sql.NVarChar, questions[i].q || "")
+            .input("questionOrder", sql.Int, i + 1)
+            .query(`
+              INSERT INTO Questions (userId, round, roundName, questionText, questionOrder)
+              VALUES (@userId, @round, @roundName, @questionText, @questionOrder)
+            `);
+        }
+      }
+
+      await transaction.commit();
+    } catch (txErr) {
+      await transaction.rollback();
+      throw txErr;
+    }
 
     res.json({
       success: true,
