@@ -74,7 +74,6 @@ const viewport = { once: true, amount: 0.2 };
 /* -------------------------------------------------------------------------- */
 
 function Navbar() {
-  const [open, setOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const navigate = useNavigate();
 
@@ -89,121 +88,72 @@ function Navbar() {
     navigate("/login");
   };
 
-  const links = [
-    { label: "Home", to: "/" },
-    { label: "Resume", to: "/resume" },
-  ];
-
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-white/90 backdrop-blur-md" style={{ borderColor: BORDER }}>
-      <nav className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6">
+    <header className="sticky top- z-50 w-full " >
+      <nav
+        className="mx-auto flex items-center justify-between  border bg-white/95 px-25 py-3 shadow-lg shadow-slate-200/60 backdrop-blur-md"
+        style={{ borderColor: BORDER }}
+      >
         <Link to="/" className="flex items-center gap-2.5">
-          <img src="/mzlogo.png" alt="Mount Zion logo" className="h-10 w-10 rounded-xl object-contain" />
+          <img src="completed logo.png" alt="Mount Zion logo" className="h-9 w-9 scale-160 rounded-xl object-contain" />
           <span className="text-lg font-bold tracking-tight" style={{ ...display, color: INK }}>
             MZ<span style={{ color: BLUE }}>ResumeAI</span>
           </span>
         </Link>
 
-        <div className="flex items-center gap-8">
-          <div className="hidden items-center gap-7 md:flex">
-            {links.map((l) => (
-              <Link key={l.label} to={l.to} className="text-sm font-medium text-slate-600 transition hover:text-slate-900" style={body}>
-                {l.label}
-              </Link>
-            ))}
-          </div>
-
-          <div className="hidden items-center gap-3 md:flex">
-            {token ? (
-              <div className="relative">
-                <button
-                  onClick={() => setProfileOpen((v) => !v)}
-                  className="flex h-9 w-9 items-center justify-center rounded-full text-sm font-bold text-white shadow-sm transition hover:opacity-90"
-                  style={{ background: BLUE }}
-                >
-                  {username ? username.charAt(0).toUpperCase() : <User className="h-4 w-4" />}
-                </button>
-                {profileOpen && (
-                  <>
-                    <div className="fixed inset-0 z-40" onClick={() => setProfileOpen(false)} />
-                    <div className="absolute right-0 top-full z-50 mt-2 w-56 rounded-2xl border bg-white p-4 shadow-xl" style={{ borderColor: BORDER }}>
-                      <div className="flex flex-col items-center text-center">
-                        <span className="flex h-14 w-14 items-center justify-center rounded-full text-xl font-bold text-white" style={{ background: BLUE }}>
-                          {username ? username.charAt(0).toUpperCase() : <User className="h-6 w-6" />}
-                        </span>
-                        <p className="mt-2 text-sm font-bold" style={{ ...body, color: INK }}>{username || "User"}</p>
-                      </div>
-                      <button
-                        onClick={handleLogout}
-                        className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl border py-2 text-sm font-semibold text-slate-600 transition hover:border-red-200 hover:bg-red-50 hover:text-red-500"
-                        style={{ borderColor: BORDER, ...body }}
-                      >
-                        <LogOut className="h-4 w-4" />
-                        Logout
-                      </button>
-                    </div>
-                  </>
-                )}
-              </div>
-            ) : (
-              <>
-                <Link to="/login" className="text-sm font-medium text-slate-600 transition hover:text-slate-900" style={body}>
-                  Login
-                </Link>
-                <button
-                  onClick={() => navigate("/resume")}
-                  className="inline-flex items-center gap-1.5 rounded-xl px-4 py-2 text-sm font-semibold text-white shadow-sm shadow-sky-200 transition hover:-translate-y-0.5 hover:brightness-105"
-                  style={{ background: BLUE, ...body }}
-                >
-                  Get Started Free
-                  <ArrowRight className="h-4 w-4" />
-                </button>
-              </>
-            )}
-          </div>
-        </div>
-
-        <button className="rounded-lg p-2 text-slate-700 md:hidden" onClick={() => setOpen((v) => !v)} aria-label="Toggle menu">
-          {open ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-        </button>
-      </nav>
-
-      {open && (
-        <div className="border-t bg-white px-4 py-4 md:hidden" style={{ borderColor: BORDER }}>
-          <div className="flex flex-col gap-3">
-            {links.map((l) => (
-              <Link key={l.label} to={l.to} onClick={() => setOpen(false)} className="rounded-lg px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50" style={body}>
-                {l.label}
-              </Link>
-            ))}
-            <div className="mt-2 flex flex-col gap-2">
-              {token ? (
-                <button
-                  onClick={() => { setOpen(false); handleLogout(); }}
-                  className="flex items-center justify-center gap-2 rounded-xl border px-4 py-2 text-center text-sm font-semibold text-slate-700"
-                  style={{ borderColor: BORDER, ...body }}
-                >
-                  <LogOut className="h-4 w-4" />
-                  Logout
-                </button>
-              ) : (
+        <div className="flex items-center gap-3">
+          {token ? (
+            <div className="relative">
+              <button
+                onClick={() => setProfileOpen((v) => !v)}
+                className="flex h-9 w-9 items-center justify-center rounded-full text-sm font-bold text-white shadow-sm transition hover:opacity-90"
+                style={{ background: BLUE }}
+              >
+                {username ? username.charAt(0).toUpperCase() : <User className="h-4 w-4" />}
+              </button>
+              {profileOpen && (
                 <>
-                  <Link to="/login" onClick={() => setOpen(false)} className="rounded-xl border px-4 py-2 text-center text-sm font-semibold text-slate-700" style={{ borderColor: BORDER, ...body }}>
-                    Login
-                  </Link>
-                  <button
-                    onClick={() => { setOpen(false); navigate("/resume"); }}
-                    className="rounded-xl px-4 py-2 text-center text-sm font-semibold text-white"
-                    style={{ background: BLUE, ...body }}
-                  >
-                    Get Started Free
-                  </button>
+                  <div className="fixed inset-0 z-40" onClick={() => setProfileOpen(false)} />
+                  <div className="absolute right-0 top-full z-50 mt-2 w-56 rounded-2xl border bg-white p-4 shadow-xl" style={{ borderColor: BORDER }}>
+                    <div className="flex flex-col items-center text-center">
+                      <span className="flex h-14 w-14 items-center justify-center rounded-full text-xl font-bold text-white" style={{ background: BLUE }}>
+                        {username ? username.charAt(0).toUpperCase() : <User className="h-6 w-6" />}
+                      </span>
+                      <p className="mt-2 text-sm font-bold" style={{ ...body, color: INK }}>{username || "User"}</p>
+                    </div>
+                    <button
+                      onClick={handleLogout}
+                      className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl border py-2 text-sm font-semibold text-slate-600 transition hover:border-red-200 hover:bg-red-50 hover:text-red-500"
+                      style={{ borderColor: BORDER, ...body }}
+                    >
+                      <LogOut className="h-4 w-4" />
+                      Logout
+                    </button>
+                  </div>
                 </>
               )}
             </div>
-          </div>
+          ) : (
+            <>
+              <Link
+                to="/login"
+                className="hidden text-sm font-medium text-slate-600 transition hover:text-slate-900 sm:inline-block"
+                style={body}
+              >
+                Login
+              </Link>
+              <button
+                onClick={() => navigate("/resume")}
+                className="inline-flex items-center gap-1.5 rounded-xl px-4 py-2 text-sm font-semibold text-white shadow-sm shadow-sky-200 transition hover:-translate-y-0.5 hover:brightness-105"
+                style={{ background: BLUE, ...body }}
+              >
+                Get Started Free
+                <ArrowRight className="h-4 w-4" />
+              </button>
+            </>
+          )}
         </div>
-      )}
+      </nav>
     </header>
   );
 }
@@ -316,17 +266,17 @@ function Hero() {
             style={{ borderColor: "rgba(255,255,255,0.3)", background: "rgba(255,255,255,0.1)", ...body }}
           >
             <Bot className="h-3.5 w-3.5" />
-            Mount Zion · Your AI interview partner
+            Mount Zion - AI Interview Practice Platform
           </motion.span>
 
           <motion.h1 variants={fadeUp} className="mt-5 text-4xl font-extrabold leading-[1.1] tracking-tight text-white sm:text-5xl" style={display}>
-            Practice on campus. <br className="hidden sm:block" />
-            Walk into <span style={{ color: "#7DD3FC" }}>Round 4</span> unshaken.
+            Confidence Begins
+ <br className="hidden sm:block" />
+            With Preparation <span style={{ color: "#7DD3FC" }}>Ace Every Interview.</span>
           </motion.h1>
 
           <motion.p variants={fadeUp} className="mt-6 max-w-lg text-base leading-relaxed text-white/80" style={body}>
-            Upload your resume and work through HR, Technical, Stress, and Scenario rounds with an AI panel that
-            scores your confidence and clarity — right here, before you ever leave Mount Zion.
+          Build confidence before your placement interviews. Upload your resume, answer personalized questions through voice recordings, and receive AI feedback to improve your communication and technical performance.
           </motion.p>
 
           <motion.div variants={fadeUp} className="mt-9 flex flex-col gap-3 sm:flex-row">
@@ -335,7 +285,7 @@ function Hero() {
               className="inline-flex items-center justify-center gap-2 rounded-xl px-6 py-3.5 text-sm font-semibold text-white shadow-lg transition hover:-translate-y-0.5 hover:brightness-105"
               style={{ background: BLUE, boxShadow: `0 12px 24px -8px ${BLUE}80`, ...body }}
             >
-              Start Free Practice
+              Start Your Journey
               <ArrowRight className="h-4 w-4" />
             </button>
             <a
@@ -348,7 +298,7 @@ function Hero() {
           </motion.div>
 
           <motion.p variants={fadeUp} className="mt-6 text-xs font-medium text-white/60" style={body}>
-            No credit card required · 5 free mock interviews a month
+           Resume Analysis • 4 Interview Rounds • AI Feedback • Placement Ready
           </motion.p>
         </motion.div>
 
@@ -764,8 +714,7 @@ export default function Home() {
         <Features />
         <HowItWorks />
         <Stats />
-        <Testimonials />
-        <Pricing />
+        
       </main>
       <Footer />
     </div>

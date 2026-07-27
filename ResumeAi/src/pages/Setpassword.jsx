@@ -106,7 +106,7 @@ const SetPassword = () => {
                             <img src="mzcet-logo.png" className="h-16 w-16" />
                             <p className="mt-4 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-widest" style={{ color: BLUE_DARK }}>
                                 <GraduationCap className="h-3.5 w-3.5" />
-                                Mount Zion
+                                 MZ Resume AI
                             </p>
                             <h1 className="mt-2 text-2xl font-extrabold tracking-tight sm:text-3xl" style={{ ...display, color: INK }}>
                                 Set your password
@@ -159,7 +159,7 @@ const SetPassword = () => {
                     </div>
 
                     <p className="mt-6 text-center text-xs leading-relaxed" style={{ color: SLATE }}>
-                        Use at least 6 characters. You can change this again later from your profile settings.
+                        Use at least 6 characters password.
                     </p>
                 </div>
             </div>
