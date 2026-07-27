@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { CheckCircle, AlertCircle, GraduationCap } from "lucide-react";
+import { API_URL } from "../config";
 
 /* -------------------------------------------------------------------------- */
 /*  Design tokens — shared with Home.jsx / Login.jsx                         */
@@ -68,7 +69,7 @@ const SetPassword = () => {
 
         try {
             const res = await axios.post(
-                "http://localhost:3007/users/reset-password",
+               `${API_URL}/users/reset-password`,
                 { newPassword },
                 { headers: { Authorization: `Bearer ${token}` } }
             );
