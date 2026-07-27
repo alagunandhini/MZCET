@@ -10,7 +10,7 @@ exports.endSession = async (req, res) => {
       return res.status(400).json({ error: "Session ID missing" });
     }
 
-    const session = await InterviewSession.findOne({ sessionId });
+    const session = await InterviewSession.findOne({ sessionId , userId: req.userId });
     console.log(session);
 
     if (!session || !round) {
@@ -174,8 +174,8 @@ exports.terminateRound = async (req, res) => {
     }
 
     await User.findByIdAndUpdate(req.userId, updateQuery, { new: true });
-
-    const session = await InterviewSession.findOne({ sessionId });
+ 
+    const session = await InterviewSession.findOne({ sessionId, userId: req.userId  });
     if (session) {
       session.terminatedForViolation = true;
       await session.save();

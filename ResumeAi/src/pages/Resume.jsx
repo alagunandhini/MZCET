@@ -590,7 +590,7 @@ const Resume = () => {
         </div>
       </div>)}
 
-      {!showQuestionsUI && <Navbar />}
+    
       {/* Loader for all */}
       {transitionLoading && <TransitionLoader text={transitionText} />}
 
