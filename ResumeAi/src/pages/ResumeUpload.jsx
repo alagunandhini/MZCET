@@ -53,9 +53,7 @@ const fadeUp = {
 };
 const staggerContainer = { hidden: {}, show: { transition: { staggerChildren: 0.08 } } };
 
-/* -------------------------------------------------------------------------- */
-/*  Navbar — unchanged from the reference design                             */
-/* -------------------------------------------------------------------------- */
+/*  Navbar */
 
 function Navbar() {
   const [profileOpen, setProfileOpen] = useState(false);
