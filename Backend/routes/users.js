@@ -4,6 +4,7 @@ const bcrypt=require("bcryptjs");
 const jwt=require("jsonwebtoken");
 const User=require("../models/users");
 const authMiddleware = require("../midleware/authMiddleware");
+const { getPool, sql } = require("../db-sql");
 
 // sign up endpoint 
 router.post("/signup",async(req ,res)=>{
@@ -38,6 +39,8 @@ router.post("/signup",async(req ,res)=>{
  };
 });
 
+
+
 //login endpoint
 router.post("/login",async(req,res)=>{
  
@@ -45,7 +48,12 @@ router.post("/login",async(req,res)=>{
 
   const {registerNumber,password} =req.body;
 
-  const user= await User.findOne({registerNumber});
+  const pool = getPool();
+  const result = await pool.request()
+    .input("registerNumber", sql.NVarChar, registerNumber)
+    .query("SELECT * FROM Users WHERE registerNumber = @registerNumber");
+
+  const user = result.recordset[0];
 
    if(!user) return res.json({message:"Invalid Register Number"});
 
@@ -56,7 +64,7 @@ router.post("/login",async(req,res)=>{
 
    // create token for future acess
    const token = await jwt.sign(
-    {id:user._id},
+    {id:user.id},
     process.env.JWT_SECRET,
     {expiresIn:"1d"},
    )
@@ -64,10 +72,10 @@ router.post("/login",async(req,res)=>{
   return  res.json({
     message:"login Sucessful",
     token,
-    hasResume: !!user.resumeText, 
+    hasResume: !!user.hasResume, 
     isFirstLogin: user.isFirstLogin,
     user:{
-      id:user._id,
+      id:user.id,
       name:user.name,
       registerNumber:user.registerNumber,
       department:user.department
@@ -98,10 +106,15 @@ router.post("/reset-password", authMiddleware, async (req, res) => {
 
     const hashedPassword = await bcrypt.hash(newPassword, 10);
 
-    await User.findByIdAndUpdate(req.userId, {
-      password: hashedPassword,
-      isFirstLogin: false,
-    });
+    const pool = getPool();
+    await pool.request()
+      .input("id", sql.Int, req.userId)
+      .input("password", sql.NVarChar, hashedPassword)
+      .query(`
+        UPDATE Users
+        SET password = @password, isFirstLogin = 0
+        WHERE id = @id
+      `);
 
     return res.json({
       success: true,
@@ -117,27 +130,62 @@ router.post("/reset-password", authMiddleware, async (req, res) => {
 });
 
 
-
 router.get("/resume-status", authMiddleware, async (req, res) => {
   try {
-    const user = await User.findById(req.userId);
+    const pool = getPool();
+
+    const userResult = await pool.request()
+      .input("id", sql.Int, req.userId)
+      .query("SELECT * FROM Users WHERE id = @id");
+
+    const user = userResult.recordset[0];
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+
+    const questionsResult = await pool.request()
+      .input("id", sql.Int, req.userId)
+      .query("SELECT * FROM Questions WHERE userId = @id ORDER BY round, questionOrder");
+
+    const completedResult = await pool.request()
+      .input("id", sql.Int, req.userId)
+      .query("SELECT round FROM CompletedRounds WHERE userId = @id");
+
+    const attemptsResult = await pool.request()
+      .input("id", sql.Int, req.userId)
+      .query("SELECT round, attemptsUsed FROM RoundAttempts WHERE userId = @id");
+
+    // Reshape flat SQL rows into { Round1: { name, questions: [{ q }] }, ... }
+    const questions = {};
+    for (const row of questionsResult.recordset) {
+      if (!questions[row.round]) {
+        questions[row.round] = { name: row.roundName, questions: [] };
+      }
+      questions[row.round].questions.push({ q: row.questionText });
+    }
+
+    // Reshape into { Round1: 2, Round2: 0, ... }
+    const roundAttempts = {};
+    for (const row of attemptsResult.recordset) {
+      roundAttempts[row.round] = row.attemptsUsed;
+    }
 
     res.json({
       success: true,
-      hasResume: !!user.resumeText,
+      hasResume: !!user.hasResume,
       resumeText: user.resumeText,
-      questions: user.questions,
-      completedRounds: user.completedRounds,
-      roundAttempts: user.roundAttempts,
+      questions,
+      completedRounds: completedResult.recordset.map(r => r.round),
+      roundAttempts,
     });
 
   } catch (err) {
+    console.error("RESUME STATUS ERROR:", err);
     res.status(500).json({
       success: false,
       message: "Something went wrong"
     });
   }
 });
-
 
 module.exports = router;
