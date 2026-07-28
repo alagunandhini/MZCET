@@ -3,6 +3,14 @@ import axios from "axios";
 
 const ROUND_KEYS = ["Round1", "Round2", "Round3", "Round4"];
 
+// e.g. 142 -> "2m 22s"
+const formatTime = (seconds) => {
+  if (seconds === null || seconds === undefined) return "--";
+  const mins = Math.floor(seconds / 60);
+  const secs = seconds % 60;
+  return `${mins}m ${secs}s`;
+};
+
 const AdminDashboard = () => {
   const [departments, setDepartments] = useState([]);
   const [years, setYears] = useState([]);
@@ -122,6 +130,11 @@ const AdminDashboard = () => {
                     {round} Attempts Left
                   </th>
                 ))}
+                {ROUND_KEYS.map((round) => (
+                  <th key={`${round}-time`} className="px-4 py-3 whitespace-nowrap text-center">
+                    {round} Time Taken
+                  </th>
+                ))}
                 <th className="px-4 py-3 whitespace-nowrap text-center">Logged In</th>
               </tr>
             </thead>
@@ -171,6 +184,15 @@ const AdminDashboard = () => {
                       className="px-4 py-3 text-center whitespace-nowrap text-gray-600"
                     >
                       {student.rounds[round]?.attemptsLeft}
+                    </td>
+                  ))}
+
+                  {ROUND_KEYS.map((round) => (
+                    <td
+                      key={`${round}-time`}
+                      className="px-4 py-3 text-center whitespace-nowrap text-gray-600"
+                    >
+                      {formatTime(student.rounds[round]?.timeTakenSeconds)}
                     </td>
                   ))}
 
