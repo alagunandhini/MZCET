@@ -9,6 +9,17 @@ exports.processAudio = async (req, res) => {
       return res.status(400).json({ error: "Audio file missing" });
     }
 
+    // Pull the logged-in user's id from wherever your auth middleware puts it.
+    // I don't have your middleware code, so this checks the common spots —
+    // once you confirm which one is actually set, you can trim this down to
+    // just that one line.
+    const userId = req.userId || req.user?.id || req.user?.userId;
+
+    if (!userId || isNaN(Number(userId))) {
+      console.error("processAudio: missing/invalid userId on request:", userId);
+      return res.status(401).json({ error: "Invalid or missing user session" });
+    }
+
     const audioPath = path.join(__dirname, "..", req.file.path);
     const question = req.body.question;
     const sessionId = req.body.sessionId;
@@ -57,7 +68,7 @@ exports.processAudio = async (req, res) => {
     if (sessionResult.recordset.length === 0) {
       const insertSession = await pool.request()
         .input("sessionId", sql.NVarChar, sessionId)
-        .input("userId", sql.Int, req.userId)
+        .input("userId", sql.Int, userId)
         .input("round", sql.NVarChar, round)
         .query(`
           INSERT INTO InterviewSessions (sessionId, userId, round)
