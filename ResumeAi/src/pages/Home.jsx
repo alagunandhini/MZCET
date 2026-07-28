@@ -59,7 +59,7 @@ const fadeUp = {
   show: { opacity: 1, y: 0, transition: { duration: 0.55, ease: [0.22, 1, 0.36, 1] } },
 };
 const staggerContainer = { hidden: {}, show: { transition: { staggerChildren: 0.1 } } };
-const viewport = { once: true, amount: 0.2 };
+const viewport = { once: false, amount: 0.2 };
 
 function Navbar() {
   const [profileOpen, setProfileOpen] = useState(false);
@@ -264,7 +264,7 @@ function Hero() {
           </motion.h1>
 
           <motion.p variants={fadeUp} className="mt-6 max-w-lg text-base leading-relaxed text-white/80" style={body}>
-          Build confidence before your placement interviews. Upload your resume, answer personalized questions through voice recordings, and receive AI feedback to improve your communication and technical performance.
+          {/* Build confidence before your placement interviews. Upload your resume, answer personalized questions through voice recordings, and receive AI feedback to improve your communication and technical performance. */}
           </motion.p>
 
           <motion.div variants={fadeUp} className="mt-9 flex flex-col gap-3 sm:flex-row">
@@ -302,7 +302,7 @@ function TrustedBy() {
   const stats = [
     { value: "10,000+", label: "Questions generated" },
     { value: "4", label: "Interview rounds" },
-    { value: "< 60 sec", label: "To your first score" },
+    { value: "30", label: "Mins per round" },
   ];
   return (
     <section className="border-y" style={{ background: BG, borderColor: BORDER }}>
