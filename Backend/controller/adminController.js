@@ -1,14 +1,19 @@
-const User = require("../models/users");
+// admin controller — SQL Server version
+const { getPool, sql } = require("../db-sql");
+
+const ROUND_KEYS = ["Round1", "Round2", "Round3", "Round4"];
+const MAX_ATTEMPTS = 3;
 
 // GET /admin/departments
-// Returns the distinct list of departments currently in use, so the
-// frontend filter dropdown always reflects real data instead of a
-// hardcoded list that can drift out of sync.
 exports.getDepartments = async (req, res) => {
   try {
-    const departments = await User.distinct("department", {
-      department: { $ne: "" },
-    });
+    const pool = getPool();
+    const result = await pool.request().query(`
+      SELECT DISTINCT department
+      FROM Users
+      WHERE department IS NOT NULL AND department <> ''
+    `);
+    const departments = result.recordset.map((r) => r.department);
     res.json({ success: true, departments });
   } catch (err) {
     console.error("getDepartments error:", err);
@@ -17,13 +22,15 @@ exports.getDepartments = async (req, res) => {
 };
 
 // GET /admin/years
-// Returns the distinct list of years currently in use, same idea as
-// getDepartments above.
 exports.getYears = async (req, res) => {
   try {
-    const years = await User.distinct("year", {
-      year: { $ne: "" },
-    });
+    const pool = getPool();
+    const result = await pool.request().query(`
+      SELECT DISTINCT year
+      FROM Users
+      WHERE year IS NOT NULL AND year <> ''
+    `);
+    const years = result.recordset.map((r) => r.year);
     res.json({ success: true, years });
   } catch (err) {
     console.error("getYears error:", err);
@@ -32,39 +39,89 @@ exports.getYears = async (req, res) => {
 };
 
 // GET /admin/students?department=CSE&year=2nd Year
-// Returns one summary row per student: name, register number, department,
-// year, per-round score + attempts-left, and whether they've logged in
-// before. Any filter omitted (or "All") is not applied.
 exports.getStudents = async (req, res) => {
   try {
     const { department, year } = req.query;
+    const pool = getPool();
 
-    const filter = {};
+    // Build the Users query with optional filters, using parameters
+    // (never string-concatenate user input into SQL).
+    const usersRequest = pool.request();
+    let where = "WHERE 1=1";
+
     if (department && department !== "All") {
-      filter.department = department;
+      where += " AND department = @department";
+      usersRequest.input("department", sql.NVarChar, department);
     }
     if (year && year !== "All") {
-      filter.year = year;
+      where += " AND year = @year";
+      usersRequest.input("year", sql.NVarChar, year);
     }
 
-    const users = await User.find(filter).select(
-      "name registerNumber department year isFirstLogin roundResults roundAttempts"
-    );
+    const usersResult = await usersRequest.query(`
+      SELECT id, name, registerNumber, department, year, isFirstLogin
+      FROM Users
+      ${where}
+    `);
+    const users = usersResult.recordset;
 
-    const ROUND_KEYS = ["Round1", "Round2", "Round3", "Round4"];
-    const MAX_ATTEMPTS = 3;
+    if (users.length === 0) {
+      return res.json({ success: true, students: [] });
+    }
+
+    // These ids came straight back from our own DB as integers, so it's
+    // safe to inline them into an IN(...) list (guard with a numeric
+    // filter as a defensive check, not because they're untrusted input).
+    const userIds = users.map((u) => u.id).filter(Number.isInteger);
+    const idsList = userIds.join(",");
+
+    const [resultsRes, attemptsRes, timeTakenRes] = await Promise.all([
+      pool.request().query(`
+        SELECT userId, round, bestScore, result
+        FROM RoundResults
+        WHERE userId IN (${idsList})
+      `),
+      pool.request().query(`
+        SELECT userId, round, attemptsUsed
+        FROM RoundAttempts
+        WHERE userId IN (${idsList})
+      `),
+      pool.request().query(`
+        SELECT userId, round, timeTakenSeconds
+        FROM RoundTimeTaken
+        WHERE userId IN (${idsList})
+      `),
+    ]);
+
+    // Index by "userId_round" for O(1) lookup while building each student row
+    const resultsMap = {};
+    resultsRes.recordset.forEach((r) => {
+      resultsMap[`${r.userId}_${r.round}`] = r;
+    });
+
+    const attemptsMap = {};
+    attemptsRes.recordset.forEach((a) => {
+      attemptsMap[`${a.userId}_${a.round}`] = a.attemptsUsed;
+    });
+
+    const timeTakenMap = {};
+    timeTakenRes.recordset.forEach((t) => {
+      timeTakenMap[`${t.userId}_${t.round}`] = t.timeTakenSeconds;
+    });
 
     const students = users.map((user) => {
       const rounds = {};
 
       ROUND_KEYS.forEach((roundKey) => {
-        const result = user.roundResults?.[roundKey];
-        const attemptsUsed = user.roundAttempts?.[roundKey] || 0;
+        const result = resultsMap[`${user.id}_${roundKey}`];
+        const attemptsUsed = attemptsMap[`${user.id}_${roundKey}`] || 0;
+        const timeTakenSeconds = timeTakenMap[`${user.id}_${roundKey}`] ?? null;
 
         rounds[roundKey] = {
-          score: result ? result.score : null,
+          score: result ? result.bestScore : null,
           result: result ? result.result : null,
           attemptsLeft: Math.max(MAX_ATTEMPTS - attemptsUsed, 0),
+          timeTakenSeconds,
         };
       });
 

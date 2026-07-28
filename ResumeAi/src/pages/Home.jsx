@@ -24,12 +24,8 @@ import {
   HelpCircle,
   RotateCcw,
   CheckCircle2,
+  ChevronDown,
 } from "lucide-react";
-
-/* -------------------------------------------------------------------------- */
-/*  Design tokens — matches the product's own dashboard: white cards, soft    */
-/*  slate borders, sky-blue primary action, amber points, rounded-2xl shapes  */
-/* -------------------------------------------------------------------------- */
 
 const BLUE = "#0EA5E9";
 const BLUE_DARK = "#0284C7";
@@ -58,20 +54,12 @@ function FontLoader() {
   );
 }
 
-/* -------------------------------------------------------------------------- */
-/*  Shared animation variants                                                 */
-/* -------------------------------------------------------------------------- */
-
 const fadeUp = {
   hidden: { opacity: 0, y: 28 },
   show: { opacity: 1, y: 0, transition: { duration: 0.55, ease: [0.22, 1, 0.36, 1] } },
 };
 const staggerContainer = { hidden: {}, show: { transition: { staggerChildren: 0.1 } } };
 const viewport = { once: true, amount: 0.2 };
-
-/* -------------------------------------------------------------------------- */
-/*  Navbar                                                                    */
-/* -------------------------------------------------------------------------- */
 
 function Navbar() {
   const [profileOpen, setProfileOpen] = useState(false);
@@ -106,10 +94,22 @@ function Navbar() {
             <div className="relative">
               <button
                 onClick={() => setProfileOpen((v) => !v)}
-                className="flex h-9 w-9 items-center justify-center rounded-full text-sm font-bold text-white shadow-sm transition hover:opacity-90"
-                style={{ background: BLUE }}
+                className="flex items-center gap-2 rounded-full bg-gray-100 py-1.5 pl-1.5 pr-3 shadow-sm transition hover:bg-gray-200"
               >
-                {username ? username.charAt(0).toUpperCase() : <User className="h-4 w-4" />}
+                <span
+                  className="flex h-7 w-7 items-center justify-center rounded-full text-sm font-bold text-white"
+                  style={{ background: BLUE }}
+                >
+                  {username ? username.charAt(0).toUpperCase() : <User className="h-4 w-4" />}
+                </span>
+                {username && (
+                  <span className="text-sm font-medium text-gray-600" style={body}>
+                    {username}
+                  </span>
+                )}
+                <ChevronDown
+                  className={`h-4 w-4 text-gray-500 transition-transform ${profileOpen ? "rotate-180" : ""}`}
+                />
               </button>
               {profileOpen && (
                 <>
@@ -158,11 +158,6 @@ function Navbar() {
   );
 }
 
-/* -------------------------------------------------------------------------- */
-/*  Mini dashboard preview — a live recreation of the actual product UI       */
-/*  (Round cards), used as the hero's visual instead of a generic mockup      */
-/* -------------------------------------------------------------------------- */
-
 function RoundPreviewCard() {
   return (
     <motion.div
@@ -207,7 +202,6 @@ function RoundPreviewCard() {
         Round 1 — <span className="font-semibold" style={{ color: "#FCA5A5" }}>Failed</span>, 0 attempts left
       </div>
 
-      {/* floating badges */}
       <motion.div
         initial={{ opacity: 0, scale: 0.7 }}
         animate={{ opacity: 1, scale: 1 }}
@@ -236,22 +230,16 @@ function RoundPreviewCard() {
   );
 }
 
-/* -------------------------------------------------------------------------- */
-/*  Hero                                                                      */
-/* -------------------------------------------------------------------------- */
-
 function Hero() {
   const navigate = useNavigate();
   return (
     <section
       className="relative flex min-h-[92vh] items-center overflow-hidden bg-cover bg-center"
       style={{
-        // Drop your own campus photo at /public/campus-hero.jpg (or swap the path below).
         backgroundImage: "url('/mzcet1.webp')",
-        backgroundColor: INK, // shows while the image loads / as a fallback
+        backgroundColor: INK,
       }}
     >
-      {/* navy/blue overlay so the photo reads as one brand, not a stock backdrop */}
       <div
         className="absolute inset-0"
         style={{ background: `linear-gradient(115deg, ${INK}F2 0%, ${BLUE_DARK}CC 45%, ${INK}D9 100%)` }}
@@ -310,10 +298,6 @@ function Hero() {
   );
 }
 
-/* -------------------------------------------------------------------------- */
-/*  Trusted By                                                                */
-/* -------------------------------------------------------------------------- */
-
 function TrustedBy() {
   const stats = [
     { value: "10,000+", label: "Questions generated" },
@@ -336,10 +320,6 @@ function TrustedBy() {
   );
 }
 
-/* -------------------------------------------------------------------------- */
-/*  Section heading helper                                                    */
-/* -------------------------------------------------------------------------- */
-
 function SectionHeading({ eyebrow, title, subtitle }) {
   return (
     <div className="mx-auto max-w-2xl text-center">
@@ -357,10 +337,6 @@ function SectionHeading({ eyebrow, title, subtitle }) {
     </div>
   );
 }
-
-/* -------------------------------------------------------------------------- */
-/*  Features                                                                  */
-/* -------------------------------------------------------------------------- */
 
 function Features() {
   const features = [
@@ -399,13 +375,9 @@ function Features() {
   );
 }
 
-/* -------------------------------------------------------------------------- */
-/*  How It Works                                                              */
-/* -------------------------------------------------------------------------- */
-
 function HowItWorks() {
   const steps = [
-    { icon: Upload, title: "Upload your resume", desc: "Drop in your PDF or LinkedIn profile. Our AI reads your experience in seconds." },
+    { icon: Upload, title: "Upload your resume", desc: "Drop in your PDF. Our AI reads your experience in seconds." },
     { icon: MessageSquare, title: "Practice with AI", desc: "Answer tailored questions out loud across four interview rounds, anytime." },
     { icon: BarChart3, title: "Get detailed feedback", desc: "Receive confidence and clarity scores, transcripts, and improvement tips." },
   ];
@@ -434,10 +406,6 @@ function HowItWorks() {
     </section>
   );
 }
-
-/* -------------------------------------------------------------------------- */
-/*  Sample report — reuses the dashboard's own progress-ring language         */
-/* -------------------------------------------------------------------------- */
 
 function Stats() {
   const scores = [
@@ -495,10 +463,6 @@ function Stats() {
   );
 }
 
-/* -------------------------------------------------------------------------- */
-/*  Testimonials                                                              */
-/* -------------------------------------------------------------------------- */
-
 function Testimonials() {
   const items = [
     { quote: "I went from stuttering through HR rounds to confidently handling stress questions. The AI feedback pinpointed exactly what to fix.", name: "Aisha Patel", role: "CS Senior, Stanford" },
@@ -538,10 +502,6 @@ function Testimonials() {
     </section>
   );
 }
-
-/* -------------------------------------------------------------------------- */
-/*  Pricing / CTA                                                             */
-/* -------------------------------------------------------------------------- */
 
 function Pricing() {
   const navigate = useNavigate();
@@ -641,10 +601,6 @@ function Pricing() {
   );
 }
 
-/* -------------------------------------------------------------------------- */
-/*  Footer                                                                    */
-/* -------------------------------------------------------------------------- */
-
 function Footer() {
   const columns = [
     { title: "Product", links: ["Features", "Pricing", "Reviews", "Changelog"] },
@@ -698,10 +654,6 @@ function Footer() {
     </footer>
   );
 }
-
-/* -------------------------------------------------------------------------- */
-/*  Home (default export)                                                     */
-/* -------------------------------------------------------------------------- */
 
 export default function Home() {
   return (

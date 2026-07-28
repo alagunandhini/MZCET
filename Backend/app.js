@@ -6,6 +6,7 @@ var logger = require('morgan');
 require("dotenv").config();
 var cors = require('cors');
 const connectDB = require("./temp.js"); 
+const { connectSQL } = require("./db-sql");
 
 
 
@@ -29,6 +30,7 @@ const adminRoutes = require("./routes/adminRoutes");
 var app = express();
 app.use(cors());
 connectDB();
+connectSQL();
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));

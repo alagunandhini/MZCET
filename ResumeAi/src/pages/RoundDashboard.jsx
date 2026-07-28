@@ -40,12 +40,7 @@ const RoundDashboard = ({
     time: "10 Minutes",
   }));
 
-  // Shared helper: figure out a round's real state from real data
-
   const isRoundFinalized = (roundKey) => {
-    // A round is "done" — for the purpose of unlocking the next one — if
-    // the student passed it, OR they've used all 3 attempts (even if failed).
-    // This stops a hard round from permanently blocking the rest of the interview.
     const isPassed = completedRounds.includes(roundKey);
     const attemptsUsed = roundAttempts?.[roundKey] || 0;
     return isPassed || attemptsUsed >= MAX_ATTEMPTS;
@@ -57,17 +52,21 @@ const RoundDashboard = ({
     const attemptsLeft = Math.max(MAX_ATTEMPTS - attemptsUsed, 0);
     const isOutOfAttempts = !isPassed && attemptsUsed >= MAX_ATTEMPTS;
 
-    // Locked because the PREVIOUS round isn't finalized yet (passed OR exhausted)
+    // This round is "done" — regardless of outcome — the moment it's passed
+    // OR all 3 attempts are used up. Both cases now read as "Completed".
+    const isCompleted = isPassed || isOutOfAttempts;
+
+    // Locked purely because the PREVIOUS round isn't finalized yet.
     const prevRoundLocked =
       round.id !== 0 && !isRoundFinalized(rounds[round.id - 1]?.key);
 
-    return { isPassed, attemptsUsed, attemptsLeft, isOutOfAttempts, prevRoundLocked };
+    return { isPassed, attemptsUsed, attemptsLeft, isOutOfAttempts, isCompleted, prevRoundLocked };
   };
 
-const startRound = (round) => {
+  const startRound = (round) => {
     const { prevRoundLocked, isOutOfAttempts, isPassed } = getRoundState(round);
     if (prevRoundLocked || isOutOfAttempts || isPassed) return;
-     document.documentElement.requestFullscreen?.().catch((err) => {
+    document.documentElement.requestFullscreen?.().catch((err) => {
       console.warn("Fullscreen request failed/denied:", err);
     });
 
@@ -85,8 +84,6 @@ const startRound = (round) => {
 
   const handleGoToRounds = () => {
     setShowProfileMenu(false);
-    // Already on the rounds dashboard — this is a no-op for now, but wired
-    // up so it can navigate here from other pages later.
   };
 
   const onLogoutClick = () => {
@@ -94,39 +91,44 @@ const startRound = (round) => {
     handleLogout?.();
   };
 
+  // Card lift on hover (unlocked only) — variant name "hover" is shared with
+  // the lock icon below so Framer Motion propagates the hover state down to it.
+  const cardVariants = (isLocked) => ({
+    rest: { y: 0 },
+    hover: { y: isLocked ? 0 : -3 },
+  });
+
+  // Centered lock icon "dance": stays still, only wiggles while the card is hovered.
+  const lockIconVariants = {
+    rest: { rotate: 0 },
+    hover: {
+      rotate: [0, -18, 15, -10, 6, 0],
+      transition: { duration: 0.5, ease: "easeInOut" },
+    },
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-sky-50 via-white to-sky-50 p-3 sm:p-4 md:p-6">
       <div className="flex flex-col md:flex-row items-start gap-4 md:gap-6">
         {/* LEFT ROBOT SECTION */}
-
         <div className="w-full md:w-[22%] md:sticky md:top-6 flex flex-col gap-4">
-
-          {/* ROBOT CARD */}
           <div className="bg-white rounded-2xl shadow-sm border border-sky-100 flex flex-row md:flex-col items-center justify-start md:justify-center p-4 md:p-6 gap-3 md:gap-0">
             <motion.img
               src="/completed logo.png"
               className="w-16 h-16 sm:w-20 sm:h-20 md:w-56 md:h-56 object-contain drop-shadow-md"
-              animate={{
-                scale: [1, 1.05, 1],
-              }}
-              transition={{
-                duration: 2,
-                repeat: Infinity,
-              }}
+              animate={{ scale: [1, 1.05, 1] }}
+              transition={{ duration: 2, repeat: Infinity }}
             />
-
             <div className="text-left md:text-center md:mt-5">
               <h2 className="text-base sm:text-lg md:text-xl font-semibold text-gray-700">
                 Hi, I'm
               </h2>
-
               <p className="text-gray-500 text-sm md:text-base md:mt-2">
                 Your interview preparation partner.
               </p>
             </div>
           </div>
 
-          {/* PROGRESS CARD */}
           <div className="bg-white rounded-2xl shadow-sm border border-sky-100 flex flex-col items-center p-5 md:p-6">
             {(() => {
               const totalRounds = rounds.length;
@@ -143,14 +145,7 @@ const startRound = (round) => {
                   </p>
                   <div className="relative w-36 h-60">
                     <svg className="w-full h-full transform -rotate-90">
-                      <circle
-                        cx="50%"
-                        cy="50%"
-                        r={radius}
-                        stroke="#e0f2fe"
-                        strokeWidth="10"
-                        fill="transparent"
-                      />
+                      <circle cx="50%" cy="50%" r={radius} stroke="#e0f2fe" strokeWidth="10" fill="transparent" />
                       <circle
                         cx="50%"
                         cy="50%"
@@ -171,7 +166,6 @@ const startRound = (round) => {
                       </span>
                     </div>
                   </div>
-
                   {percent === 100 && (
                     <p className="text-gray-500 text-sm font-semibold text-center ">
                       🎉 Congrats! You've completed the interview
@@ -181,20 +175,15 @@ const startRound = (round) => {
               );
             })()}
           </div>
-
         </div>
 
         {/* RIGHT DASHBOARD */}
-
         <div className="w-full md:w-[78%]">
-          {/* HEADER */}
-
           <div className="bg-white rounded-2xl p-4 md:p-5 shadow-sm border border-sky-100 flex flex-col sm:flex-row justify-between sm:items-center gap-3 sm:gap-4 mb-4 md:mb-6">
             <div>
               <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-800">
                 Interview Dashboard
               </h1>
-
               <p className="text-gray-500 text-xs sm:text-sm md:text-base">
                 Complete your rounds and improve your score
               </p>
@@ -203,22 +192,11 @@ const startRound = (round) => {
             <div className="flex items-center gap-2 sm:gap-3">
               <button
                 onClick={handleGoToRounds}
-                className="
-px-3 sm:px-5 py-1.5 sm:py-2 
-text-xs sm:text-sm
-font-medium
-text-gray-600
-rounded-xl
-border-none
-bg-gray-50
-hover:bg-gray-100
-transition
-"
+                className="px-3 sm:px-5 py-1.5 sm:py-2 text-xs sm:text-sm font-medium text-gray-600 rounded-xl border-none bg-gray-50 hover:bg-gray-100 transition"
               >
                 Progress
               </button>
 
-              {/* PROFILE BUTTON + DROPDOWN */}
               <div className="relative">
                 <button
                   onClick={() => setShowProfileMenu((v) => !v)}
@@ -240,14 +218,6 @@ transition
                         </p>
                       </div>
 
-                      {/* <button
-                        onClick={handleGoToRounds}
-                        className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 py-2 text-sm font-semibold text-slate-600 transition hover:border-sky-200 hover:bg-sky-50 hover:text-sky-500"
-                      >
-                        <ListChecks className="h-4 w-4" />
-                        Rounds
-                      </button> */}
-
                       <button
                         onClick={onLogoutClick}
                         className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 py-2 text-sm font-semibold text-slate-600 transition hover:border-red-200 hover:bg-red-50 hover:text-red-500"
@@ -260,18 +230,7 @@ transition
                 )}
               </div>
 
-              <div
-                className="
-flex items-center gap-1.5
-px-3 sm:px-5 py-1.5 sm:py-2 
-text-xs sm:text-sm
-rounded-xl
-bg-amber-50
-text-amber-600
-font-bold
-whitespace-nowrap
-"
-              >
+              <div className="flex items-center gap-1.5 px-3 sm:px-5 py-1.5 sm:py-2 text-xs sm:text-sm rounded-xl bg-amber-50 text-amber-600 font-bold whitespace-nowrap">
                 <Star size={14} className="fill-amber-400 text-amber-400" />
                 320
               </div>
@@ -279,57 +238,43 @@ whitespace-nowrap
           </div>
 
           {/* ROUND CARDS */}
-
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
             {rounds.map((round) => {
-
-              const { isPassed, attemptsLeft, isOutOfAttempts, prevRoundLocked } = getRoundState(round);
-              const isLocked = prevRoundLocked || isOutOfAttempts;
+              const { isCompleted, attemptsLeft, prevRoundLocked } = getRoundState(round);
+              const isLocked = prevRoundLocked;
 
               return (
-
                 <motion.div
                   key={round.id}
-                  whileHover={!isLocked ? { y: -3 } : {}}
-                  className={`
-bg-white
-rounded-2xl
-p-4 md:p-6
-shadow-sm
-border
-transition-all
-${isLocked ? "border-gray-100 opacity-60" : "border-sky-100 hover:shadow-lg hover:border-sky-200"}
-`}
+                  initial="rest"
+                  whileHover="hover"
+                  variants={cardVariants(isLocked)}
+                  className={`relative bg-white rounded-2xl p-4 md:p-6 shadow-sm border transition-all ${
+                    isLocked
+                      ? "border-gray-100 opacity-60"
+                      : "border-sky-100 hover:shadow-lg hover:border-sky-200"
+                  }`}
                 >
                   <div className="flex justify-between items-center">
-                    <h2 className="text-lg md:text-xl font-bold text-gray-800">
-                      {round.title}
-                    </h2>
+                    <h2 className="text-lg md:text-xl font-bold text-gray-800">{round.title}</h2>
 
-                    {isPassed && (
+                    {isCompleted && (
                       <span className="flex items-center gap-1 text-emerald-500 font-semibold text-xs sm:text-sm bg-emerald-50 px-2.5 py-1 rounded-full">
-                        <CheckCircle2 size={14} /> Passed
+                        <CheckCircle2 size={14} /> Completed
                       </span>
                     )}
 
-                    {!isPassed && !isLocked && (
+                    {!isCompleted && !isLocked && (
                       <span className="flex items-center gap-1 text-sky-500 font-semibold text-xs sm:text-sm bg-sky-50 px-2.5 py-1 rounded-full">
                         <CheckCircle2 size={14} /> Ready
                       </span>
                     )}
 
-                    {!isPassed && prevRoundLocked && (
+                    {!isCompleted && isLocked && (
                       <span className="flex items-center gap-1 text-gray-400 text-xs sm:text-sm bg-gray-50 px-2.5 py-1 rounded-full">
                         <Lock size={12} /> Locked
                       </span>
                     )}
-
-                    {!isPassed && isOutOfAttempts && (
-                      <span className="flex items-center gap-1 text-red-500 text-xs sm:text-sm bg-red-50 px-2.5 py-1 rounded-full">
-                        <XCircle size={12} /> Failed
-                      </span>
-                    )}
-
                   </div>
 
                   <p className="mt-2 md:mt-3 text-gray-500 text-sm md:text-base">{round.name}</p>
@@ -339,54 +284,44 @@ ${isLocked ? "border-gray-100 opacity-60" : "border-sky-100 hover:shadow-lg hove
                       <Clock size={14} className="text-sky-400 shrink-0" />
                       Duration : <span className="font-semibold text-gray-700">{round.time}</span>
                     </p>
-
                     <p className="flex items-center gap-2">
                       <HelpCircle size={14} className="text-sky-400 shrink-0" />
                       Questions : <span className="font-semibold text-gray-700">{round.questions}</span>
                     </p>
-
                     <p className="flex items-center gap-2">
                       <RotateCcw size={14} className="text-sky-400 shrink-0" />
-                      Attempts Left : <span className="font-semibold text-sky-500">{isPassed ? "-" : attemptsLeft}</span>
+                      Attempts Left :{" "}
+                      <span className="font-semibold text-sky-500">{isCompleted ? "-" : attemptsLeft}</span>
                     </p>
                   </div>
 
                   <button
-                    disabled={isLocked || isPassed}
+                    disabled={isLocked || isCompleted}
                     onClick={() => startRound(round)}
-                    className={`
-mt-4 md:mt-6
-w-full
-py-2.5 md:py-3
-text-sm md:text-base
-rounded-xl
-font-semibold
-border-none
-transition
-shadow-sm
-
-${isLocked || isPassed
+                    className={`mt-4 md:mt-6 w-full py-2.5 md:py-3 text-sm md:text-base rounded-xl font-semibold border-none transition shadow-sm ${
+                      isLocked || isCompleted
                         ? "bg-gray-100 text-gray-400 cursor-not-allowed shadow-none"
                         : "bg-sky-400 text-white hover:bg-sky-500 hover:shadow-md"
-                      }
-
-`}
+                    }`}
                   >
-                  {isPassed
-                      ? "Completed"
-                      : isOutOfAttempts
-                      ? "No Attempts Left"
-                      : prevRoundLocked
-                      ? "Locked"
-                      : "Start Round"}
+                    {isCompleted ? "Completed" : isLocked ? "Locked" : "Start Round"}
                   </button>
+
+                  {/* Centered overlay — blurred backdrop showing round title + lock icon, icon dances on hover */}
+                  {isLocked && (
+                    <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 rounded-2xl backdrop-blur-[1px] bg-white/50 pointer-events-none">
+                      <span className="text-sm font-semibold text-black">{round.title}</span>
+                      <motion.div variants={lockIconVariants}>
+                        <Lock size={32} className="text-gray-700" strokeWidth={1.75} />
+                      </motion.div>
+                    </div>
+                  )}
                 </motion.div>
               );
             })}
           </div>
 
           {/* BACK BUTTON */}
-
           <div className="flex justify-end mt-4 md:mt-6">
             <button
               onClick={() => {
@@ -397,20 +332,7 @@ ${isLocked || isPassed
                   setShowQuestionsUI(false);
                 }, 2000);
               }}
-              className="
-flex items-center gap-1.5
-px-6 md:px-8
-py-2.5 md:py-3
-text-sm md:text-base
-font-medium
-rounded-full
-border-none
-bg-white
-shadow-sm
-text-sky-500
-hover:bg-sky-50
-transition
-"
+              className="flex items-center gap-1.5 px-6 md:px-8 py-2.5 md:py-3 text-sm md:text-base font-medium rounded-full border-none bg-white shadow-sm text-sky-500 hover:bg-sky-50 transition"
             >
               <ChevronLeft size={16} />
               Back

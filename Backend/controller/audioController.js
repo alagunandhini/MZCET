@@ -1,7 +1,7 @@
 const path = require("path");
 const fs = require("fs");
 const axios = require("axios");
-const InterviewSession = require("../models/InterviewSession");
+const { getPool, sql } = require("../db-sql");
 
 exports.processAudio = async (req, res) => {
   try {
@@ -34,7 +34,7 @@ exports.processAudio = async (req, res) => {
       {
         headers: {
           Authorization: `Token ${process.env.DEEPGRAM_API_KEY}`,
-          "Content-Type":mimeType,
+          "Content-Type": mimeType,
         },
       }
     );
@@ -44,23 +44,59 @@ exports.processAudio = async (req, res) => {
 
     console.log("📝 Transcript:", transcript);
 
-    let session = await InterviewSession.findOne({ sessionId });
+    const pool = getPool();
 
-    if (!session) {
-      session = new InterviewSession({
-        sessionId,
-         userId: req.userId,  
-        answers: [],
-      });
+    // Find the session row, or create it if this is the first answer for it —
+    // same pattern as the old findOne()/new InterviewSession() in MongoDB.
+    let sessionResult = await pool.request()
+      .input("sessionId", sql.NVarChar, sessionId)
+      .query("SELECT id FROM InterviewSessions WHERE sessionId = @sessionId");
+
+    let sessionRowId;
+
+    if (sessionResult.recordset.length === 0) {
+      const insertSession = await pool.request()
+        .input("sessionId", sql.NVarChar, sessionId)
+        .input("userId", sql.Int, req.userId)
+        .input("round", sql.NVarChar, round)
+        .query(`
+          INSERT INTO InterviewSessions (sessionId, userId, round)
+          OUTPUT INSERTED.id
+          VALUES (@sessionId, @userId, @round)
+        `);
+      sessionRowId = insertSession.recordset[0].id;
+    } else {
+      sessionRowId = sessionResult.recordset[0].id;
     }
 
-    session.answers.push({
-      question,
-      transcript,
-      round,
-    });
+    // Dedupe: if this exact question already has an answer for this session,
+    // UPDATE the transcript instead of inserting a duplicate row — handles
+    // retries after a dropped connection the same way the Mongo version did.
+    const existingAnswer = await pool.request()
+      .input("sessionRowId", sql.Int, sessionRowId)
+      .input("questionText", sql.NVarChar, question)
+      .input("round", sql.NVarChar, round)
+      .query(`
+        SELECT id FROM Answers 
+        WHERE sessionId = @sessionRowId AND questionText = @questionText AND round = @round
+      `);
 
-    await session.save();
+    if (existingAnswer.recordset.length > 0) {
+      await pool.request()
+        .input("id", sql.Int, existingAnswer.recordset[0].id)
+        .input("transcript", sql.NVarChar, transcript)
+        .query("UPDATE Answers SET transcript = @transcript WHERE id = @id");
+    } else {
+      await pool.request()
+        .input("sessionRowId", sql.Int, sessionRowId)
+        .input("questionText", sql.NVarChar, question)
+        .input("transcript", sql.NVarChar, transcript)
+        .input("round", sql.NVarChar, round)
+        .query(`
+          INSERT INTO Answers (sessionId, questionText, transcript, round)
+          VALUES (@sessionRowId, @questionText, @transcript, @round)
+        `);
+    }
 
     fs.unlink(audioPath, () => {});
 
