@@ -240,7 +240,7 @@ const RoundDashboard = ({
           {/* ROUND CARDS */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
             {rounds.map((round) => {
-              const { isCompleted, attemptsLeft, prevRoundLocked } = getRoundState(round);
+              const { isPassed, isOutOfAttempts, isCompleted, attemptsLeft, prevRoundLocked } = getRoundState(round);
               const isLocked = prevRoundLocked;
 
               return (
@@ -258,9 +258,15 @@ const RoundDashboard = ({
                   <div className="flex justify-between items-center">
                     <h2 className="text-lg md:text-xl font-bold text-gray-800">{round.title}</h2>
 
-                    {isCompleted && (
+                    {isPassed && (
                       <span className="flex items-center gap-1 text-emerald-500 font-semibold text-xs sm:text-sm bg-emerald-50 px-2.5 py-1 rounded-full">
                         <CheckCircle2 size={14} /> Completed
+                      </span>
+                    )}
+
+                    {isOutOfAttempts && (
+                      <span className="flex items-center gap-1 text-red-500 font-semibold text-xs sm:text-sm bg-red-50 px-2.5 py-1 rounded-full">
+                        <XCircle size={14} /> Failed
                       </span>
                     )}
 
@@ -304,7 +310,7 @@ const RoundDashboard = ({
                         : "bg-sky-400 text-white hover:bg-sky-500 hover:shadow-md"
                     }`}
                   >
-                    {isCompleted ? "Completed" : isLocked ? "Locked" : "Start Round"}
+                    {isPassed ? "Completed" : isOutOfAttempts ? "Failed" : isLocked ? "Locked" : "Start Round"}
                   </button>
 
                   {/* Centered overlay — blurred backdrop showing round title + lock icon, icon dances on hover */}
