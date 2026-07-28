@@ -42,26 +42,31 @@ Output Format:
 }
 `;
 
-    const callGemini = async () => {
-      const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${process.env.GEMINI_API_KEY}`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            contents: [{ parts: [{ text: prompt }] }],
-            generationConfig: {
-              temperature: 0.3,
-              maxOutputTokens: 8000,
-              responseMimeType: "application/json",
-              thinkingConfig: {
-                thinkingLevel: "low",
+const callGemini = async () => {
+      try {
+        const response = await fetch(
+          `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${process.env.GEMINI_API_KEY}`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              contents: [{ parts: [{ text: prompt }] }],
+              generationConfig: {
+                temperature: 0.3,
+                maxOutputTokens: 8000,
+                responseMimeType: "application/json",
+                thinkingConfig: {
+                  thinkingLevel: "low",
+                },
               },
-            },
-          }),
-        }
-      );
-      return await response.json();
+            }),
+          }
+        );
+        return await response.json();
+      } catch (networkErr) {
+        console.error("Gemini network error:", networkErr.message);
+        return { error: { message: `Network error: ${networkErr.message}` } };
+      }
     };
 
     let data = await callGemini();
