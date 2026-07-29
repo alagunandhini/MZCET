@@ -35,6 +35,7 @@ exports.processAudio = async (req, res) => {
     }
 
     console.log("🎤 Audio received:", audioPath);
+    console.log("📦 File size (bytes):", req.file.size, "| Declared mimeType:", mimeType);
     console.log("❓ Question:", question);
 
     const audioBuffer = fs.readFileSync(audioPath);
@@ -75,7 +76,7 @@ exports.processAudio = async (req, res) => {
     const transcript =
       response.data?.results?.channels?.[0]?.alternatives?.[0]?.transcript || "";
     console.log("📝 Transcript:", transcript);
-
+    console.log("🔍 Full Deepgram response:", JSON.stringify(response.data, null, 2));
     const pool = getPool();
 
     // Find the session row, or create it if this is the first answer for it —

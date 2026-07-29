@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
+import { Search } from "lucide-react";
 
 const ROUND_KEYS = ["Round1", "Round2", "Round3", "Round4"];
 
@@ -17,6 +18,7 @@ const AdminDashboard = () => {
   const [selectedDepartment, setSelectedDepartment] = useState("All");
   const [selectedYear, setSelectedYear] = useState("All");
   const [students, setStudents] = useState([]);
+  const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -56,6 +58,16 @@ const AdminDashboard = () => {
     };
     fetchStudents();
   }, [selectedDepartment, selectedYear]);
+
+  // Filter the already-loaded list by name or register number as the admin types
+  const filteredStudents = students.filter((student) => {
+    const q = searchQuery.trim().toLowerCase();
+    if (!q) return true;
+    return (
+      student.name?.toLowerCase().includes(q) ||
+      student.registerNumber?.toLowerCase().includes(q)
+    );
+  });
 
   return (
     <div className="min-h-screen bg-gray-50 p-6 md:p-10">
@@ -98,6 +110,17 @@ const AdminDashboard = () => {
             ))}
           </select>
         </div>
+
+        <div className="relative ml-auto">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search students..."
+            className="border border-gray-300 rounded-lg pl-9 pr-4 py-2 text-sm text-gray-700 bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-sky-300 w-56"
+          />
+        </div>
       </div>
 
       {/* Table */}
@@ -108,9 +131,9 @@ const AdminDashboard = () => {
           </div>
         ) : error ? (
           <div className="p-10 text-center text-red-500 text-sm">{error}</div>
-        ) : students.length === 0 ? (
+        ) : filteredStudents.length === 0 ? (
           <div className="p-10 text-center text-gray-400 text-sm">
-            No students found for this filter.
+            {searchQuery ? "No students match your search." : "No students found for this filter."}
           </div>
         ) : (
           <table className="min-w-full text-sm text-left">
@@ -139,7 +162,7 @@ const AdminDashboard = () => {
               </tr>
             </thead>
             <tbody>
-              {students.map((student, i) => (
+              {filteredStudents.map((student, i) => (
                 <tr
                   key={student.registerNumber}
                   className={i % 2 === 0 ? "bg-white" : "bg-gray-50/50"}
