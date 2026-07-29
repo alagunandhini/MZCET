@@ -101,7 +101,7 @@ function Navbar() {
           <Link to="/" className="flex items-center gap-2.5">
             <img src="completed logo.png" alt="Mount Zion logo" className="h-9 w-9 scale-160 rounded-xl object-contain" />
             <span className="text-lg font-bold tracking-tight" style={{ ...display, color: INK }}>
-              MZ<span style={{ color: BLUE }}>ResumeAI</span>
+              MZ<span style={{ color: BLUE }}>PlaceNext</span>
             </span>
           </Link>
         </div>
