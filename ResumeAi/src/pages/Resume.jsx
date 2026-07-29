@@ -231,14 +231,13 @@ const Resume = () => {
   // for start recording
   const startRecording = async () => {
 
-    // clean up the raw mic signal before it's even recorded — this matters a lot in a noisy classroom.
-    const stream = await navigator.mediaDevices.getUserMedia({
-      audio: {
-        echoCancellation: true,
-        noiseSuppression: true,
-        autoGainControl: true,
-      },
-    });
+   const stream = await navigator.mediaDevices.getUserMedia({
+  audio: {
+    echoCancellation: true,
+    noiseSuppression: true,
+    autoGainControl: true,
+  },
+});
 
     const audioTrack = stream.getAudioTracks()[0];
     console.log("Track label:", audioTrack.label);

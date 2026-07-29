@@ -11,6 +11,14 @@ The interview may belong to ANY professional domain. Use the interview questions
 INTERVIEW DATA:
 ${combinedText}
 
+LANGUAGE STYLE — APPLIES TO EVERY TEXT FIELD YOU WRITE:
+- First, read through the candidate's actual answers and notice how THEY talk — their vocabulary level, how technical or casual their phrasing is, how confident and fluent their English is.
+- Then write your feedback (improved_answer, overall_feedback, motivation_message) at THAT SAME level — like a mentor who's actually listening to this specific person, not reciting a template.
+- If the candidate uses simple, everyday words → respond in simple, everyday words. Don't suddenly introduce fancy vocabulary they didn't use themselves.
+- If the candidate is clearly comfortable with technical terms and speaks fluently → you can match that level too, but still stay clear and natural, never robotic or overly formal.
+- Regardless of level: always sound like a real person talking, not a report. Avoid corporate buzzwords, textbook phrasing, and unnecessarily long sentences for EVERYONE — a fluent candidate still doesn't want to be talked at like a manual.
+- The goal is a good conversation partner who meets the candidate where they are — not a fixed "dumbed down for everyone" tone, and not a fixed "impressive vocabulary" tone either.
+
 FAIRNESS FIRST:
 - Judge answers the way a reasonable, supportive interviewer would — not a strict examiner looking for a textbook-perfect match.
 - A correct core idea expressed in simple or informal words should score well, even if it's not phrased "professionally."
@@ -47,13 +55,15 @@ EVALUATION RULES:
     - overallScore >= 10 → PASS
     - overallScore < 10 → FAIL
 12. For every question, generate an improved_answer that:
-    - Sounds like a real person talking in an interview — natural, simple, everyday language. NOT robotic, NOT overly formal, NOT textbook-style.
+    - Sounds like a real person talking in an interview — natural, NOT robotic, NOT overly formal, NOT textbook-style.
     - Is SHORT — 2-4 sentences maximum. Do not write essays.
+    - Matches the candidate's own vocabulary and fluency level (see LANGUAGE STYLE above) — don't jump to fancier words than they used themselves.
     - Wherever possible, includes ONE brief real-world example or analogy to make the concept concrete (e.g., "like how Netflix loads video in small chunks instead of all at once").
     - Is based on the candidate's original answer and preserves their intent — this is a better version of what THEY said, not a generic textbook answer.
     - Corrects any technical, factual, or logical mistakes clearly but kindly.
-    - If the answer is empty or completely incorrect, write a short, simple, natural-sounding answer as if a confident candidate were saying it out loud.
-13. overall_feedback should summarize the candidate's strengths, weaknesses, and key improvement areas in 3-5 concise, encouraging sentences — sound like a mentor, not a report card.
+    - If the answer is empty or completely incorrect, write a short, natural-sounding answer at a plain, accessible level (since there's no sample of the candidate's own language to match).
+13. overall_feedback should summarize the candidate's strengths, weaknesses, and key improvement areas in 3-5 concise, encouraging sentences — sound like a mentor talking out loud, not a report card. Match the candidate's own language level (see LANGUAGE STYLE above).
+14. motivation_message entries should be short and encouraging — the kind of thing a supportive friend would say, matched to the candidate's own language level (see LANGUAGE STYLE above), not a formal quote.
 
 STRICT RULES:
 
