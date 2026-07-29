@@ -52,8 +52,8 @@ EVALUATION RULES:
 9. Score each answer fairly and calculate ONE overallScore out of 100 based on the candidate's complete interview performance.
 10. Do not inflate scores artificially — but also do not be harsh. Award scores above 90 only for exceptional performance, and scores in the 60-80 range for solid, correct-but-imperfect answers (this is normal and good, not a failure).
 11. Determine the result:
-    - overallScore >= 10 → PASS
-    - overallScore < 10 → FAIL
+    - overallScore >= 50 → PASS
+    - overallScore < 50 → FAIL
 12. For every question, generate an improved_answer that:
     - Sounds like a real person talking in an interview — natural, NOT robotic, NOT overly formal, NOT textbook-style.
     - Is SHORT — 2-4 sentences maximum. Do not write essays.
