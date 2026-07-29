@@ -24,13 +24,14 @@ var audioRoute=require("./routes/audio.js");
 const sessionRoutes = require("./routes/sessionRoutes");
 const feedbackRoutes = require("./routes/feedbackRoutes");
 const adminRoutes = require("./routes/adminRoutes");
+const ssoRoutes = require("./routes/sso");
 
 
 
 var app = express();
 app.use(cors());
 connectDB();
-connectSQL();
+connectSQL().catch(err => console.log("⚠️ SQL init failed, server continuing anyway"));
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
@@ -50,6 +51,7 @@ app.use("/", sessionRoutes);
 
 app.use("/feedback", feedbackRoutes);
 app.use("/admin", adminRoutes);
+app.use(ssoRoutes);
 
 
 

@@ -564,13 +564,13 @@ const ResumeUpload = ({
   return (
     <div className="min-h-screen" style={{ ...body, background: BG }}>
       <FontLoader />
-        <Link
-          to="/"
+        <button
+          onClick={() => navigate("/")}
           className="absolute left-4 top-4 inline-flex items-center gap-1.5 rounded-full border bg-white/80 px-4 py-4 text-sm font-semibold backdrop-blur-md transition hover:-translate-y-0.5 sm:left-6 sm:top-6"
           style={{ borderColor: BORDER, color: INK }}
         >
-          <ArrowLeft  className="h-5 w-5" />
-        </Link>
+          <ArrowLeft className="h-5 w-5" />
+        </button>
       
       <main className="mx-auto max-w-6xl px-4 pb-24 pt-10 sm:px-6">
         <div className="grid gap-12 lg:grid-cols-2 lg:items-center">

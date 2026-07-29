@@ -8,6 +8,7 @@ import {
   FileText,
   Brain,
   Layers,
+  ArrowLeft,
   ArrowRight,
   Upload,
   MessageSquare,
@@ -89,16 +90,21 @@ function Navbar() {
         className="mx-auto flex items-center justify-between border bg-white/95 px-4 py-3 shadow-lg shadow-slate-200/60 backdrop-blur-md sm:px-6 lg:px-10 xl:px-25"
         style={{ borderColor: BORDER }}
       >
-        <Link to="/" className="flex items-center gap-2 sm:gap-2.5" onClick={() => setMobileOpen(false)}>
-          <img
-            src="completed logo.png"
-            alt="Mount Zion logo"
-            className="h-8 w-8 scale-150 rounded-xl object-contain sm:h-9 sm:w-9 sm:scale-160"
-          />
-          <span className="text-base font-bold tracking-tight sm:text-lg" style={{ ...display, color: INK }}>
-            MZ<span style={{ color: BLUE }}>ResumeAI</span>
-          </span>
-        </Link>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => window.location.href = "http://localhost:3011/home.html"}
+            className="inline-flex items-center justify-center rounded-full border p-2 transition hover:bg-gray-100"
+            style={{ borderColor: BORDER, color: INK }}
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </button>
+          <Link to="/" className="flex items-center gap-2.5">
+            <img src="completed logo.png" alt="Mount Zion logo" className="h-9 w-9 scale-160 rounded-xl object-contain" />
+            <span className="text-lg font-bold tracking-tight" style={{ ...display, color: INK }}>
+              MZ<span style={{ color: BLUE }}>ResumeAI</span>
+            </span>
+          </Link>
+        </div>
 
         {/* Desktop actions */}
         <div className="hidden items-center gap-3 sm:flex">

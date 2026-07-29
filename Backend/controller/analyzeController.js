@@ -173,7 +173,7 @@ const callGemini = async () => {
 
       await transaction.commit();
     } catch (txErr) {
-      await transaction.rollback();
+      try { await transaction.rollback(); } catch (_) {}
       throw txErr;
     }
 

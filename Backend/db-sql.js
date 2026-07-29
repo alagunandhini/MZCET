@@ -10,7 +10,7 @@ const config = {
     encrypt: false,              // college servers are often not set up for encrypted connections; try false first
     trustServerCertificate: true,
   },
-  connectionTimeout: 15000,
+  connectionTimeout: 60000,
 };
 
 let pool;
