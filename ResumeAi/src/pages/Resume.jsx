@@ -171,6 +171,13 @@ const Resume = () => {
 
     const MAX_VIOLATIONS = 4; // 3 warnings, 4th terminates
 
+    // Tracks the "re-enter on next click" listener while it's pending, so we
+    // can remove it the moment the round ends (see effect cleanup below).
+    // Without this, the listener stays attached to `document` forever and
+    // fires on the NEXT click anywhere in the app — even after the round is
+    // over — forcing fullscreen on the dashboard/upload page.
+    let pendingReentryListener = null;
+
     const registerViolation = (reason) => {
       if (intentionalExitRef.current) return; // we caused this ourselves — not a violation
 
@@ -191,7 +198,34 @@ const Resume = () => {
 
     const handleFullscreenChange = () => {
       if (!document.fullscreenElement) {
+        // Exiting fullscreen because WE told it to (Exit button, round
+        // finished, time up, terminated for violations) is not a violation
+        // and should NOT try to force fullscreen back on afterwards.
+        if (intentionalExitRef.current) return;
+
         registerViolation("you exited fullscreen");
+
+        // Don't stack a second pending listener if one is already waiting.
+        if (pendingReentryListener) {
+          document.removeEventListener("click", pendingReentryListener);
+        }
+
+        // Browsers won't let JS re-enter fullscreen without a genuine user
+        // gesture, so we can't just call requestFullscreen() here directly.
+        // Instead, listen for the user's very next click anywhere on the
+        // page and use THAT as the gesture to re-enter fullscreen.
+        pendingReentryListener = async () => {
+          document.removeEventListener("click", pendingReentryListener);
+          pendingReentryListener = null;
+          if (document.fullscreenElement) return; // they got back in some other way
+          try {
+            await document.documentElement.requestFullscreen();
+          } catch (err) {
+            console.error("Failed to re-enter fullscreen", err);
+          }
+        };
+
+        document.addEventListener("click", pendingReentryListener);
       }
     };
 
@@ -207,6 +241,10 @@ const Resume = () => {
     return () => {
       document.removeEventListener("fullscreenchange", handleFullscreenChange);
       document.removeEventListener("visibilitychange", handleVisibilityChange);
+      if (pendingReentryListener) {
+        document.removeEventListener("click", pendingReentryListener);
+        pendingReentryListener = null;
+      }
     };
   }, [startPractice]);
 
@@ -488,7 +526,6 @@ const Resume = () => {
     }
   };
 
-
   // funstion to move question
   const next = () => {
     const totalQuestions = questions[currentSection]?.questions?.length || 0;
@@ -548,13 +585,13 @@ const Resume = () => {
       document.exitFullscreen?.().catch(() => { });
     }
     setShowExitModal(false);
-    setTransitionText("Returning to upload…");
+    setTransitionText("Returning to dashboard…");
     setTransitionLoading(true);
     setTimeout(() => {
       setSessionId(uuidv4());
       setTransitionLoading(false);
       setStartPractice(false);
-      setShowQuestionsUI(false);
+      setShowQuestionsUI(true);
       setCurrentIndex(0);
     }, 2000);
   };
