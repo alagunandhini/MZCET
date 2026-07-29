@@ -565,7 +565,7 @@ const ResumeUpload = ({
     <div className="min-h-screen" style={{ ...body, background: BG }}>
       <FontLoader />
         <button
-          onClick={() => window.location.href = "http://localhost:3011/home.html"}
+          onClick={() => navigate("/")}
           className="absolute left-4 top-4 inline-flex items-center gap-1.5 rounded-full border bg-white/80 px-4 py-4 text-sm font-semibold backdrop-blur-md transition hover:-translate-y-0.5 sm:left-6 sm:top-6"
           style={{ borderColor: BORDER, color: INK }}
         >

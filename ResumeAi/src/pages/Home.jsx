@@ -8,6 +8,7 @@ import {
   FileText,
   Brain,
   Layers,
+  ArrowLeft,
   ArrowRight,
   Upload,
   MessageSquare,
@@ -82,12 +83,21 @@ function Navbar() {
         className="mx-auto flex items-center justify-between  border bg-white/95 px-25 py-3 shadow-lg shadow-slate-200/60 backdrop-blur-md"
         style={{ borderColor: BORDER }}
       >
-        <Link to="/" className="flex items-center gap-2.5">
-          <img src="completed logo.png" alt="Mount Zion logo" className="h-9 w-9 scale-160 rounded-xl object-contain" />
-          <span className="text-lg font-bold tracking-tight" style={{ ...display, color: INK }}>
-            MZ<span style={{ color: BLUE }}>ResumeAI</span>
-          </span>
-        </Link>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => window.location.href = "http://localhost:3011/home.html"}
+            className="inline-flex items-center justify-center rounded-full border p-2 transition hover:bg-gray-100"
+            style={{ borderColor: BORDER, color: INK }}
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </button>
+          <Link to="/" className="flex items-center gap-2.5">
+            <img src="completed logo.png" alt="Mount Zion logo" className="h-9 w-9 scale-160 rounded-xl object-contain" />
+            <span className="text-lg font-bold tracking-tight" style={{ ...display, color: INK }}>
+              MZ<span style={{ color: BLUE }}>ResumeAI</span>
+            </span>
+          </Link>
+        </div>
 
         <div className="flex items-center gap-3">
           {token ? (
