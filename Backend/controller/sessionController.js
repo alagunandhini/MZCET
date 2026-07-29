@@ -251,7 +251,7 @@ exports.endSession = async (req, res) => {
       res.json({ success: true, feedback });
 
     } catch (txErr) {
-      await transaction.rollback();
+      try { await transaction.rollback(); } catch (_) {}
       throw txErr;
     }
 
@@ -354,7 +354,7 @@ exports.terminateRound = async (req, res) => {
 
       await transaction.commit();
     } catch (txErr) {
-      await transaction.rollback();
+      try { await transaction.rollback(); } catch (_) {}
       throw txErr;
     }
 

@@ -549,13 +549,13 @@ const Resume = () => {
       document.exitFullscreen?.().catch(() => { });
     }
     setShowExitModal(false);
-    setTransitionText("Returning to questions…");
+    setTransitionText("Returning to upload…");
     setTransitionLoading(true);
     setTimeout(() => {
       setSessionId(uuidv4());
       setTransitionLoading(false);
       setStartPractice(false);
-      setShowQuestionsUI(true);
+      setShowQuestionsUI(false);
       setCurrentIndex(0);
     }, 2000);
   };
