@@ -9,6 +9,17 @@ exports.processAudio = async (req, res) => {
       return res.status(400).json({ error: "Audio file missing" });
     }
 
+    // Pull the logged-in user's id from wherever your auth middleware puts it.
+    // I don't have your middleware code, so this checks the common spots —
+    // once you confirm which one is actually set, you can trim this down to
+    // just that one line.
+    const userId = req.userId || req.user?.id || req.user?.userId;
+
+    if (!userId || isNaN(Number(userId))) {
+      console.error("processAudio: missing/invalid userId on request:", userId);
+      return res.status(401).json({ error: "Invalid or missing user session" });
+    }
+
     const audioPath = path.join(__dirname, "..", req.file.path);
     const question = req.body.question;
     const sessionId = req.body.sessionId;
@@ -28,20 +39,41 @@ exports.processAudio = async (req, res) => {
 
     const audioBuffer = fs.readFileSync(audioPath);
 
-    const response = await axios.post(
-      "https://api.deepgram.com/v1/listen",
-      audioBuffer,
-      {
-        headers: {
-          Authorization: `Token ${process.env.DEEPGRAM_API_KEY}`,
-          "Content-Type": mimeType,
-        },
+   const callDeepgram = async () => {
+      return axios.post(
+        "https://api.deepgram.com/v1/listen?smart_format=true&punctuate=true",
+        audioBuffer,
+        {
+          headers: {
+            Authorization: `Token ${process.env.DEEPGRAM_API_KEY}`,
+            "Content-Type": mimeType,
+          },
+          timeout: 30000,
+        }
+      );
+    };
+
+    let response;
+    let attempts = 0;
+    const maxAttempts = 3;
+
+    while (attempts < maxAttempts) {
+      try {
+        response = await callDeepgram();
+        break;
+      } catch (err) {
+        attempts++;
+        const isTimeout = err.response?.status === 408 || err.code === "ECONNABORTED";
+        if (isTimeout && attempts < maxAttempts) {
+          console.warn(`Deepgram upload timeout, retrying (${attempts}/${maxAttempts})...`);
+          continue;
+        }
+        throw err;
       }
-    );
+    }
 
     const transcript =
       response.data?.results?.channels?.[0]?.alternatives?.[0]?.transcript || "";
-
     console.log("📝 Transcript:", transcript);
 
     const pool = getPool();
@@ -57,7 +89,7 @@ exports.processAudio = async (req, res) => {
     if (sessionResult.recordset.length === 0) {
       const insertSession = await pool.request()
         .input("sessionId", sql.NVarChar, sessionId)
-        .input("userId", sql.Int, req.userId)
+        .input("userId", sql.Int, userId)
         .input("round", sql.NVarChar, round)
         .query(`
           INSERT INTO InterviewSessions (sessionId, userId, round)
@@ -106,7 +138,12 @@ exports.processAudio = async (req, res) => {
       transcript,
     });
   } catch (err) {
-    console.error("Deepgram Error:", err);
-    res.status(500).json({ error: "Transcription failed" });
+    console.error("Deepgram Error:", err.message);
+    const isTimeout = err.response?.status === 408 || err.code === "ECONNABORTED";
+    res.status(500).json({
+      error: isTimeout
+        ? "Audio upload was too slow — please check your internet connection and try recording again."
+        : "Transcription failed",
+    });
   }
 };

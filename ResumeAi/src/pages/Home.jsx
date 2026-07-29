@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate, Link } from "react-router-dom";
 import {
   Menu,
@@ -60,10 +60,11 @@ const fadeUp = {
   show: { opacity: 1, y: 0, transition: { duration: 0.55, ease: [0.22, 1, 0.36, 1] } },
 };
 const staggerContainer = { hidden: {}, show: { transition: { staggerChildren: 0.1 } } };
-const viewport = { once: true, amount: 0.2 };
+const viewport = { once: false, amount: 0.2 };
 
 function Navbar() {
   const [profileOpen, setProfileOpen] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
   const navigate = useNavigate();
 
   const token = localStorage.getItem("token");
@@ -75,12 +76,18 @@ function Navbar() {
     localStorage.removeItem("username");
     localStorage.removeItem("user");
     navigate("/login");
+    setMobileOpen(false);
+  };
+
+  const handleGetStarted = () => {
+    navigate("/resume");
+    setMobileOpen(false);
   };
 
   return (
-    <header className="sticky top- z-50 w-full " >
+    <header className="sticky top-0 z-50 w-full">
       <nav
-        className="mx-auto flex items-center justify-between  border bg-white/95 px-25 py-3 shadow-lg shadow-slate-200/60 backdrop-blur-md"
+        className="mx-auto flex items-center justify-between border bg-white/95 px-4 py-3 shadow-lg shadow-slate-200/60 backdrop-blur-md sm:px-6 lg:px-10 xl:px-25"
         style={{ borderColor: BORDER }}
       >
         <div className="flex items-center gap-2">
@@ -99,7 +106,8 @@ function Navbar() {
           </Link>
         </div>
 
-        <div className="flex items-center gap-3">
+        {/* Desktop actions */}
+        <div className="hidden items-center gap-3 sm:flex">
           {token ? (
             <div className="relative">
               <button
@@ -147,7 +155,7 @@ function Navbar() {
             <>
               <Link
                 to="/login"
-                className="hidden text-sm font-medium text-slate-600 transition hover:text-slate-900 sm:inline-block"
+                className="text-sm font-medium text-slate-600 transition hover:text-slate-900"
                 style={body}
               >
                 Login
@@ -163,7 +171,86 @@ function Navbar() {
             </>
           )}
         </div>
+
+        {/* Mobile: avatar (if logged in) + hamburger */}
+        <div className="flex items-center gap-2 sm:hidden">
+          {token && (
+            <span
+              className="flex h-8 w-8 items-center justify-center rounded-full text-sm font-bold text-white"
+              style={{ background: BLUE }}
+            >
+              {username ? username.charAt(0).toUpperCase() : <User className="h-4 w-4" />}
+            </span>
+          )}
+          <button
+            onClick={() => setMobileOpen((v) => !v)}
+            aria-label={mobileOpen ? "Close menu" : "Open menu"}
+            className="flex h-9 w-9 items-center justify-center rounded-xl border transition hover:bg-gray-100"
+            style={{ borderColor: BORDER, color: INK }}
+          >
+            {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+          </button>
+        </div>
       </nav>
+
+      {/* Mobile dropdown panel */}
+      <AnimatePresence>
+        {mobileOpen && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
+            className="overflow-hidden border-b bg-white/95 shadow-lg backdrop-blur-md sm:hidden"
+            style={{ borderColor: BORDER }}
+          >
+            <div className="flex flex-col gap-3 px-4 py-4">
+              {token ? (
+                <>
+                  <div className="flex items-center gap-3 rounded-xl bg-gray-100 px-3 py-2.5">
+                    <span
+                      className="flex h-9 w-9 items-center justify-center rounded-full text-sm font-bold text-white"
+                      style={{ background: BLUE }}
+                    >
+                      {username ? username.charAt(0).toUpperCase() : <User className="h-4 w-4" />}
+                    </span>
+                    <span className="text-sm font-medium text-gray-600" style={body}>
+                      {username || "User"}
+                    </span>
+                  </div>
+                  <button
+                    onClick={handleLogout}
+                    className="flex w-full items-center justify-center gap-2 rounded-xl border py-2.5 text-sm font-semibold text-slate-600 transition hover:border-red-200 hover:bg-red-50 hover:text-red-500"
+                    style={{ borderColor: BORDER, ...body }}
+                  >
+                    <LogOut className="h-4 w-4" />
+                    Logout
+                  </button>
+                </>
+              ) : (
+                <>
+                  <Link
+                    to="/login"
+                    onClick={() => setMobileOpen(false)}
+                    className="rounded-xl border py-2.5 text-center text-sm font-medium text-slate-600 transition hover:text-slate-900"
+                    style={{ borderColor: BORDER, ...body }}
+                  >
+                    Login
+                  </Link>
+                  <button
+                    onClick={handleGetStarted}
+                    className="inline-flex w-full items-center justify-center gap-1.5 rounded-xl px-4 py-2.5 text-sm font-semibold text-white shadow-sm shadow-sky-200 transition hover:brightness-105"
+                    style={{ background: BLUE, ...body }}
+                  >
+                    Get Started Free
+                    <ArrowRight className="h-4 w-4" />
+                  </button>
+                </>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </header>
   );
 }
@@ -274,7 +361,7 @@ function Hero() {
           </motion.h1>
 
           <motion.p variants={fadeUp} className="mt-6 max-w-lg text-base leading-relaxed text-white/80" style={body}>
-          Build confidence before your placement interviews. Upload your resume, answer personalized questions through voice recordings, and receive AI feedback to improve your communication and technical performance.
+          {/* Build confidence before your placement interviews. Upload your resume, answer personalized questions through voice recordings, and receive AI feedback to improve your communication and technical performance. */}
           </motion.p>
 
           <motion.div variants={fadeUp} className="mt-9 flex flex-col gap-3 sm:flex-row">
@@ -312,7 +399,7 @@ function TrustedBy() {
   const stats = [
     { value: "10,000+", label: "Questions generated" },
     { value: "4", label: "Interview rounds" },
-    { value: "< 60 sec", label: "To your first score" },
+    { value: "30", label: "Mins per round" },
   ];
   return (
     <section className="border-y" style={{ background: BG, borderColor: BORDER }}>
