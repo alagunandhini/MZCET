@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 import { Search } from "lucide-react";
+import { API_URL } from "../config";
 
 const ROUND_KEYS = ["Round1", "Round2", "Round3", "Round4"];
 
@@ -13,6 +15,7 @@ const formatTime = (seconds) => {
 };
 
 const AdminDashboard = () => {
+  const navigate = useNavigate();
   const [departments, setDepartments] = useState([]);
   const [years, setYears] = useState([]);
   const [selectedDepartment, setSelectedDepartment] = useState("All");
@@ -22,13 +25,27 @@ const AdminDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
+  
+ // Redirect to login if there's no admin token
+  useEffect(() => {
+    const token = localStorage.getItem("adminToken");
+    if (!token) {
+      navigate("/admin-login");
+    }
+  }, [navigate]);
+
   // Load the department + year lists once, for the filter dropdowns
   useEffect(() => {
     const fetchFilters = async () => {
       try {
+        const token = localStorage.getItem("adminToken");
         const [deptRes, yearRes] = await Promise.all([
-          axios.get("http://localhost:3007/admin/departments"),
-          axios.get("http://localhost:3007/admin/years"),
+          axios.get(`${API_URL}/admin/departments`, {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
+          axios.get(`${API_URL}/admin/years`, {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
         ]);
         setDepartments(deptRes.data.departments || []);
         setYears(yearRes.data.years || []);
@@ -45,8 +62,10 @@ const AdminDashboard = () => {
       setLoading(true);
       setError("");
       try {
-        const res = await axios.get("http://localhost:3007/admin/students", {
+       const token = localStorage.getItem("adminToken");
+        const res = await axios.get(`${API_URL}/admin/students`, {
           params: { department: selectedDepartment, year: selectedYear },
+          headers: { Authorization: `Bearer ${token}` },
         });
         setStudents(res.data.students || []);
       } catch (err) {
