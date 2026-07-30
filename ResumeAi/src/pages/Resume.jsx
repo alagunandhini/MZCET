@@ -196,6 +196,10 @@ const Resume = () => {
       });
     };
 
+    // Gesture events we listen for to re-enter fullscreen — any of these
+    // count as a valid "user gesture" in browser fullscreen APIs.
+    const REENTRY_EVENTS = ["click", "keydown", "touchstart"];
+
     const handleFullscreenChange = () => {
       if (!document.fullscreenElement) {
         // Exiting fullscreen because WE told it to (Exit button, round
@@ -207,25 +211,35 @@ const Resume = () => {
 
         // Don't stack a second pending listener if one is already waiting.
         if (pendingReentryListener) {
-          document.removeEventListener("click", pendingReentryListener);
+          REENTRY_EVENTS.forEach((evt) =>
+            document.removeEventListener(evt, pendingReentryListener)
+          );
         }
 
-        // Browsers won't let JS re-enter fullscreen without a genuine user
-        // gesture, so we can't just call requestFullscreen() here directly.
-        // Instead, listen for the user's very next click anywhere on the
-        // page and use THAT as the gesture to re-enter fullscreen.
+        // Browsers refuse to re-enter fullscreen from a fullscreenchange
+        // handler — it MUST be called directly inside a user-gesture event
+        // (click, keydown, touchstart all qualify). So we wait for whichever
+        // of those the user does first and use that as the gesture.
         pendingReentryListener = async () => {
-          document.removeEventListener("click", pendingReentryListener);
+          REENTRY_EVENTS.forEach((evt) =>
+            document.removeEventListener(evt, pendingReentryListener)
+          );
           pendingReentryListener = null;
-          if (document.fullscreenElement) return; // they got back in some other way
+          if (document.fullscreenElement) return; // already back in some other way
+
           try {
             await document.documentElement.requestFullscreen();
           } catch (err) {
-            console.error("Failed to re-enter fullscreen", err);
+            // Some browsers impose a brief cooldown right after an
+            // Escape-key exit before allowing another requestFullscreen()
+            // call, even with a valid gesture — that shows up here.
+            console.error("Failed to re-enter fullscreen:", err);
           }
         };
 
-        document.addEventListener("click", pendingReentryListener);
+        REENTRY_EVENTS.forEach((evt) =>
+          document.addEventListener(evt, pendingReentryListener, { once: false })
+        );
       }
     };
 
@@ -242,7 +256,9 @@ const Resume = () => {
       document.removeEventListener("fullscreenchange", handleFullscreenChange);
       document.removeEventListener("visibilitychange", handleVisibilityChange);
       if (pendingReentryListener) {
-        document.removeEventListener("click", pendingReentryListener);
+        REENTRY_EVENTS.forEach((evt) =>
+          document.removeEventListener(evt, pendingReentryListener)
+        );
         pendingReentryListener = null;
       }
     };

@@ -36,10 +36,12 @@ const InterviewRoom = ({
       ? ((currentIndex + 1) / totalQuestions) * 100
       : 0;
 
-  // Reused in both the desktop (top row) and mobile (above logo) placements
+  // Single timer badge, now shown centered above the question box for all
+  // screen sizes (no longer split into a top-row desktop version and a
+  // separate mobile version).
   const TimerBadge = () => (
-    <div className="flex items-center gap-1 bg-white text-sky-600 font-bold text-xs sm:text-sm px-3 py-1.5 rounded-full shadow-sm border border-sky-100 whitespace-nowrap">
-      ⏱ {formatTime(seconds)}
+    <div className="flex items-center gap-1 bg-white text-black font-mono font-bold tracking-widest text-base sm:text-lg md:text-xl px-3 py-1 sm:px-4 sm:py-1.5 rounded-md shadow-sm border border-gray-300 whitespace-nowrap">
+      {formatTime(seconds)}
     </div>
   );
 
@@ -58,11 +60,11 @@ const InterviewRoom = ({
           </p>
         </div>
 
-        {/* TOP SECTION - Progress bar + Timer + Exit button, all in one row on desktop.
-            Stays fixed right under header, not affected by centering below */}
-        <div className="w-full flex items-center px-4 md:px-10 pt-3 mt-6 md:pt-2 gap-3 md:gap-6">
-          {/* Progress Bar — flex-1 so it fills exactly the space left over
-              after the timer and exit button, leaving no dead space at the end */}
+        {/* TOP SECTION - Progress bar + Exit button, back to original layout.
+            Mobile top margin trimmed (mt-2, was mt-6) — part of the overall
+            mobile spacing tightening below the bottom buttons too. */}
+        <div className="w-full flex items-center px-4 md:px-10 pt-3 mt-2 md:mt-6 md:pt-2 gap-3 md:gap-6">
+          {/* Progress Bar — back to flex-1, taking all remaining space */}
           <div className="flex-1">
             <div className="flex justify-between items-center mb-1 md:mb-2">
               <p className="font-semibold text-gray-700 text-xs sm:text-sm md:text-base">
@@ -80,12 +82,7 @@ const InterviewRoom = ({
             </div>
           </div>
 
-          {/* Timer — desktop only here; shown above the logo on mobile instead */}
-          <div className="hidden md:block shrink-0">
-            <TimerBadge />
-          </div>
-
-          {/* Exit button */}
+          {/* Exit button — back to original layout */}
           <div className="flex justify-end gap-2 shrink-0">
             <button
               onClick={() => setShowExitModal(true)}
@@ -97,21 +94,26 @@ const InterviewRoom = ({
           </div>
         </div>
 
-        {/* Timer — mobile only, shown just above the logo */}
-        <div className="md:hidden flex justify-center mt-4">
-          <TimerBadge />
-        </div>
-
         {/* WRAPPER - only logo, question box, mic, skip go here. This is what moves down / centers on mobile */}
         <div className="w-full flex flex-col items-center ">
-          {/* LEFT SECTION */}
-          <div className="flex flex-col md:flex-row w-full px-6 md:px-10 mt-6 md:mt-5 gap-2 md:gap-4">
+
+          {/* Timer — centered, with enough top margin to clear the progress
+              bar above it (mt-1 was too tight and made it look like it was
+              overlapping). LEFT SECTION's margin below is trimmed slightly
+              to compensate so mobile still fits without scrolling. */}
+          <div className="flex justify-center mt-10 mb-1">
+            <TimerBadge />
+          </div>
+
+          {/* LEFT SECTION — mobile top margin trimmed further (mt-1) to
+              offset the timer's added mt-3; desktop margin (md:mt-5) unchanged */}
+          <div className="flex flex-col md:flex-row w-full px-6 md:px-10 mt-1 md:mt-5 gap-2 md:gap-4">
             {/* ROBOT */}
             <div className="flex justify-center md:w-1/4 w-full">
               <div className="flex flex-col items-center">
                 <motion.img
                   src="mzlogo.png"
-                  className="w-44 h-44 sm:w-44 sm:h-44 md:w-70 md:h-70 me-4"
+                  className="w-28 h-28 sm:w-36 sm:h-36 md:w-70 md:h-70 me-4"
                   initial={{}}
                   animate={{
                     scale: isSpeaking ? [1, 1.04, 1] : 1,
@@ -197,13 +199,15 @@ const InterviewRoom = ({
             </div>
           </div>
 
-          {/* BOTTOM BUTTONS */}
-          <div className="flex flex-col items-center justify-center mt-20 md:mt-8 gap-3 md:gap-6 mb-4 md:mb-3">
+          {/* BOTTOM BUTTONS — mobile top margin was mt-20 (80px!), trimmed to
+              mt-6. Bumped slightly to mt-8 per request to nudge it down a
+              touch, still far from the original 80px. */}
+          <div className="flex flex-col items-center justify-center mt-8 md:mt-8 gap-3 md:gap-6 mb-4 md:mb-3">
             {/* SPEAK NOW BUTTON */}
             <button
               onClick={isRecording ? stopRecording : startRecording}
               disabled={isSpeaking}
-              className={`w-28 h-28 rounded-full flex items-center justify-center shadow-xl transition-all border-none outline-none focus:outline-none appearance-none
+              className={`w-20 h-20 md:w-28 md:h-28 rounded-full flex items-center justify-center shadow-xl transition-all border-none outline-none focus:outline-none appearance-none
 ${isRecording
                   ? "bg-sky-400 animate-pulse ring-8 ring-sky-300/50"
                   : "bg-sky-300 hover:bg-sky-400"
