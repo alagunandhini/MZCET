@@ -29,7 +29,21 @@ const ssoRoutes = require("./routes/sso");
 
 
 var app = express();
-app.use(cors());
+app.use(cors({
+  origin: true,
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Origin", "X-Requested-With", "Content-Type", "Accept", "Authorization"],
+  exposedHeaders: ["Authorization"]
+}));
+
+app.options("*", cors({
+  origin: true,
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Origin", "X-Requested-With", "Content-Type", "Accept", "Authorization"],
+  exposedHeaders: ["Authorization"]
+}));
 connectDB();
 connectSQL().catch(err => console.log("⚠️ SQL init failed, server continuing anyway"));
 

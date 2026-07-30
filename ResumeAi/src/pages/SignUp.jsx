@@ -2,6 +2,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import axios from "axios";
 import { useState, useEffect } from "react";
 import { CheckCircle } from "lucide-react";
+import { API_URL } from "../config";
 
 const SignUp = () => {
     const [name, setName] = useState("");
@@ -28,7 +29,7 @@ const SignUp = () => {
             return;
         }
         try {
-            const res = await axios.post("http://localhost:3007/users/signup", { name, email, password });
+            const res = await axios.post(`${API_URL}/users/signup`, { name, email, password });
             var user = res.data.user;
             const token = res.data.token;
             localStorage.setItem("user", JSON.stringify(user));

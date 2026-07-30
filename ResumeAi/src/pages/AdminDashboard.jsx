@@ -26,9 +26,11 @@ const AdminDashboard = () => {
   const [error, setError] = useState("");
 
   
- // Redirect to login if there's no admin token
+ // Redirect to login if there's no admin token (check both SSO "token" and direct login "adminToken")
   useEffect(() => {
-    const token = localStorage.getItem("adminToken");
+    const adminToken = localStorage.getItem("adminToken");
+    const ssoToken = localStorage.getItem("token");
+    const token = adminToken || ssoToken;
     if (!token) {
       navigate("/admin-login");
     }
@@ -38,7 +40,9 @@ const AdminDashboard = () => {
   useEffect(() => {
     const fetchFilters = async () => {
       try {
-        const token = localStorage.getItem("adminToken");
+        const adminToken = localStorage.getItem("adminToken");
+        const ssoToken = localStorage.getItem("token");
+        const token = adminToken || ssoToken;
         const [deptRes, yearRes] = await Promise.all([
           axios.get(`${API_URL}/admin/departments`, {
             headers: { Authorization: `Bearer ${token}` },
@@ -62,7 +66,9 @@ const AdminDashboard = () => {
       setLoading(true);
       setError("");
       try {
-       const token = localStorage.getItem("adminToken");
+        const adminToken = localStorage.getItem("adminToken");
+        const ssoToken = localStorage.getItem("token");
+        const token = adminToken || ssoToken;
         const res = await axios.get(`${API_URL}/admin/students`, {
           params: { department: selectedDepartment, year: selectedYear },
           headers: { Authorization: `Bearer ${token}` },
