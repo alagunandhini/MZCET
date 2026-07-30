@@ -9,7 +9,7 @@ export default defineConfig({
     react()
   ],
   server: {
-    host: true,  // allows access from outside the container
-    port: 5173   // make sure this matches your docker-compose mapping
+    host: true,
+    port: 5173
   }
 })

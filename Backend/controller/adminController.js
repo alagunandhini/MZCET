@@ -69,29 +69,34 @@ exports.getStudents = async (req, res) => {
       return res.json({ success: true, students: [] });
     }
 
-    // These ids came straight back from our own DB as integers, so it's
-    // safe to inline them into an IN(...) list (guard with a numeric
-    // filter as a defensive check, not because they're untrusted input).
-    const userIds = users.map((u) => u.id).filter(Number.isInteger);
+    const userIds = users.map((u) => u.id).filter((id) => id != null);
     const idsList = userIds.join(",");
 
-    const [resultsRes, attemptsRes, timeTakenRes] = await Promise.all([
-      pool.request().query(`
-        SELECT userId, round, bestScore, result
-        FROM RoundResults
-        WHERE userId IN (${idsList})
-      `),
-      pool.request().query(`
-        SELECT userId, round, attemptsUsed
-        FROM RoundAttempts
-        WHERE userId IN (${idsList})
-      `),
-      pool.request().query(`
-        SELECT userId, round, timeTakenSeconds
-        FROM RoundTimeTaken
-        WHERE userId IN (${idsList})
-      `),
-    ]);
+    let resultsRes = { recordset: [] };
+    let attemptsRes = { recordset: [] };
+    let timeTakenRes = { recordset: [] };
+
+    try {
+      [resultsRes, attemptsRes, timeTakenRes] = await Promise.all([
+        pool.request().query(`
+          SELECT userId, round, bestScore, result
+          FROM RoundResults
+          WHERE userId IN (${idsList})
+        `),
+        pool.request().query(`
+          SELECT userId, round, attemptsUsed
+          FROM RoundAttempts
+          WHERE userId IN (${idsList})
+        `),
+        pool.request().query(`
+          SELECT userId, round, timeTakenSeconds
+          FROM RoundTimeTaken
+          WHERE userId IN (${idsList})
+        `),
+      ]);
+    } catch (roundErr) {
+      console.warn("Round tables may not exist yet, returning students without round data:", roundErr.message);
+    }
 
     // Index by "userId_round" for O(1) lookup while building each student row
     const resultsMap = {};

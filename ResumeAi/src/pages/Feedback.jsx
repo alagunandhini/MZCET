@@ -1,12 +1,13 @@
 import { useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
+import { API_URL } from "../config";
 
 export default function Feedback() {
   const { sessionId } = useParams();
   const [feedback, setFeedback] = useState(null);
 
   useEffect(() => {
-    fetch(`http://localhost:3007/feedback/${sessionId}`)
+    fetch(`${API_URL}/feedback/${sessionId}`)
       .then(res => res.json())
       .then(data => {
         if (!data || data.error) return;
