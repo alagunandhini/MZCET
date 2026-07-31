@@ -221,6 +221,21 @@ const Login = () => {
               <p className="mt-1.5 text-sm" style={{ color: SLATE }}>
                Log in to access MZ Resume AI.
               </p>
+
+              {/* Admin | Student Toggle */}
+              <div className="mt-6 flex items-center justify-center gap-4">
+                <Link
+                  to="/admin-login"
+                  className="text-sm font-semibold transition hover:brightness-110"
+                  style={{ color: SLATE }}
+                >
+                  Admin
+                </Link>
+                <div className="h-4 w-px" style={{ background: BORDER }} />
+                <span className="text-sm font-semibold" style={{ color: BLUE }}>
+                  Student
+                </span>
+              </div>
             </div>
 
             <form className="mt-8 flex flex-col gap-4" onSubmit={handleSubmit}>

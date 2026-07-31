@@ -76,11 +76,16 @@
           }
 
           var user = data.user;
-          localStorage.setItem("token", token);
+          var userType = data.userType || "student";
+          
+          localStorage.setItem("token", data.token);
           localStorage.setItem("user", JSON.stringify(user));
           localStorage.setItem("username", JSON.stringify(user.name));
-
-          window.location.href = "/";
+          localStorage.setItem("userType", userType);
+          
+          // Redirect based on user type (hod → admin dashboard, student → home)
+          var redirectUrl = userType === "hod" ? "/admin" : "/";
+          window.location.href = redirectUrl;
         })
         .catch(function () {
           showError("Unable to reach server. Please try again.");

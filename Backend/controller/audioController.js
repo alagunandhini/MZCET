@@ -42,7 +42,7 @@ exports.processAudio = async (req, res) => {
 
    const callDeepgram = async () => {
       return axios.post(
-        "https://api.deepgram.com/v1/listen?smart_format=true&punctuate=true",
+        "https://api.deepgram.com/v1/listen?model=nova-3&language=en&smart_format=true&punctuate=true",
         audioBuffer,
         {
           headers: {
