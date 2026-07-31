@@ -230,3 +230,5 @@ const analyzeResume = async (req, res) => {
 };
 
 module.exports = analyzeResume;
+module.exports.ROUND_DEFS = ROUND_DEFS;
+module.exports.generateRound = generateRound;
