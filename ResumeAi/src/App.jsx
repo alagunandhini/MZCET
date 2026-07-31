@@ -13,6 +13,8 @@ import Login from './pages/Login';
 import SetPassword from './pages/SetPassword';
 import Feedback from './pages/Feedback';
 import AdminDashboard from './pages/AdminDashboard';
+import AdminLogin from './pages/AdminLogin';
+import SsoCallback from './pages/SsoCallback';
 
 
 function App() {
@@ -28,7 +30,10 @@ function App() {
         <Route path='/login' element={<Login/>}/>
         <Route path='/set-password' element={<SetPassword/>}/>
         <Route path='/feedback/:sessionId' element={<Feedback/>}/>
+        <Route path='/admin-login' element={<AdminLogin/>}/>
         <Route path='/admin' element={<AdminDashboard/>}/>
+        <Route path='/auth/callback' element={<SsoCallback/>}/>
+        
 
 
       </Routes>
