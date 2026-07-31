@@ -38,44 +38,9 @@ const Resume = () => {
     }
   }, []);
 
-  // Check whether resume already exists
-  useEffect(() => {
-
-    const checkResume = async () => {
-      const token = localStorage.getItem("token");
-      try {
-        const res = await axios.get(
-          `${API_URL}/users/resume-status`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-
-        if (res.data.hasResume) {
-          setShowQuestionsUI(true);
-          setQuestions(res.data.questions || {});
-          setCompletedRounds(res.data.completedRounds || []);
-          setRoundAttempts(res.data.roundAttempts || {});
-        }
-
-      } catch (err) {
-        console.log(err);
-      }
-      finally {
-        // Always stop loading
-        setTimeout(() => {
-          setCheckingResume(false);
-        }, 1100);
-      }
-
-
-    };
-
-    checkResume();
-
-  }, []);
+  // Resume status is fetched via refreshResumeStatus, defined below (after
+  // state declarations) and called from the mount effect plus every place
+  // a round finishes and the user returns to the dashboard.
 
   const [questions, setQuestions] = useState({});// store generated questions
   const [loading, setLoading] = useState(false);
@@ -133,6 +98,44 @@ const Resume = () => {
     setShowCompletionScreen,
     setFeedback,
   });
+
+  // Pulled out of the old mount-only effect so it can be called again after
+  // a round finishes. Without re-calling this, `questions` stays frozen at
+  // whatever was fetched on page load — meaning after finishing a round and
+  // going back to the dashboard, the NEXT attempt still used the stale
+  // question slice from before that attempt was ever made, even though the
+  // backend had already moved on to the next 15-question set.
+  const refreshResumeStatus = useCallback(async () => {
+    const token = localStorage.getItem("token");
+    try {
+      const res = await axios.get(
+        `${API_URL}/users/resume-status`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (res.data.hasResume) {
+        setShowQuestionsUI(true);
+        setQuestions(res.data.questions || {});
+        setCompletedRounds(res.data.completedRounds || []);
+        setRoundAttempts(res.data.roundAttempts || {});
+      }
+    } catch (err) {
+      console.log(err);
+    }
+  }, []);
+
+  // Initial fetch on mount (replaces the old inline checkResume effect).
+  useEffect(() => {
+    refreshResumeStatus().finally(() => {
+      setTimeout(() => {
+        setCheckingResume(false);
+      }, 1100);
+    });
+  }, [refreshResumeStatus]);
 
   // Timer: runs while a round is active, resets when a new round starts.
   // Placed AFTER startPractice/sectionIndex are declared above, since the
@@ -539,6 +542,10 @@ const Resume = () => {
       setCurrentIndex(0);
       setQuestionStatus({});
       setSessionId(uuidv4());
+      // Re-fetch so `questions` reflects the new attemptsUsed the backend
+      // just recorded — otherwise the next attempt reuses the stale
+      // pre-attempt question slice.
+      refreshResumeStatus();
     }
   };
 
@@ -591,6 +598,10 @@ const Resume = () => {
       setQuestionStatus({});
       setSessionId(uuidv4());
       setTransitionLoading(false);
+      // Re-fetch so `questions` reflects the new attemptsUsed the backend
+      // just recorded in endInterview() — otherwise the next attempt on
+      // this round reuses the stale pre-attempt question slice.
+      refreshResumeStatus();
     }, 2200);
 
   };
@@ -684,6 +695,7 @@ const Resume = () => {
             setStartPractice={setStartPractice}
 
             setShowQuestionsUI={setShowQuestionsUI}
+            setSessionId={setSessionId}
 
             username={username}
             handleLogout={handleLogout}

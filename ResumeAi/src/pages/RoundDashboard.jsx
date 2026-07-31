@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { motion } from "framer-motion";
+import { v4 as uuidv4 } from "uuid";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate, Link } from "react-router-dom";
 import {
@@ -29,6 +31,7 @@ const RoundDashboard = ({
   setStartPractice,
   setSectionIndex,
   setShowQuestionsUI,
+  setSessionId,
   username,
   handleLogout,
 }) => {
@@ -41,7 +44,9 @@ const RoundDashboard = ({
     title: `Round ${index + 1}`,
     name: questions[key].name,
     questions: questions[key].questions.length,
-    time: "10 Minutes",
+    // Was hardcoded to "10 Minutes" — didn't match the actual 30-minute
+    // round limit (ROUND_TIME_LIMIT_SECONDS in Resume.jsx).
+    time: "30 Minutes",
   }));
 
   const isRoundFinalized = (roundKey) => {
@@ -70,6 +75,17 @@ const RoundDashboard = ({
     document.documentElement.requestFullscreen?.().catch((err) => {
       console.warn("Fullscreen request failed/denied:", err);
     });
+
+    // Always mint a brand new session for this attempt, right here at the
+    // moment it starts — not just when leaving a finished round. If a stale
+    // sessionId from a previous attempt ever carried over (e.g. via a page
+    // refresh before the post-round regeneration ran), endSession's
+    // "already has feedback for this session" check would short-circuit
+    // and return the OLD attempt's cached scorecard instead of grading a
+    // new one — and attemptsUsed would never increment. Regenerating here
+    // guarantees every attempt gets a genuinely fresh session regardless of
+    // how the previous one ended.
+    setSessionId(uuidv4());
 
     setSectionIndex(round.id);
     setCurrentIndex(0);
