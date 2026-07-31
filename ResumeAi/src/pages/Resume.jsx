@@ -117,12 +117,19 @@ const Resume = () => {
         }
       );
 
-      if (res.data.hasResume) {
-        setShowQuestionsUI(true);
-        setQuestions(res.data.questions || {});
-        setCompletedRounds(res.data.completedRounds || []);
-        setRoundAttempts(res.data.roundAttempts || {});
-      }
+   if (res.data.hasResume) {
+  setShowQuestionsUI(true);
+  setQuestions(res.data.questions || {});
+  setCompletedRounds(res.data.completedRounds || []);
+  setRoundAttempts(res.data.roundAttempts || {});
+} else {
+  // No resume on the server — override any stale cached state from a
+  // previous session/testing round, so the upload page shows correctly.
+  setShowQuestionsUI(false);
+  setQuestions({});
+  setCompletedRounds([]);
+  setRoundAttempts({});
+}
     } catch (err) {
       console.log(err);
     }
