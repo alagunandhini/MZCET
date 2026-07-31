@@ -44,8 +44,14 @@ app.options("*", cors({
   allowedHeaders: ["Origin", "X-Requested-With", "Content-Type", "Accept", "Authorization"],
   exposedHeaders: ["Authorization"]
 }));
-connectDB();
-connectSQL().catch(err => console.log("⚠️ SQL init failed, server continuing anyway"));
+// Both connections must finish before the server starts accepting requests —
+// otherwise early requests can hit routes before the DB pool is ready.
+const dbReady = Promise.all([
+  connectDB(),
+  connectSQL().catch(err => {
+    console.log("⚠️ SQL init failed, server continuing anyway:", err.message);
+  }),
+]);
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
@@ -66,6 +72,11 @@ app.use("/", sessionRoutes);
 app.use("/feedback", feedbackRoutes);
 app.use("/admin", adminRoutes);
 app.use(ssoRoutes);
+app.use(express.static(path.join(__dirname, "../ResumeAi/dist")));
+
+app.get("*", (req, res) => {
+  res.sendFile(path.join(__dirname, "../ResumeAi/dist", "index.html"));
+});
 
 
 
@@ -88,3 +99,4 @@ app.use(function(err, req, res, next) {
 });
 
 module.exports = app;
+module.exports.dbReady = dbReady;

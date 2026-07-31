@@ -7,10 +7,15 @@ const config = {
   user: process.env.SQL_USER,
   password: process.env.SQL_PASSWORD,
   options: {
-    encrypt: false,              // college servers are often not set up for encrypted connections; try false first
+    encrypt: false,
     trustServerCertificate: true,
   },
   connectionTimeout: 60000,
+  pool: {
+    max: 50,
+    min: 5,
+    idleTimeoutMillis: 30000,
+  },
 };
 
 let pool;
