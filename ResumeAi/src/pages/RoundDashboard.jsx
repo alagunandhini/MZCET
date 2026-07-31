@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { motion } from "framer-motion";
+
 import { v4 as uuidv4 } from "uuid";
-import {  AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate, Link } from "react-router-dom";
 import {
   Clock,
