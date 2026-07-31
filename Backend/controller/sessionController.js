@@ -281,16 +281,34 @@ exports.terminateRound = async (req, res) => {
     // question, in which case no session row exists yet — create one now,
     // same as audioController.js does on the first saved answer.
     if (!session) {
-      const insertSession = await pool.request()
-        .input("sessionId", sql.NVarChar, sessionId)
-        .input("userId", sql.Int, req.userId)
-        .input("round", sql.NVarChar, round)
-        .query(`
-          INSERT INTO InterviewSessions (sessionId, userId, round)
-          OUTPUT INSERTED.id, INSERTED.userId
-          VALUES (@sessionId, @userId, @round)
-        `);
-      session = insertSession.recordset[0];
+      try {
+        const insertSession = await pool.request()
+          .input("sessionId", sql.NVarChar, sessionId)
+          .input("userId", sql.Int, req.userId)
+          .input("round", sql.NVarChar, round)
+          .query(`
+            INSERT INTO InterviewSessions (sessionId, userId, round)
+            OUTPUT INSERTED.id, INSERTED.userId
+            VALUES (@sessionId, @userId, @round)
+          `);
+        session = insertSession.recordset[0];
+      } catch (insertErr) {
+        // Unique-key violation (SQL Server error 2627) means a concurrent
+        // request — e.g. two violation events (fullscreenchange +
+        // visibilitychange) firing almost simultaneously — already inserted
+        // this exact sessionId a moment ago. Re-select it instead of
+        // crashing here: without this, the request dies before ever
+        // reaching the attemptsUsed increment below, silently eating an
+        // attempt without advancing the counter.
+        if (insertErr.number === 2627) {
+          const retryResult = await pool.request()
+            .input("sessionId", sql.NVarChar, sessionId)
+            .query("SELECT * FROM InterviewSessions WHERE sessionId = @sessionId");
+          session = retryResult.recordset[0];
+        } else {
+          throw insertErr;
+        }
+      }
     }
 
     const userId = session.userId;

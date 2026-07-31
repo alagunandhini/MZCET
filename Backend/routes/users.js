@@ -130,6 +130,10 @@ router.post("/reset-password", authMiddleware, async (req, res) => {
 });
 
 
+// Each round stores 45 questions (3 sets of 15 — one set per attempt).
+// This tells us which 15-question slice belongs to a given attempt number.
+const QUESTIONS_PER_ATTEMPT_SET = 15;
+
 router.get("/resume-status", authMiddleware, async (req, res) => {
   try {
     const pool = getPool();
@@ -155,19 +159,42 @@ router.get("/resume-status", authMiddleware, async (req, res) => {
       .input("id", sql.Int, req.userId)
       .query("SELECT round, attemptsUsed FROM RoundAttempts WHERE userId = @id");
 
-    // Reshape flat SQL rows into { Round1: { name, questions: [{ q }] }, ... }
+    // Reshape into { Round1: 2, Round2: 0, ... } first — the question
+    // slicing below needs this to know which attempt-set to serve.
+    const roundAttempts = {};
+    for (const row of attemptsResult.recordset) {
+      roundAttempts[row.round] = row.attemptsUsed;
+    }
+
+    // Reshape flat SQL rows into { Round1: { name, questions: [{ q }] }, ... },
+    // but only keep the 15-question slice matching this round's current
+    // attempt number. attemptsUsed=0 -> questionOrder 1-15 (attempt 1),
+    // attemptsUsed=1 -> 16-30 (attempt 2), attemptsUsed=2+ -> 31-45 (attempt 3).
+    // Without this, every attempt saw the same first 15 (or all 45) questions.
+    //
+    // IMPORTANT: clamp the slice INDEX to a max of 2 (there are only 3 sets,
+    // questionOrder 1-45). roundAttempts[row.round] itself is left untouched
+    // for the "Attempts Left"/"Failed" display below — only the value used to
+    // pick a question slice is clamped. Without this clamp, once a round hit
+    // attemptsUsed=3 (all attempts used), setStart became 46 — past every
+    // stored row — so zero rows matched and the round's key never got added
+    // to `questions` at all, making it disappear from the dashboard entirely
+    // instead of correctly showing as "Failed" with 0 attempts left.
     const questions = {};
     for (const row of questionsResult.recordset) {
+      const attemptsUsed = roundAttempts[row.round] || 0;
+      const sliceIndex = Math.min(attemptsUsed, 2);
+      const setStart = sliceIndex * QUESTIONS_PER_ATTEMPT_SET + 1;
+      const setEnd = setStart + QUESTIONS_PER_ATTEMPT_SET - 1;
+
+      if (row.questionOrder < setStart || row.questionOrder > setEnd) {
+        continue; // belongs to a different attempt's set — skip it
+      }
+
       if (!questions[row.round]) {
         questions[row.round] = { name: row.roundName, questions: [] };
       }
       questions[row.round].questions.push({ q: row.questionText });
-    }
-
-    // Reshape into { Round1: 2, Round2: 0, ... }
-    const roundAttempts = {};
-    for (const row of attemptsResult.recordset) {
-      roundAttempts[row.round] = row.attemptsUsed;
     }
 
     res.json({
