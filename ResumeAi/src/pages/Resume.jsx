@@ -66,6 +66,13 @@ const Resume = () => {
   const currentSection = sections[sectionIndex];
   const [completedRounds, setCompletedRounds] = useState([]);
   const [roundAttempts, setRoundAttempts] = useState({});
+const [isDark, setIsDark] = useState(() => {
+  return localStorage.getItem("isDark") === "true";
+});
+
+useEffect(() => {
+  localStorage.setItem("isDark", isDark);
+}, [isDark]);
 
   // Timer state — how long the user has spent on the current round
   const [seconds, setSeconds] = useState(0);
@@ -680,82 +687,81 @@ const Resume = () => {
         )}
 
         {/* Page 2 - Generate question  */}
-        {showQuestionsUI && !startPractice && (
-          <RoundDashboard
-            questions={questions}
-            completedRounds={completedRounds}
-            roundAttempts={roundAttempts}
 
-            setCompletedRounds={setCompletedRounds}
+       {showQuestionsUI && !startPractice && (
+  <RoundDashboard
+    questions={questions}
+    completedRounds={completedRounds}
+    roundAttempts={roundAttempts}
+    setCompletedRounds={setCompletedRounds}
+    sections={sections}
+    selectedRound={selectedRound}
+    setSelectedRound={setSelectedRound}
+    setCurrentIndex={setCurrentIndex}
+    setSectionIndex={setSectionIndex}
+    setTransitionLoading={setTransitionLoading}
+    setTransitionText={setTransitionText}
+    setStartPractice={setStartPractice}
+    setShowQuestionsUI={setShowQuestionsUI}
+    setSessionId={setSessionId}
+    username={username}
+    handleLogout={handleLogout}
+    isDark={isDark}
+    setIsDark={setIsDark}
+  />
+)}
 
-            sections={sections}
+  {/* Page 3 - Practice Question */}
 
-            selectedRound={selectedRound}
-            setSelectedRound={setSelectedRound}
-
-
-            setCurrentIndex={setCurrentIndex}
-            setSectionIndex={setSectionIndex}
-
-            setTransitionLoading={setTransitionLoading}
-            setTransitionText={setTransitionText}
-
-            setStartPractice={setStartPractice}
-
-            setShowQuestionsUI={setShowQuestionsUI}
-            setSessionId={setSessionId}
-
-            username={username}
-            handleLogout={handleLogout}
-
-          />
-        )}
-        {/* Page 3 - Practice Question */}
-
-        {startPractice && (
-          <InterviewRoom
-            seconds={Math.max(ROUND_TIME_LIMIT_SECONDS - seconds, 0)}
-            currentIndex={currentIndex}
-            questions={questions}
-            sectionName={
-              questions[currentSection]?.name
-            }
-
-            computedSection={currentSection}
-            isSpeaking={isSpeaking}
-            isRecording={isRecording}
-            startRecording={startRecording}
-            stopRecording={stopRecording}
-            skipQuestion={skipQuestion}
-            setShowExitModal={setShowExitModal}
-            setSessionId={setSessionId}
-            mediaRecorderRef={mediaRecorderRef}
-            setIsRecording={setIsRecording}
-            setCurrentIndex={setCurrentIndex}
-          />)}
+{startPractice && (
+  <InterviewRoom
+    seconds={Math.max(ROUND_TIME_LIMIT_SECONDS - seconds, 0)}
+    currentIndex={currentIndex}
+    questions={questions}
+    sectionName={questions[currentSection]?.name}
+    computedSection={currentSection}
+    isSpeaking={isSpeaking}
+    isRecording={isRecording}
+    startRecording={startRecording}
+    stopRecording={stopRecording}
+    skipQuestion={skipQuestion}
+    setShowExitModal={setShowExitModal}
+    setSessionId={setSessionId}
+    mediaRecorderRef={mediaRecorderRef}
+    setIsRecording={setIsRecording}
+    setCurrentIndex={setCurrentIndex}
+    isDark={isDark}
+    setIsDark={setIsDark}
+  />
+)}
       </div>
 
 
       {/* Loader-ANalyze interview */}
-      <InterviewLoader isAnalyzing={isAnalyzing} />
+      <InterviewLoader isAnalyzing={isAnalyzing} isDark={isDark} />
 
       {/* interview completed page */}
-      {showCompletionScreen && (
-        <InterviewCompleted
-          sessionId={sessionId}
-          answered={answeredCount}
-          skipped={skippedCount}
-          feedback={feedback}
-          onNextRound={handleNextRound}
-          roundLabel={questions[currentSection]?.name || currentSection}
-        />
-      )}
+    {/* exit module */}
 
-      {/* exit module */}
-      <ExitModal
-        showExitModal={showExitModal}
-        onCancel={() => setShowExitModal(false)}
-        onExit={handleExitPractice} />
+    {showCompletionScreen && (
+  <InterviewCompleted
+    sessionId={sessionId}
+    answered={answeredCount}
+    skipped={skippedCount}
+    feedback={feedback}
+    onNextRound={handleNextRound}
+    roundLabel={questions[currentSection]?.name || currentSection}
+    isDark={isDark}
+  />
+)}
+
+<ExitModal
+  showExitModal={showExitModal}
+  onCancel={() => setShowExitModal(false)}
+  onExit={handleExitPractice}
+  isDark={isDark}
+/>
+    
     </>);
 };
 export default Resume;

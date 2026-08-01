@@ -34,9 +34,11 @@ const RoundDashboard = ({
   setSessionId,
   username,
   handleLogout,
+  isDark,
+  setIsDark,
 }) => {
   const [showProfileMenu, setShowProfileMenu] = useState(false);
-  const [isDark, setIsDark] = useState(false);
+
 
   const rounds = Object.keys(questions).map((key, index) => ({
     id: index,
