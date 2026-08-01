@@ -119,6 +119,7 @@ const Resume = () => {
 
    if (res.data.hasResume) {
   setShowQuestionsUI(true);
+  // setShowCompletionScreen(true);
   setQuestions(res.data.questions || {});
   setCompletedRounds(res.data.completedRounds || []);
   setRoundAttempts(res.data.roundAttempts || {});
@@ -746,6 +747,7 @@ const Resume = () => {
           skipped={skippedCount}
           feedback={feedback}
           onNextRound={handleNextRound}
+          roundLabel={questions[currentSection]?.name || currentSection}
         />
       )}
 

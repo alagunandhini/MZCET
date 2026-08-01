@@ -141,11 +141,11 @@ function Navbar() {
 }
 
 /* -------------------------------------------------------------------------- */
-/*  Step rail — unchanged from the reference design                          */
+/*  Step rail — now only 2 steps: Upload, Analyze                            */
 /* -------------------------------------------------------------------------- */
 
 function StepRail({ step }) {
-  const steps = ["Upload", "Analyze", "Confirm", "Practice"];
+  const steps = ["Upload", "Analyze"];
   return (
     <div className="mx-auto flex w-full max-w-md items-center justify-between">
       {steps.map((label, i) => {
@@ -464,7 +464,8 @@ const ResumeUpload = ({
   const [resumeText, setResumeText] = useState("");
   const [jobDescription, setJobDescription] = useState("");
 
-  const step = !file ? 1 : status === "analyzing" ? 3 : 2;
+  // Only 2 steps now: Upload (1) and Analyze (2, covers parsing/parsed/analyzing)
+  const step = !file ? 1 : 2;
 
   /* ---- real PDF text extraction, straight from the working parser ---- */
   const readPdf = (pdfFile) => {
@@ -581,7 +582,7 @@ const ResumeUpload = ({
               className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold"
               style={{ background: BLUE_LIGHT, color: BLUE_DARK, ...body }}
             >
-              Step {step} of 4
+              Step {step} of 2
             </motion.span>
 
             <motion.h1
