@@ -719,6 +719,7 @@ useEffect(() => {
     currentIndex={currentIndex}
     questions={questions}
     sectionName={questions[currentSection]?.name}
+    roundNumber={sectionIndex}  
     computedSection={currentSection}
     isSpeaking={isSpeaking}
     isRecording={isRecording}
