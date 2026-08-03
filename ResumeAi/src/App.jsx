@@ -17,32 +17,36 @@ import AdminLogin from './pages/AdminLogin';
 import SsoCallback from './pages/SsoCallback';
 
 
+import StudentDetail from './pages/StudentDetail';
+
+
 function App() {
   return (
     <>
-    
-   
-    <div className='min-h-screen w-full overflow-x-hidden'>
-      <Routes>
-        <Route path='/' element={<Home/>}/>
-        <Route path='/resume' element={<Resume/>}/>
-      <Route path='/resources' element={<Resources/>}/>
-        <Route path='/login' element={<Login/>}/>
-        <Route path='/set-password' element={<SetPassword/>}/>
-        <Route path='/feedback/:sessionId' element={<Feedback/>}/>
-        <Route path='/admin-login' element={<AdminLogin/>}/>
-        <Route path='/admin' element={<AdminDashboard/>}/>
-        <Route path='/auth/callback' element={<SsoCallback/>}/>
-        
 
 
-      </Routes>
+      <div className='min-h-screen w-full overflow-x-hidden'>
+        <Routes>
+          <Route path='/' element={<Home />} />
+          <Route path='/resume' element={<Resume />} />
+          <Route path='/resources' element={<Resources />} />
+          <Route path='/login' element={<Login />} />
+          <Route path='/set-password' element={<SetPassword />} />
+          <Route path='/feedback/:sessionId' element={<Feedback />} />
+          <Route path='/admin-login' element={<AdminLogin />} />
+          <Route path='/admin' element={<AdminDashboard />} />
 
-    </div>
-    
-   
-   
-   
+          <Route path='/auth/callback' element={<SsoCallback />} />
+          <Route path='/admin/students/:registerNumber' element={<StudentDetail />} />
+
+
+        </Routes>
+
+      </div>
+
+
+
+
 
     </>
   )
