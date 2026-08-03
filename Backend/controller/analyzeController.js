@@ -1,5 +1,5 @@
 const { getPool, sql } = require("../db-sql");
-
+const geminiQueue = require("../utils/geminiQueue");
 // One Gemini call per round — each call generates 45 questions for that
 // round only (3 sequential sets of 15, one set per attempt). This replaces
 // the old single mega-call that tried to generate all 4 rounds x 45
@@ -57,45 +57,87 @@ Output Format:
 `;
 
 const callGemini = async (prompt) => {
-  try {
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${process.env.GEMINI_API_KEY}`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: {
-            temperature: 0.3,
-            // 45 questions per call now (was up to 180 in one call) —
-            // 6000 is comfortable headroom for a single round's response.
-            maxOutputTokens: 6000,
-            responseMimeType: "application/json",
-            thinkingConfig: {
-              thinkingLevel: "low",
-            },
-          },
-        }),
-      }
-    );
-    return await response.json();
-  } catch (networkErr) {
-    console.error("Gemini network error:", networkErr.message);
-    return { error: { message: `Network error: ${networkErr.message}` } };
+  const apiKey = process.env.GEMINI_API_KEY;
+
+  if (!apiKey || !apiKey.trim()) {
+    // Fail fast and loud instead of sending a request with an empty/undefined
+    // key, which is what produces the confusing 401 ACCESS_TOKEN_TYPE_UNSUPPORTED.
+    return {
+      error: { code: 401, status: "MISSING_KEY", message: "GEMINI_API_KEY is not set or empty in the environment." },
+    };
   }
+
+  return geminiQueue.enqueue(async () => {
+    try {
+      const response = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${apiKey.trim()}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: prompt }] }],
+            generationConfig: {
+              temperature: 0.3,
+              // 45 questions per call now (was up to 180 in one call) —
+              // 6000 is comfortable headroom for a single round's response.
+              maxOutputTokens: 6000,
+              responseMimeType: "application/json",
+              thinkingConfig: {
+                thinkingLevel: "low",
+              },
+            },
+          }),
+        }
+      );
+      const json = await response.json();
+      // Some non-2xx responses don't populate a top-level `error` key
+      // consistently — normalize so callers can always branch on json.error.
+      if (!response.ok && !json.error) {
+        json.error = { code: response.status, status: response.statusText, message: "Unknown error" };
+      }
+      return json;
+    } catch (networkErr) {
+      console.error("Gemini network error:", networkErr.message);
+      return { error: { message: `Network error: ${networkErr.message}` } };
+    }
+  });
 };
 
-// Calls Gemini for a single round, with the same retry-on-error behavior
-// the old single mega-call had, and returns the parsed { name, questions }.
+// Pulls Google's suggested retryDelay (e.g. "28s") out of a 429 error body,
+// falling back to a default if it's not present.
+const getRetryDelayMs = (errorObj, fallbackMs) => {
+  const retryInfo = errorObj?.details?.find((d) => d["@type"]?.includes("RetryInfo"));
+  const raw = retryInfo?.retryDelay; // e.g. "28s"
+  if (!raw) return fallbackMs;
+  const seconds = parseFloat(raw);
+  return Number.isFinite(seconds) ? Math.ceil(seconds * 1000) + 500 : fallbackMs;
+};
+
+// Calls Gemini for a single round, with error-aware retry behavior:
+// - 401/403 (bad/missing credentials) fail immediately — retrying won't help.
+// - 429 (quota) backs off using Google's suggested retryDelay instead of a flat 3s.
+// - anything else retries with a short flat delay, same as before.
 const generateRound = async (roundDef, text, jobDescription) => {
   const prompt = buildRoundPrompt(roundDef, text, jobDescription);
 
   let data = await callGemini(prompt);
   let retries = 0;
+  const maxRetries = 2;
 
-  while (data?.error && retries < 2) {
-    console.warn(`Gemini error on ${roundDef.key}, retrying (${retries + 1}/2):`, data.error.message);
-    await new Promise((resolve) => setTimeout(resolve, 3000));
+  while (data?.error && retries < maxRetries) {
+    const code = data.error.code;
+
+    if (code === 401 || code === 403) {
+      console.error(`Gemini auth error on ${roundDef.key}, not retrying:`, data.error.message);
+      break;
+    }
+
+    const delayMs = code === 429 ? getRetryDelayMs(data.error, 5000) : 3000;
+    console.warn(
+      `Gemini error on ${roundDef.key}, retrying (${retries + 1}/${maxRetries}) in ${delayMs}ms:`,
+      data.error.message
+    );
+    await new Promise((resolve) => setTimeout(resolve, delayMs));
     data = await callGemini(prompt);
     retries++;
   }
@@ -104,6 +146,15 @@ const generateRound = async (roundDef, text, jobDescription) => {
 
   if (!analysis) {
     console.error(`Gemini API error for ${roundDef.key} after retries:`, data?.error);
+    const code = data?.error?.code;
+    if (code === 401 || code === 403) {
+      throw new Error(
+        `Gemini API rejected the credentials for ${roundDef.key}. Check that GEMINI_API_KEY is set correctly and hasn't been revoked/regenerated.`
+      );
+    }
+    if (code === 429) {
+      throw new Error(`Gemini API quota exceeded for ${roundDef.key}. Check your plan/rate limits.`);
+    }
     throw new Error(`AI failed to generate questions for ${roundDef.key}`);
   }
 
@@ -132,7 +183,9 @@ const analyzeResume = async (req, res) => {
     }
 
     // One Gemini call per round (4 total), run sequentially so a failure on
-    // one round is easy to attribute and retry independently.
+    // one round is easy to attribute and retry independently. Pacing across
+    // rounds (and across students) is handled by geminiQueue now, so no
+    // manual setTimeout delay is needed here between rounds.
     const parsedQuestions = {};
     for (const roundDef of ROUND_DEFS) {
       try {
