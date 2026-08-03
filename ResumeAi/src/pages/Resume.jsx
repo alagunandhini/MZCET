@@ -145,7 +145,7 @@ useEffect(() => {
       console.error("refreshResumeStatus failed:", err);
       showToast("Couldn't refresh your progress. Please reload the page.", "error");
     }
-  }, [showToast]);
+  }, []);
 
   // Initial fetch on mount (replaces the old inline checkResume effect).
   useEffect(() => {
