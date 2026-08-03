@@ -139,9 +139,13 @@ useEffect(() => {
   setRoundAttempts({});
 }
     } catch (err) {
-      console.log(err);
+      // Surfaced instead of silently swallowed — if this fails (auth/token
+      // issue, SQL timeout, etc.) the dashboard would otherwise keep showing
+      // stale questions with no visible indication anything went wrong.
+      console.error("refreshResumeStatus failed:", err);
+      showToast("Couldn't refresh your progress. Please reload the page.", "error");
     }
-  }, []);
+  }, [showToast]);
 
   // Initial fetch on mount (replaces the old inline checkResume effect).
   useEffect(() => {
@@ -553,14 +557,19 @@ useEffect(() => {
       console.error("Terminate round failed", err);
     } finally {
       setStartPractice(false);
-      setShowQuestionsUI(true);
       setCurrentIndex(0);
       setQuestionStatus({});
       setSessionId(uuidv4());
       // Re-fetch so `questions` reflects the new attemptsUsed the backend
       // just recorded — otherwise the next attempt reuses the stale
-      // pre-attempt question slice.
-      refreshResumeStatus();
+      // pre-attempt question slice. Awaited (and setShowQuestionsUI moved
+      // to run AFTER it resolves) so the dashboard never renders with the
+      // old 45/stale question set for even a moment — previously these ran
+      // in parallel, so the dashboard could mount before the fresh
+      // `questions` data came back, and only a hard refresh forced a
+      // re-fetch that actually landed before render.
+      await refreshResumeStatus();
+      setShowQuestionsUI(true);
     }
   };
 
@@ -604,19 +613,31 @@ useEffect(() => {
     setTransitionText("Back to Dashboard");
     setTransitionLoading(true);
 
-    setTimeout(() => {
+    setTimeout(async () => {
       setShowCompletionScreen(false);
       setStartPractice(false);
-      setShowQuestionsUI(true);
       setCurrentIndex(0);
 
       setQuestionStatus({});
       setSessionId(uuidv4());
-      setTransitionLoading(false);
+
       // Re-fetch so `questions` reflects the new attemptsUsed the backend
       // just recorded in endInterview() — otherwise the next attempt on
       // this round reuses the stale pre-attempt question slice.
-      refreshResumeStatus();
+      //
+      // AWAITED, and setShowQuestionsUI(true) moved to run after it
+      // resolves (was previously fired in parallel, un-awaited, right
+      // alongside setShowQuestionsUI(true)). That race meant the dashboard
+      // mounted immediately with whatever `questions` was already sitting
+      // in memory (stale — from before this attempt), and only got the
+      // correct 15-question slice a moment later if/when the fetch
+      // resolved — which is why only a hard refresh reliably showed the
+      // right count (a full remount re-runs the initial fetch and blocks
+      // on it via checkingResume, this in-app path did not).
+      await refreshResumeStatus();
+
+      setShowQuestionsUI(true);
+      setTransitionLoading(false);
     }, 2200);
 
   };
