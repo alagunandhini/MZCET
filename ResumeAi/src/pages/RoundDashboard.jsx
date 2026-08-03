@@ -1,5 +1,5 @@
 import { useState } from "react";
-
+import { Home } from "lucide-react";
 import { v4 as uuidv4 } from "uuid";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate, Link } from "react-router-dom";
@@ -16,10 +16,17 @@ import {
   LogOut,
   Sun,
   Moon,
+  GraduationCap,
+  ArrowLeft,
+  Building2
 } from "lucide-react";
+
 
 const MAX_ATTEMPTS = 3;
 const display = { fontFamily: "'Sora', system-ui, sans-serif" };
+const INK = "#0F172A";
+const SLATE = "#64748B";
+const BORDER = "#E2E8F0";
 
 const RoundDashboard = ({
   questions,
@@ -38,6 +45,7 @@ const RoundDashboard = ({
   setIsDark,
 }) => {
   const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const navigate =useNavigate();
 
 
   const rounds = Object.keys(questions).map((key, index) => ({
@@ -247,22 +255,35 @@ const RoundDashboard = ({
               isDark ? "bg-slate-800/90 border-slate-700/80" : "bg-white border-sky-100"
             }`}
           >
-            <div>
-              <h1
-                className={`text-lg sm:text-xl md:text-2xl font-bold transition-colors duration-500 ${
-                  isDark ? "text-slate-100" : "text-gray-800"
-                }`}
-              >
-                Interview Dashboard
-              </h1>
-              <p
-                className={`text-xs sm:text-sm md:text-base transition-colors duration-500 ${
-                  isDark ? "text-slate-300" : "text-gray-500"
-                }`}
-              >
-                Complete your rounds and improve your score
-              </p>
-            </div>
+           <div className="flex items-center gap-3">
+   {/* <button
+          onClick={() => navigate("/")}
+          className="absolute left-4 top-4 m-6 inline-flex items-center gap-1.5 rounded-full border bg-white/80 px-4 py-4 text-sm font-semibold backdrop-blur-md transition hover:-translate-y-0.5 sm:left-6 sm:top-6"
+          style={{ borderColor: BORDER, color: INK }}
+        >
+          <ArrowLeft className="h-5 w-5" />
+        </button> */}
+
+
+  <div>
+    <h1
+      className={`text-lg sm:text-xl md:text-2xl font-bold ${
+        isDark ? "text-slate-100" : "text-gray-800"
+      }`}
+
+      
+    >
+      Interview Dashboard
+    </h1>
+
+    <p
+      className={`text-xs sm:text-sm md:text-base ${
+        isDark ? "text-slate-300" : "text-gray-500"
+      }`}
+    >
+    </p>
+  </div>
+</div>
 
             <div className="flex items-center gap-2 sm:gap-3">
               {/* DARK MODE TOGGLE */}
@@ -521,8 +542,8 @@ const RoundDashboard = ({
                   : "bg-white text-sky-500 hover:bg-sky-50"
               }`}
             >
-              <ChevronLeft size={16} />
-              Back
+             
+              Restart
             </button>
           </div>
         </div>
