@@ -1,96 +1,237 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Redirecting...</title>
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body {
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-family: 'Inter', system-ui, -apple-system, sans-serif;
-      background: #F8FAFC;
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Redirecting...</title>
+
+<style>
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;
+}
+
+body{
+    min-height:100vh;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    background:#f8fafc;
+}
+
+/* Loading Card */
+
+.card{
+    text-align:center;
+}
+
+.spinner{
+    width:55px;
+    height:55px;
+    border:5px solid #e2e8f0;
+    border-top:5px solid #0ea5e9;
+    border-radius:50%;
+    margin:auto;
+    animation:spin .8s linear infinite;
+}
+
+@keyframes spin{
+    to{
+        transform:rotate(360deg);
     }
-    .card {
-      text-align: center;
-      padding: 40px;
+}
+
+#status{
+    margin-top:18px;
+    color:#64748b;
+    font-size:15px;
+}
+
+.error{
+    margin-top:15px;
+    color:#dc2626;
+    font-weight:600;
+    display:none;
+}
+
+/* Modal */
+
+.modal-overlay{
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,.55);
+    display:none;
+    justify-content:center;
+    align-items:center;
+    z-index:9999;
+}
+
+.modal-overlay.show{
+    display:flex;
+}
+
+.modal{
+    width:470px;
+    max-width:90%;
+    background:#fff;
+    border-radius:22px;
+    padding:45px 40px;
+    text-align:center;
+    box-shadow:0 25px 60px rgba(0,0,0,.30);
+    animation:popup .25s ease;
+}
+
+@keyframes popup{
+    from{
+        transform:scale(.85);
+        opacity:0;
     }
-    .spinner {
-      width: 40px; height: 40px;
-      border: 4px solid #E2E8F0;
-      border-top-color: #0EA5E9;
-      border-radius: 50%;
-      animation: spin 0.8s linear infinite;
-      margin: 0 auto 20px;
+    to{
+        transform:scale(1);
+        opacity:1;
     }
-    @keyframes spin { to { transform: rotate(360deg); } }
-    p { color: #64748B; font-size: 14px; }
-    .error { color: #B91C1C; font-weight: 600; margin-top: 12px; }
-  </style>
+}
+
+.modal-icon{
+    font-size:78px;
+    line-height:1;
+    margin-bottom:28px;
+}
+
+.modal-title{
+    font-size:28px;
+    font-weight:700;
+    color:#e63946;
+    margin-bottom:35px;
+}
+
+.modal-btn{
+    background:#2563eb;
+    color:#fff;
+    border:none;
+    border-radius:10px;
+    padding:14px 42px;
+    font-size:22px;
+    cursor:pointer;
+    transition:.2s;
+}
+
+.modal-btn:hover{
+    background:#1d4ed8;
+}
+</style>
+
 </head>
+
 <body>
-  <div class="card">
+
+<div class="card">
     <div class="spinner"></div>
     <p id="status">Verifying your login...</p>
-    <p class="error" id="errorMsg" style="display:none;"></p>
-  </div>
+    <p class="error" id="errorMsg"></p>
+</div>
 
-  <script>
-    (function () {
-      const API_URL = "http://localhost:3007";
+<div class="modal-overlay" id="modalOverlay">
 
-      function getQueryParam(name) {
+    <div class="modal">
+
+        <div class="modal-icon">🚫</div>
+
+        <h2 class="modal-title">
+            Access Denied
+        </h2>
+
+        <button class="modal-btn" id="modalOk">
+            OK
+        </button>
+
+    </div>
+
+</div>
+
+<script>
+(function () {
+
+    const API_URL = "http://localhost:3007";
+
+    function getQueryParam(name) {
         const params = new URLSearchParams(window.location.search);
         return params.get(name);
-      }
+    }
 
-      function showError(msg) {
+    function showError(msg) {
         document.getElementById("status").style.display = "none";
         document.querySelector(".spinner").style.display = "none";
+
         const el = document.getElementById("errorMsg");
         el.textContent = msg;
         el.style.display = "block";
-      }
+    }
 
-      const token = getQueryParam("token");
+    const token = getQueryParam("token");
 
-      if (!token) {
+    if (!token) {
         showError("No token found in URL.");
         return;
-      }
+    }
 
-      fetch(`${API_URL}/api/auth/sso`, {
+    fetch(`${API_URL}/api/auth/sso`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ token }),
-      })
-        .then(function (res) { return res.json(); })
-        .then(function (data) {
-          if (!data.success) {
-            alert(data.message || "Access denied");
-            window.location.href = "http://localhost:3011/home.html";
-            return;
-          }
-
-          var user = data.user;
-          var userType = data.userType || "student";
-          
-          localStorage.setItem("token", data.token);
-          localStorage.setItem("user", JSON.stringify(user));
-          localStorage.setItem("username", JSON.stringify(user.name));
-          localStorage.setItem("userType", userType);
-          
-          // Redirect based on user type (hod → admin dashboard, student → home)
-          var redirectUrl = userType === "hod" ? "/admin" : "/";
-          window.location.href = redirectUrl;
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            token
         })
-        .catch(function () {
-          showError("Unable to reach server. Please try again.");
-        });
-    })();
-  </script>
+    })
+    .then(function(res){
+        return res.json();
+    })
+    .then(function(data){
+
+        if(!data.success){
+
+            document.getElementById("status").style.display="none";
+            document.querySelector(".spinner").style.display="none";
+
+            document
+                .getElementById("modalOverlay")
+                .classList.add("show");
+
+            document
+                .getElementById("modalOk")
+                .onclick=function(){
+
+                window.location.href="http://localhost:3011/home.html";
+
+            };
+
+            return;
+        }
+
+        var user=data.user;
+        var userType=data.userType || "student";
+
+        localStorage.setItem("token",data.token);
+        localStorage.setItem("user",JSON.stringify(user));
+        localStorage.setItem("username",JSON.stringify(user.name));
+        localStorage.setItem("userType",userType);
+
+        var redirectUrl=userType==="hod" ? "/admin" : "/";
+
+        window.location.href=redirectUrl;
+
+    })
+    .catch(function(){
+
+        showError("Unable to reach server. Please try again.");
+
+    });
+
+})();
+</script>
+
 </body>
 </html>
