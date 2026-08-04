@@ -57,17 +57,15 @@ Output Format:
 `;
 
 const callGemini = async (prompt) => {
-  const apiKey = process.env.GEMINI_API_KEY;
+  const { apiKey, queue } = geminiQueue.getNextKeyedQueue();
 
   if (!apiKey || !apiKey.trim()) {
-    // Fail fast and loud instead of sending a request with an empty/undefined
-    // key, which is what produces the confusing 401 ACCESS_TOKEN_TYPE_UNSUPPORTED.
     return {
       error: { code: 401, status: "MISSING_KEY", message: "GEMINI_API_KEY is not set or empty in the environment." },
     };
   }
 
-  return geminiQueue.enqueue(async () => {
+  return queue.enqueue(async () => {
     try {
       const response = await fetch(
         `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${apiKey.trim()}`,
@@ -78,8 +76,6 @@ const callGemini = async (prompt) => {
             contents: [{ parts: [{ text: prompt }] }],
             generationConfig: {
               temperature: 0.3,
-              // 45 questions per call now (was up to 180 in one call) —
-              // 6000 is comfortable headroom for a single round's response.
               maxOutputTokens: 6000,
               responseMimeType: "application/json",
               thinkingConfig: {
@@ -90,8 +86,6 @@ const callGemini = async (prompt) => {
         }
       );
       const json = await response.json();
-      // Some non-2xx responses don't populate a top-level `error` key
-      // consistently — normalize so callers can always branch on json.error.
       if (!response.ok && !json.error) {
         json.error = { code: response.status, status: response.statusText, message: "Unknown error" };
       }
@@ -102,7 +96,6 @@ const callGemini = async (prompt) => {
     }
   });
 };
-
 // Pulls Google's suggested retryDelay (e.g. "28s") out of a 429 error body,
 // falling back to a default if it's not present.
 const getRetryDelayMs = (errorObj, fallbackMs) => {
