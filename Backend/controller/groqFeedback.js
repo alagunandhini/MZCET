@@ -15,64 +15,53 @@ ${combinedText}
 
 LANGUAGE STYLE — APPLIES TO EVERY TEXT FIELD YOU WRITE:
 - First, read through the candidate's actual answers and notice how THEY talk — their vocabulary level, how technical or casual their phrasing is, how confident and fluent their English is.
-- Then write your feedback (improved_answer, overall_feedback, motivation_message) at THAT SAME level — like a mentor who's actually listening to this specific person, not reciting a template.
+- Then write your feedback (improved_answer, question_feedback, overall_feedback, motivation_message, strengths, weaknesses, final_suggestions) at THAT SAME level — like a mentor who's actually listening to this specific person, not reciting a template.
 - If the candidate uses simple, everyday words → respond in simple, everyday words. Don't suddenly introduce fancy vocabulary they didn't use themselves.
 - If the candidate is clearly comfortable with technical terms and speaks fluently → you can match that level too, but still stay clear and natural, never robotic or overly formal.
-- Regardless of level: always sound like a real person talking, not a report. Avoid corporate buzzwords, textbook phrasing, and unnecessarily long sentences for EVERYONE — a fluent candidate still doesn't want to be talked at like a manual.
-- The goal is a good conversation partner who meets the candidate where they are — not a fixed "dumbed down for everyone" tone, and not a fixed "impressive vocabulary" tone either.
+- Regardless of level: always sound like a real person talking, not a report. Avoid corporate buzzwords, textbook phrasing, and unnecessarily long sentences for EVERYONE.
 
 FAIRNESS FIRST:
 - Judge answers the way a reasonable, supportive interviewer would — not a strict examiner looking for a textbook-perfect match.
 - A correct core idea expressed in simple or informal words should score well, even if it's not phrased "professionally."
-- Do not penalize minor grammar issues, filler words, or informal phrasing — focus on whether the candidate actually understood the concept.
+- Do not penalize minor grammar issues, filler words, or informal phrasing in the overall/technical scores — but DO reflect genuine grammar quality separately in grammar_score.
 - Only score low when the answer is genuinely incorrect, empty, or shows no real understanding.
 
 IMPORTANT — CONSISTENCY:
-Before scoring, first silently rate each answer on a 1-5 scale for: Correctness, Completeness, Clarity, and Relevance. Then derive the overallScore from the AVERAGE of these four sub-scores across all questions, converted to a 0-100 scale. This keeps scoring consistent and defensible, not a vague gut-feeling number.
+Before scoring, first silently rate each answer on a 1-5 scale for: Correctness, Completeness, Clarity, and Relevance. Then derive the overallScore from the AVERAGE of these four sub-scores across all questions, converted to a 0-100 scale.
+
+Also derive question_score (0-100) per answer the same way, from that same question's four sub-scores.
 
 EVALUATION RULES:
 
-1. Evaluate EVERY question exactly once.
+1. Evaluate EVERY question exactly once, in order.
 2. Never skip any question, even if the answer is empty, incorrect, or irrelevant.
 3. Use the candidate's exact answer as user_answer.
 4. Treat the reference answer as guidance only. Do NOT compare answers word-for-word.
 5. Accept different approaches if they are technically or professionally correct.
-6. Evaluate each answer like a real interviewer by considering:
-   - Understanding of the question
-   - Technical or domain correctness
-   - Relevance
-   - Completeness
-   - Conceptual understanding
-   - Practical applicability (when appropriate)
-   - Clarity of communication
-7. Penalize only for:
-   - Incorrect facts
-   - Irrelevant answers
-   - Hallucinated information
-   - Answers that show no real understanding of the topic
+6. Evaluate each answer like a real interviewer considering understanding, correctness, relevance, completeness, and clarity.
+7. Penalize only for incorrect facts, irrelevant answers, hallucinated information, or answers showing no real understanding.
 8. Do not reward lengthy answers unless they provide meaningful and correct information.
-9. Score each answer fairly and calculate ONE overallScore out of 100 based on the candidate's complete interview performance.
-10. Do not inflate scores artificially — but also do not be harsh. Award scores above 90 only for exceptional performance, and scores in the 60-80 range for solid, correct-but-imperfect answers (this is normal and good, not a failure).
-11. Determine the result:
-    - overallScore >= 50 → PASS
-    - overallScore < 50 → FAIL
-12. For every question, generate an improved_answer that:
-    - Sounds like a real person talking in an interview — natural, NOT robotic, NOT overly formal, NOT textbook-style.
-    - Is SHORT — 2-4 sentences maximum. Do not write essays.
-    - Matches the candidate's own vocabulary and fluency level (see LANGUAGE STYLE above) — don't jump to fancier words than they used themselves.
-    - Wherever possible, includes ONE brief real-world example or analogy to make the concept concrete (e.g., "like how Netflix loads video in small chunks instead of all at once").
-    - Is based on the candidate's original answer and preserves their intent — this is a better version of what THEY said, not a generic textbook answer.
-    - Corrects any technical, factual, or logical mistakes clearly but kindly.
-    - If the answer is empty or completely incorrect, write a short, natural-sounding answer at a plain, accessible level (since there's no sample of the candidate's own language to match).
-13. overall_feedback should summarize the candidate's strengths, weaknesses, and key improvement areas in 3-5 concise, encouraging sentences — sound like a mentor talking out loud, not a report card. Match the candidate's own language level (see LANGUAGE STYLE above).
-14. motivation_message entries should be short and encouraging — the kind of thing a supportive friend would say, matched to the candidate's own language level (see LANGUAGE STYLE above), not a formal quote.
+9. Determine the result: overallScore >= 50 → PASS, overallScore < 50 → FAIL.
+10. Do not inflate scores artificially — but also do not be harsh.
+11. For every question, generate:
+    - question_score: 0-100 for that single answer.
+    - question_feedback: 1-2 short sentences of specific, kind feedback on THAT answer (what was good / what to fix). Not generic.
+    - improved_answer: a short (2-4 sentence), natural-sounding better version of the candidate's own answer, matching their vocabulary level, with a brief real-world example where useful.
+12. overall_feedback: 3-5 concise, encouraging sentences summarizing the whole interview, mentor-style.
+13. strengths: an array of 2-4 short bullet-point strings — specific things the candidate did well across the interview.
+14. weaknesses: an array of 2-4 short bullet-point strings — specific, constructive areas to improve.
+15. final_suggestions: 2-4 short, actionable sentences on what to focus on before the next attempt.
+16. technical_score (0-100): domain/technical correctness across all answers.
+17. grammar_score (0-100): actual grammar and language correctness (separate from technical understanding).
+18. fluency_score (0-100): how smoothly and coherently the candidate expressed their ideas.
+19. communication.confidence_percentage and communication.clarity_percentage as before.
+20. motivation_message entries should be short and encouraging, matched to the candidate's language level.
 
 STRICT RULES:
-
 - Return ONLY valid JSON.
 - Do NOT add markdown, explanations, comments, or extra text.
 - Do NOT rename any keys.
-- Ensure qa_feedback contains every interview question exactly once.
+- Ensure qa_feedback contains every interview question exactly once, in order.
 
 OUTPUT FORMAT:
 
@@ -84,17 +73,21 @@ OUTPUT FORMAT:
     "confidence_percentage": 0,
     "clarity_percentage": 0
   },
+  "technical_score": 0,
+  "grammar_score": 0,
+  "fluency_score": 0,
   "overall_feedback": "",
-  "motivation_message": [
-    "",
-    "",
-    ""
-  ],
+  "strengths": ["", ""],
+  "weaknesses": ["", ""],
+  "final_suggestions": "",
+  "motivation_message": ["", "", ""],
   "qa_feedback": [
     {
       "question": "",
       "user_answer": "",
-      "improved_answer": ""
+      "improved_answer": "",
+      "question_score": 0,
+      "question_feedback": ""
     }
   ]
 }
@@ -140,17 +133,12 @@ const callGemini = async () => {
     retries++;
   }
 
-  console.log("GEMINI FEEDBACK OUTPUT:", JSON.stringify(data, null, 2));
-
   const raw = data?.candidates?.[0]?.content?.parts?.[0]?.text;
 
   if (!raw) {
     console.error("Gemini feedback error after retries:", data?.error);
     throw new Error("AI failed to generate feedback after multiple attempts");
   }
-
-  console.log("feedback response:");
-  console.log(raw);
 
   const start = raw.indexOf('{');
   const end = raw.lastIndexOf('}');

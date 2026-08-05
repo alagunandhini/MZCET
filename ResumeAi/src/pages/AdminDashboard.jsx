@@ -3,26 +3,16 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import {
   Search,
-  ChevronDown,
   ChevronRight,
   Users,
   CheckCircle2,
   Trophy,
   Radio,
   ArrowUpDown,
-  Clock,
-  RotateCcw,
 } from "lucide-react";
 import { API_URL } from "../config";
 
 const ROUND_KEYS = ["Round1", "Round2", "Round3", "Round4"];
-
-const formatTime = (seconds) => {
-  if (seconds === null || seconds === undefined) return "\u2014";
-  const mins = Math.floor(seconds / 60);
-  const secs = seconds % 60;
-  return `${mins}m ${secs}s`;
-};
 
 const roundsCompleted = (student) =>
   ROUND_KEYS.filter(
@@ -81,16 +71,13 @@ export default function AdminDashboard() {
   const [searchQuery, setSearchQuery] = useState("");
   const [sortKey, setSortKey] = useState("name");
   const [sortDir, setSortDir] = useState("asc");
-  const [expanded, setExpanded] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  // Redirect to login if there's no admin token (SSO "token" or direct login "adminToken")
   useEffect(() => {
     if (!getToken()) navigate("/admin-login");
   }, [navigate]);
 
-  // Load department + year filter options once
   useEffect(() => {
     const fetchFilters = async () => {
       try {
@@ -108,7 +95,6 @@ export default function AdminDashboard() {
     fetchFilters();
   }, []);
 
-  // Reload students whenever a filter changes
   useEffect(() => {
     const fetchStudents = async () => {
       setLoading(true);
@@ -152,6 +138,11 @@ export default function AdminDashboard() {
   const toggleSort = (key) => {
     if (sortKey === key) setSortDir((d) => (d === "asc" ? "desc" : "asc"));
     else { setSortKey(key); setSortDir("asc"); }
+  };
+
+  // NEW: navigate to the detail page in the same tab
+  const goToStudent = (registerNumber) => {
+    navigate(`/admin/students/${registerNumber}`);
   };
 
   const totalStudents = students.length;
@@ -264,19 +255,69 @@ export default function AdminDashboard() {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredStudents.map((student, i) => (
-                    <FragmentRow
-                      key={student.registerNumber}
-                      student={student}
-                      i={i}
-                      isOpen={expanded === student.registerNumber}
-                      avg={overallAverage(student)}
-                      done={roundsCompleted(student)}
-                      onToggle={() =>
-                        setExpanded(expanded === student.registerNumber ? null : student.registerNumber)
-                      }
-                    />
-                  ))}
+                  {filteredStudents.map((student, i) => {
+                    const avg = overallAverage(student);
+                    const done = roundsCompleted(student);
+                    const initials = (student.name || "?")
+                      .split(" ")
+                      .map((p) => p[0])
+                      .slice(0, 2)
+                      .join("")
+                      .toUpperCase();
+                    return (
+                      <tr
+                        key={student.registerNumber}
+                        onClick={() => goToStudent(student.registerNumber)}
+                        className={`cursor-pointer border-b border-violet-50 transition-colors hover:bg-violet-50/50 ${
+                          i % 2 === 0 ? "bg-white" : "bg-violet-50/20"
+                        }`}
+                      >
+                        <td className="pl-4">
+                          <ChevronRight className="h-4 w-4 text-violet-300" />
+                        </td>
+                        <td className="px-4 py-3 whitespace-nowrap">
+                          <div className="flex items-center gap-3">
+                            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-violet-500 to-fuchsia-500 text-white text-[11px] font-bold shrink-0">
+                              {initials}
+                            </div>
+                            <div className="min-w-0">
+                              <p className="font-semibold text-slate-800 leading-tight">{student.name}</p>
+                              <p className="text-[11px] text-slate-400 leading-tight">{student.registerNumber}</p>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-4 py-3 whitespace-nowrap text-slate-600">
+                          <span className="inline-flex items-center rounded-md bg-violet-50 px-2 py-0.5 text-xs font-semibold text-violet-600">
+                            {student.department}
+                          </span>
+                          <span className="ml-2 text-xs text-slate-400">Year {student.year}</span>
+                        </td>
+                        <td className="px-4 py-3">
+                          <div className="flex items-center gap-1.5">
+                            {ROUND_KEYS.map((r) => <RoundPill key={r} round={r} data={student.rounds?.[r]} />)}
+                            <span className="ml-2 text-xs text-slate-400">{done}/4</span>
+                          </div>
+                        </td>
+                        <td className="px-4 py-3 text-center whitespace-nowrap">
+                          {avg === null ? (
+                            <span className="text-slate-300">—</span>
+                          ) : (
+                            <span className={`font-bold ${avg >= 40 ? "text-emerald-600" : "text-rose-500"}`}>{avg}%</span>
+                          )}
+                        </td>
+                        <td className="px-4 py-3 text-center whitespace-nowrap">
+                          <span
+                            className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-semibold ${
+                              student.loggedIn ? "bg-emerald-50 text-emerald-600" : "bg-slate-100 text-slate-500"
+                            }`}
+                          >
+                            <span className={`h-1.5 w-1.5 rounded-full ${student.loggedIn ? "bg-emerald-500" : "bg-slate-400"}`} />
+                            {student.loggedIn ? "Online" : "Offline"}
+                          </span>
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
@@ -284,112 +325,9 @@ export default function AdminDashboard() {
         </div>
 
         <p className="text-xs text-slate-400 mt-4">
-          Showing {filteredStudents.length} of {totalStudents} students &middot; click a row for round-by-round detail
+          Showing {filteredStudents.length} of {totalStudents} students &middot; click a row to view full session details
         </p>
       </div>
     </div>
-  );
-}
-
-function FragmentRow({ student, i, isOpen, avg, done, onToggle }) {
-  const initials = (student.name || "?")
-    .split(" ")
-    .map((p) => p[0])
-    .slice(0, 2)
-    .join("")
-    .toUpperCase();
-
-  return (
-    <>
-      <tr
-        onClick={onToggle}
-        className={`cursor-pointer border-b border-violet-50 transition-colors hover:bg-violet-50/50 ${
-          i % 2 === 0 ? "bg-white" : "bg-violet-50/20"
-        }`}
-      >
-        <td className="pl-4">
-          {isOpen ? <ChevronDown className="h-4 w-4 text-violet-400" /> : <ChevronRight className="h-4 w-4 text-violet-300" />}
-        </td>
-        <td className="px-4 py-3 whitespace-nowrap">
-          <div className="flex items-center gap-3">
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-violet-500 to-fuchsia-500 text-white text-[11px] font-bold shrink-0">
-              {initials}
-            </div>
-            <div className="min-w-0">
-              <p className="font-semibold text-slate-800 leading-tight">{student.name}</p>
-              <p className="text-[11px] text-slate-400 leading-tight">{student.registerNumber}</p>
-            </div>
-          </div>
-        </td>
-        <td className="px-4 py-3 whitespace-nowrap text-slate-600">
-          <span className="inline-flex items-center rounded-md bg-violet-50 px-2 py-0.5 text-xs font-semibold text-violet-600">
-            {student.department}
-          </span>
-          <span className="ml-2 text-xs text-slate-400">Year {student.year}</span>
-        </td>
-        <td className="px-4 py-3">
-          <div className="flex items-center gap-1.5">
-            {ROUND_KEYS.map((r) => <RoundPill key={r} round={r} data={student.rounds?.[r]} />)}
-            <span className="ml-2 text-xs text-slate-400">{done}/4</span>
-          </div>
-        </td>
-        <td className="px-4 py-3 text-center whitespace-nowrap">
-          {avg === null ? (
-            <span className="text-slate-300">—</span>
-          ) : (
-            <span className={`font-bold ${avg >= 40 ? "text-emerald-600" : "text-rose-500"}`}>{avg}%</span>
-          )}
-        </td>
-        <td className="px-4 py-3 text-center whitespace-nowrap">
-          <span
-            className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-semibold ${
-              student.loggedIn ? "bg-emerald-50 text-emerald-600" : "bg-slate-100 text-slate-500"
-            }`}
-          >
-            <span className={`h-1.5 w-1.5 rounded-full ${student.loggedIn ? "bg-emerald-500" : "bg-slate-400"}`} />
-            {student.loggedIn ? "Online" : "Offline"}
-          </span>
-        </td>
-      </tr>
-
-      {isOpen && (
-        <tr className="bg-violet-50/40 border-b border-violet-50">
-          <td colSpan={6} className="px-4 py-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-              {ROUND_KEYS.map((r) => {
-                const d = student.rounds?.[r];
-                const attempted = d?.score !== null && d?.score !== undefined;
-                const pass = d?.result?.toLowerCase().includes("pass");
-                return (
-                  <div key={r} className="rounded-xl border border-violet-100 bg-white px-4 py-3">
-                    <p className="text-xs font-bold uppercase tracking-wide text-violet-400 mb-2">{r}</p>
-                    {!attempted ? (
-                      <p className="text-sm text-slate-300">Not attempted</p>
-                    ) : (
-                      <div className="space-y-1.5">
-                        <div className="flex items-center justify-between">
-                          <span className="text-xs text-slate-400">Score</span>
-                          <span className={`text-sm font-bold ${pass ? "text-emerald-600" : "text-rose-500"}`}>
-                            {d.score} · {d.result}
-                          </span>
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <span className="text-xs text-slate-400 flex items-center gap-1"><Clock className="h-3 w-3" /> Time</span>
-                          <span className="text-xs text-slate-600">{formatTime(d.timeTakenSeconds)}</span>
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <span className="text-xs text-slate-400 flex items-center gap-1"><RotateCcw className="h-3 w-3" /> Attempts left</span>
-                          <span className="text-xs text-slate-600">{d.attemptsLeft}</span>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          </td>
-        </tr>
-      )}
-    </>
   );
 }

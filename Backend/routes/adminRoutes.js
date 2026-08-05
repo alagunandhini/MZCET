@@ -1,10 +1,10 @@
-//adminroutes
+// adminRoutes
 const express = require("express");
 const router = express.Router();
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const { getPool, sql } = require("../db-sql");
-const { getDepartments, getYears, getStudents } = require("../controller/adminController");
+const { getDepartments, getYears, getStudents, getStudentDetail } = require("../controller/adminController");
 const adminAuthMiddleware = require("../midleware/adminAuthMiddleware");
 
 // Admin login — checks the separate Admins table, nothing to do with Users
@@ -43,5 +43,7 @@ router.post("/login", async (req, res) => {
 router.get("/departments", adminAuthMiddleware, getDepartments);
 router.get("/years", adminAuthMiddleware, getYears);
 router.get("/students", adminAuthMiddleware, getStudents);
+// NEW: full session detail for one student
+router.get("/students/:registerNumber", adminAuthMiddleware, getStudentDetail);
 
 module.exports = router;
