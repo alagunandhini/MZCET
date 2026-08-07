@@ -69,7 +69,7 @@ async function run() {
         UPDATE Users 
         SET resumeText = '', jobDescription = '', hasResume = 0, 
             password = @password, isFirstLogin = 1
-      `);0
+      `);
 
     await transaction.commit();
     console.log("\n✅ All students reset to a fresh state successfully.");
