@@ -68,7 +68,7 @@ const callGemini = async (prompt) => {
   return queue.enqueue(async () => {
     try {
       const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${apiKey.trim()}`,
+`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent?key=${apiKey.trim()}`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -166,6 +166,8 @@ const generateRound = async (roundDef, text, jobDescription) => {
   }
 };
 
+
+
 const analyzeResume = async (req, res) => {
   try {
     const { text, jobDescription } = req.body;
@@ -175,6 +177,11 @@ const analyzeResume = async (req, res) => {
       return res.status(400).json({ error: "No resume text received" });
     }
 
+const MAX_RESUME_CHARS = 3000; // ~750-800 tokens, plenty for context
+const trimmedText = text.length > MAX_RESUME_CHARS
+  ? text.slice(0, MAX_RESUME_CHARS) + "\n...[truncated]"
+  : text;
+
     // One Gemini call per round (4 total), run sequentially so a failure on
     // one round is easy to attribute and retry independently. Pacing across
     // rounds (and across students) is handled by geminiQueue now, so no
@@ -182,7 +189,7 @@ const analyzeResume = async (req, res) => {
     const parsedQuestions = {};
     for (const roundDef of ROUND_DEFS) {
       try {
-        parsedQuestions[roundDef.key] = await generateRound(roundDef, text, jobDescription);
+        parsedQuestions[roundDef.key] = await generateRound(roundDef, trimmedText, jobDescription);
       } catch (roundErr) {
         console.error(`GEMINI INTERVIEW ERROR (${roundDef.key}):`, roundErr);
         return res.status(500).json({
