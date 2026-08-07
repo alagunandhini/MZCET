@@ -4,15 +4,20 @@ import { useNavigate } from "react-router-dom";
 import {
   Search,
   ChevronRight,
+  ChevronDown,
   Users,
   CheckCircle2,
   Trophy,
   Radio,
   ArrowUpDown,
+  Lock,
+  XCircle,
+  CircleDashed,
 } from "lucide-react";
 import { API_URL } from "../config";
 
 const ROUND_KEYS = ["Round1", "Round2", "Round3", "Round4"];
+const ROUND_LABELS = { Round1: "Round 1", Round2: "Round 2", Round3: "Round 3", Round4: "Round 4" };
 
 const roundsCompleted = (student) =>
   ROUND_KEYS.filter(
@@ -34,22 +39,22 @@ const getToken = () => localStorage.getItem("adminToken") || localStorage.getIte
 const RoundPill = ({ round, data }) => {
   const attempted = data?.score !== null && data?.score !== undefined;
   if (!attempted) {
-    return <div title={`${round}: not attempted`} className="h-2 w-7 rounded-full bg-violet-100" />;
+    return <div title={`${round}: not attempted`} className="h-2 w-7 rounded-full bg-slate-200" />;
   }
   const pass = data.result?.toLowerCase().includes("pass");
   return (
     <div
       title={`${round}: ${data.score} (${data.result})`}
-      className={`h-2 w-7 rounded-full ${pass ? "bg-emerald-400" : "bg-rose-400"}`}
+      className={`h-2 w-7 rounded-full ${pass ? "bg-sky-500" : "bg-slate-400"}`}
     />
   );
 };
 
-const StatCard = ({ icon: Icon, label, value, sub, gradient }) => (
-  <div className="relative overflow-hidden rounded-2xl border border-violet-100 bg-white p-5 shadow-[0_2px_10px_rgba(109,40,217,0.06)]">
-    <div className={`absolute -right-6 -top-6 h-24 w-24 rounded-full opacity-20 ${gradient}`} />
+const StatCard = ({ icon: Icon, label, value, sub }) => (
+  <div className="relative overflow-hidden rounded-2xl border border-slate-200 bg-white p-5 shadow-[0_2px_10px_rgba(15,23,42,0.05)]">
+    <div className="absolute -right-6 -top-6 h-24 w-24 rounded-full bg-sky-500 opacity-10" />
     <div className="relative flex items-center gap-3.5">
-      <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-white ${gradient}`}>
+      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-sky-600 text-white">
         <Icon className="h-5 w-5" />
       </div>
       <div className="min-w-0">
@@ -60,6 +65,101 @@ const StatCard = ({ icon: Icon, label, value, sub, gradient }) => (
     </div>
   </div>
 );
+
+/**
+ * Derives a human-readable round status without requiring any new API calls.
+ * Falls back sensibly if attemptsUsed/maxAttempts aren't present in the payload yet.
+ */
+const getRoundStatus = (roundData, prevRoundData, isFirstRound) => {
+  const hasScore = roundData?.score !== null && roundData?.score !== undefined;
+
+  if (hasScore) {
+    const pass = roundData.result?.toLowerCase().includes("pass");
+    return { label: pass ? "PASS" : "FAIL", pass, locked: false, started: true };
+  }
+
+  // Not first round and previous round wasn't passed -> locked
+  if (!isFirstRound) {
+    const prevHasScore = prevRoundData?.score !== null && prevRoundData?.score !== undefined;
+    const prevPass = prevRoundData?.result?.toLowerCase().includes("pass");
+    if (!prevHasScore || !prevPass) {
+      return { label: "LOCKED", pass: false, locked: true, started: false };
+    }
+  }
+
+  return { label: "NOT STARTED", pass: false, locked: false, started: false };
+};
+
+const RoundStatusIcon = ({ status }) => {
+  if (status.locked) return <Lock className="h-3.5 w-3.5 text-slate-400" />;
+  if (status.started && status.pass) return <CheckCircle2 className="h-3.5 w-3.5 text-sky-500" />;
+  if (status.started && !status.pass) return <XCircle className="h-3.5 w-3.5 text-slate-500" />;
+  return <CircleDashed className="h-3.5 w-3.5 text-slate-400" />;
+};
+
+const RoundSummaryCard = ({ roundKey, data, prevData, isFirstRound }) => {
+  const status = getRoundStatus(data, prevData, isFirstRound);
+  const attemptsUsed = data?.attemptsUsed ?? data?.attempts ?? null;
+  const maxAttempts = data?.maxAttempts ?? null;
+  const timeTaken = data?.timeTaken ?? data?.duration ?? null;
+
+  const statusColor = status.locked
+    ? "border-slate-200 bg-slate-50"
+    : status.started
+    ? status.pass
+      ? "border-sky-200 bg-sky-50/60"
+      : "border-slate-300 bg-slate-100/60"
+    : "border-slate-200 bg-white";
+
+  return (
+    <div className={`rounded-xl border p-3.5 ${statusColor}`}>
+      <div className="flex items-center justify-between mb-2">
+        <p className="text-xs font-bold text-slate-700">{ROUND_LABELS[roundKey]}</p>
+        <RoundStatusIcon status={status} />
+      </div>
+      <div className="space-y-1 text-[11px] text-slate-500">
+        <div className="flex items-center justify-between">
+          <span>Attempts</span>
+          <span className="font-semibold text-slate-600">
+            {attemptsUsed !== null && maxAttempts !== null
+              ? `${attemptsUsed} / ${maxAttempts}`
+              : attemptsUsed !== null
+              ? attemptsUsed
+              : "—"}
+          </span>
+        </div>
+        <div className="flex items-center justify-between">
+          <span>Status</span>
+          <span
+            className={`font-semibold ${
+              status.locked
+                ? "text-slate-400"
+                : status.started
+                ? status.pass
+                  ? "text-sky-600"
+                  : "text-slate-500"
+                : "text-slate-400"
+            }`}
+          >
+            {status.label}
+          </span>
+        </div>
+        {data?.score !== null && data?.score !== undefined && (
+          <div className="flex items-center justify-between">
+            <span>Best Score</span>
+            <span className="font-semibold text-slate-600">{data.score}%</span>
+          </div>
+        )}
+        {timeTaken && (
+          <div className="flex items-center justify-between">
+            <span>Time Taken</span>
+            <span className="font-semibold text-slate-600">{timeTaken}</span>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
 
 export default function AdminDashboard() {
   const navigate = useNavigate();
@@ -73,6 +173,8 @@ export default function AdminDashboard() {
   const [sortDir, setSortDir] = useState("asc");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  // NEW: tracks which student row (by registerNumber) is currently expanded
+  const [expandedRow, setExpandedRow] = useState(null);
 
   useEffect(() => {
     if (!getToken()) navigate("/admin-login");
@@ -140,9 +242,14 @@ export default function AdminDashboard() {
     else { setSortKey(key); setSortDir("asc"); }
   };
 
-  // NEW: navigate to the detail page in the same tab
+  // CHANGED: navigation is now only triggered from the "View Full Details" button
   const goToStudent = (registerNumber) => {
     navigate(`/admin/students/${registerNumber}`);
+  };
+
+  // NEW: toggles the expanded summary panel for a row
+  const toggleExpand = (registerNumber) => {
+    setExpandedRow((prev) => (prev === registerNumber ? null : registerNumber));
   };
 
   const totalStudents = students.length;
@@ -152,16 +259,27 @@ export default function AdminDashboard() {
   const avgScoreAll = averages.length ? Math.round(averages.reduce((a, b) => a + b, 0) / averages.length) : 0;
 
   return (
-    <div className="min-h-screen bg-[#FAF9FE]" style={{ fontFamily: "'Inter', ui-sans-serif, system-ui" }}>
+    <div className="min-h-screen bg-slate-50" style={{ fontFamily: "'Inter', ui-sans-serif, system-ui" }}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@700;800&family=Inter:wght@400;500;600;700&display=swap');
+
+        @keyframes expandPanel {
+          from { opacity: 0; transform: translateY(-6px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        .expand-panel {
+          animation: expandPanel 0.22s ease-out;
+        }
+        .chevron-rotate {
+          transition: transform 0.2s ease;
+        }
       `}</style>
 
       {/* Header */}
-      <div className="bg-gradient-to-r from-violet-700 via-violet-600 to-fuchsia-600">
+      <div className="bg-sky-900">
         <div className="mx-auto max-w-7xl px-6 md:px-10 py-7 flex items-center justify-between">
           <div>
-            <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-violet-200">
+            <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-sky-400">
               Placement &amp; Assessment Cell
             </p>
             <h1
@@ -171,8 +289,8 @@ export default function AdminDashboard() {
               Student Progress Dashboard
             </h1>
           </div>
-          <div className="hidden sm:flex items-center gap-2 rounded-full bg-white/10 px-3 py-1.5 text-xs text-violet-100 backdrop-blur">
-            <Radio className="h-3.5 w-3.5 text-emerald-300" />
+          <div className="hidden sm:flex items-center gap-2 rounded-full bg-white/10 px-3 py-1.5 text-xs text-slate-200 backdrop-blur">
+            <Radio className="h-3.5 w-3.5 text-sky-400" />
             Live data
           </div>
         </div>
@@ -181,10 +299,10 @@ export default function AdminDashboard() {
       <div className="mx-auto max-w-7xl px-6 md:px-10 -mt-6 pb-10">
         {/* Stat cards */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-7">
-          <StatCard icon={Users} label="Total Students" value={totalStudents} gradient="bg-gradient-to-br from-violet-500 to-indigo-500" />
-          <StatCard icon={CheckCircle2} label="Completed All Rounds" value={completedAll} sub={totalStudents ? `of ${totalStudents}` : undefined} gradient="bg-gradient-to-br from-emerald-400 to-teal-500" />
-          <StatCard icon={Trophy} label="Average Score" value={`${avgScoreAll}%`} gradient="bg-gradient-to-br from-amber-400 to-orange-500" />
-          <StatCard icon={Radio} label="Currently Online" value={onlineNow} gradient="bg-gradient-to-br from-fuchsia-500 to-pink-500" />
+          <StatCard icon={Users} label="Total Students" value={totalStudents} />
+          <StatCard icon={CheckCircle2} label="Completed All Rounds" value={completedAll} sub={totalStudents ? `of ${totalStudents}` : undefined} />
+          <StatCard icon={Trophy} label="Average Score" value={`${avgScoreAll}%`} />
+          <StatCard icon={Radio} label="Currently Online" value={onlineNow} />
         </div>
 
         {/* Filter bar */}
@@ -192,7 +310,7 @@ export default function AdminDashboard() {
           <select
             value={selectedDepartment}
             onChange={(e) => setSelectedDepartment(e.target.value)}
-            className="border border-violet-100 rounded-xl px-3.5 py-2 text-sm text-slate-700 bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-violet-300"
+            className="border border-slate-200 rounded-xl px-3.5 py-2 text-sm text-slate-700 bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-sky-300"
           >
             <option value="All">All Departments</option>
             {departments.map((d) => <option key={d} value={d}>{d}</option>)}
@@ -201,30 +319,30 @@ export default function AdminDashboard() {
           <select
             value={selectedYear}
             onChange={(e) => setSelectedYear(e.target.value)}
-            className="border border-violet-100 rounded-xl px-3.5 py-2 text-sm text-slate-700 bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-violet-300"
+            className="border border-slate-200 rounded-xl px-3.5 py-2 text-sm text-slate-700 bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-sky-300"
           >
             <option value="All">All Years</option>
             {years.map((y) => <option key={y} value={y}>{y}</option>)}
           </select>
 
           <div className="relative ml-auto w-full sm:w-64">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-violet-300" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search name or register no."
-              className="w-full border border-violet-100 rounded-xl pl-9 pr-4 py-2 text-sm text-slate-700 bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-violet-300"
+              className="w-full border border-slate-200 rounded-xl pl-9 pr-4 py-2 text-sm text-slate-700 bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-sky-300"
             />
           </div>
         </div>
 
         {/* Table */}
-        <div className="bg-white rounded-2xl border border-violet-100 shadow-[0_2px_14px_rgba(109,40,217,0.06)] overflow-hidden">
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-[0_2px_14px_rgba(15,23,42,0.05)] overflow-hidden">
           {loading ? (
             <div className="p-14 text-center text-slate-400 text-sm">Loading students…</div>
           ) : error ? (
-            <div className="p-14 text-center text-rose-500 text-sm">{error}</div>
+            <div className="p-14 text-center text-slate-500 text-sm">{error}</div>
           ) : filteredStudents.length === 0 ? (
             <div className="p-14 text-center text-slate-400 text-sm">
               {searchQuery ? "No students match your search." : "No students found for this filter."}
@@ -232,22 +350,22 @@ export default function AdminDashboard() {
           ) : (
             <div className="overflow-x-auto">
               <table className="min-w-full text-sm text-left border-collapse">
-                <thead className="bg-violet-50/70 text-violet-500 text-xs uppercase tracking-wide border-b border-violet-100">
+                <thead className="bg-slate-50 text-slate-500 text-xs uppercase tracking-wide border-b border-slate-200">
                   <tr>
                     <th className="w-8"></th>
                     <th className="px-4 py-3 font-bold">
-                      <button onClick={() => toggleSort("name")} className="flex items-center gap-1 hover:text-violet-700">
+                      <button onClick={() => toggleSort("name")} className="flex items-center gap-1 hover:text-slate-800">
                         Student <ArrowUpDown className="h-3 w-3" />
                       </button>
                     </th>
                     <th className="px-4 py-3 font-bold whitespace-nowrap">Dept / Year</th>
                     <th className="px-4 py-3 font-bold">
-                      <button onClick={() => toggleSort("progress")} className="flex items-center gap-1 hover:text-violet-700">
+                      <button onClick={() => toggleSort("progress")} className="flex items-center gap-1 hover:text-slate-800">
                         Round Progress <ArrowUpDown className="h-3 w-3" />
                       </button>
                     </th>
                     <th className="px-4 py-3 font-bold text-center">
-                      <button onClick={() => toggleSort("average")} className="flex items-center gap-1 mx-auto hover:text-violet-700">
+                      <button onClick={() => toggleSort("average")} className="flex items-center gap-1 mx-auto hover:text-slate-800">
                         Avg. Score <ArrowUpDown className="h-3 w-3" />
                       </button>
                     </th>
@@ -258,6 +376,7 @@ export default function AdminDashboard() {
                   {filteredStudents.map((student, i) => {
                     const avg = overallAverage(student);
                     const done = roundsCompleted(student);
+                    const isExpanded = expandedRow === student.registerNumber;
                     const initials = (student.name || "?")
                       .split(" ")
                       .map((p) => p[0])
@@ -265,57 +384,94 @@ export default function AdminDashboard() {
                       .join("")
                       .toUpperCase();
                     return (
-                      <tr
-                        key={student.registerNumber}
-                        onClick={() => goToStudent(student.registerNumber)}
-                        className={`cursor-pointer border-b border-violet-50 transition-colors hover:bg-violet-50/50 ${
-                          i % 2 === 0 ? "bg-white" : "bg-violet-50/20"
-                        }`}
-                      >
-                        <td className="pl-4">
-                          <ChevronRight className="h-4 w-4 text-violet-300" />
-                        </td>
-                        <td className="px-4 py-3 whitespace-nowrap">
-                          <div className="flex items-center gap-3">
-                            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-violet-500 to-fuchsia-500 text-white text-[11px] font-bold shrink-0">
-                              {initials}
+                      <>
+                        <tr
+                          key={student.registerNumber}
+                          onClick={() => toggleExpand(student.registerNumber)}
+                          className={`cursor-pointer border-b border-slate-100 transition-colors hover:bg-slate-50 ${
+                            isExpanded ? "bg-slate-50" : i % 2 === 0 ? "bg-white" : "bg-slate-50/40"
+                          }`}
+                        >
+                          <td className="pl-4">
+                            <ChevronRight
+                              className={`h-4 w-4 text-slate-400 chevron-rotate ${isExpanded ? "rotate-90" : ""}`}
+                            />
+                          </td>
+                          <td className="px-4 py-3 whitespace-nowrap">
+                            <div className="flex items-center gap-3">
+                              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-sky-600 text-white text-[11px] font-bold shrink-0">
+                                {initials}
+                              </div>
+                              <div className="min-w-0">
+                                <p className="font-semibold text-slate-800 leading-tight">{student.name}</p>
+                                <p className="text-[11px] text-slate-400 leading-tight">{student.registerNumber}</p>
+                              </div>
                             </div>
-                            <div className="min-w-0">
-                              <p className="font-semibold text-slate-800 leading-tight">{student.name}</p>
-                              <p className="text-[11px] text-slate-400 leading-tight">{student.registerNumber}</p>
+                          </td>
+                          <td className="px-4 py-3 whitespace-nowrap text-slate-600">
+                            <span className="inline-flex items-center rounded-md bg-sky-50 px-2 py-0.5 text-xs font-semibold text-sky-700">
+                              {student.department}
+                            </span>
+                            <span className="ml-2 text-xs text-slate-400">Year {student.year}</span>
+                          </td>
+                          <td className="px-4 py-3">
+                            <div className="flex items-center gap-1.5">
+                              {ROUND_KEYS.map((r) => <RoundPill key={r} round={r} data={student.rounds?.[r]} />)}
+                              <span className="ml-2 text-xs text-slate-400">{done}/4</span>
                             </div>
-                          </div>
-                        </td>
-                        <td className="px-4 py-3 whitespace-nowrap text-slate-600">
-                          <span className="inline-flex items-center rounded-md bg-violet-50 px-2 py-0.5 text-xs font-semibold text-violet-600">
-                            {student.department}
-                          </span>
-                          <span className="ml-2 text-xs text-slate-400">Year {student.year}</span>
-                        </td>
-                        <td className="px-4 py-3">
-                          <div className="flex items-center gap-1.5">
-                            {ROUND_KEYS.map((r) => <RoundPill key={r} round={r} data={student.rounds?.[r]} />)}
-                            <span className="ml-2 text-xs text-slate-400">{done}/4</span>
-                          </div>
-                        </td>
-                        <td className="px-4 py-3 text-center whitespace-nowrap">
-                          {avg === null ? (
-                            <span className="text-slate-300">—</span>
-                          ) : (
-                            <span className={`font-bold ${avg >= 40 ? "text-emerald-600" : "text-rose-500"}`}>{avg}%</span>
-                          )}
-                        </td>
-                        <td className="px-4 py-3 text-center whitespace-nowrap">
-                          <span
-                            className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-semibold ${
-                              student.loggedIn ? "bg-emerald-50 text-emerald-600" : "bg-slate-100 text-slate-500"
-                            }`}
-                          >
-                            <span className={`h-1.5 w-1.5 rounded-full ${student.loggedIn ? "bg-emerald-500" : "bg-slate-400"}`} />
-                            {student.loggedIn ? "Online" : "Offline"}
-                          </span>
-                        </td>
-                      </tr>
+                          </td>
+                          <td className="px-4 py-3 text-center whitespace-nowrap">
+                            {avg === null ? (
+                              <span className="text-slate-300">—</span>
+                            ) : (
+                              <span className={`font-bold ${avg >= 40 ? "text-sky-600" : "text-slate-500"}`}>{avg}%</span>
+                            )}
+                          </td>
+                          <td className="px-4 py-3 text-center whitespace-nowrap">
+                            <span
+                              className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-semibold ${
+                                student.loggedIn ? "bg-sky-50 text-sky-600" : "bg-slate-100 text-slate-500"
+                              }`}
+                            >
+                              <span className={`h-1.5 w-1.5 rounded-full ${student.loggedIn ? "bg-sky-500" : "bg-slate-400"}`} />
+                              {student.loggedIn ? "Online" : "Offline"}
+                            </span>
+                          </td>
+                        </tr>
+
+                        {/* NEW: expandable summary row */}
+                        {isExpanded && (
+                          <tr className="border-b border-slate-100 bg-slate-50/60">
+                            <td colSpan={6} className="px-4 py-4">
+                              <div className="expand-panel">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
+                                  {ROUND_KEYS.map((r, idx) => (
+                                    <RoundSummaryCard
+                                      key={r}
+                                      roundKey={r}
+                                      data={student.rounds?.[r]}
+                                      prevData={idx > 0 ? student.rounds?.[ROUND_KEYS[idx - 1]] : null}
+                                      isFirstRound={idx === 0}
+                                    />
+                                  ))}
+                                </div>
+                                <div className="flex justify-end">
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      goToStudent(student.registerNumber);
+                                    }}
+                                    className="inline-flex items-center gap-1.5 rounded-xl bg-sky-600 px-4 py-2 text-xs font-bold text-white shadow-sm hover:bg-sky-700 transition-colors"
+                                  >
+                                    View Full Details
+                                    <ChevronRight className="h-3.5 w-3.5" />
+                                  </button>
+                                </div>
+                              </div>
+                            </td>
+                          </tr>
+                        )}
+                      </>
                     );
                   })}
                 </tbody>
@@ -325,7 +481,7 @@ export default function AdminDashboard() {
         </div>
 
         <p className="text-xs text-slate-400 mt-4">
-          Showing {filteredStudents.length} of {totalStudents} students &middot; click a row to view full session details
+          Showing {filteredStudents.length} of {totalStudents} students &middot; click a row to view round-by-round summary
         </p>
       </div>
     </div>
