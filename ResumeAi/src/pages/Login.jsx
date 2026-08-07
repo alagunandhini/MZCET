@@ -213,13 +213,13 @@ const Login = () => {
               <img src="mzcet-logo.png" className="h-16 w-16" alt="MZCET Logo" />
               <p className="mt-4 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-widest" style={{ color: BLUE_DARK }}>
                 <GraduationCap className="h-3.5 w-3.5" />
-               MZ Resume AI
+               MZ PlaceNext
               </p>
               <h1 className="mt-2 text-2xl font-extrabold tracking-tight sm:text-3xl" style={{ ...display, color: INK }}>
                 Welcome back
               </h1>
               <p className="mt-1.5 text-sm" style={{ color: SLATE }}>
-               Log in to access MZ Resume AI.
+               Log in to access MZ PlaceNext.
               </p>
 
               {/* Admin | Student Toggle */}
