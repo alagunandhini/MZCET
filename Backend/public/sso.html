@@ -143,6 +143,8 @@ body{
             Access Denied
         </h2>
 
+        <p id="modalMsg" style="color:#64748b;font-size:15px;margin-bottom:35px;"></p>
+
         <button class="modal-btn" id="modalOk">
             OK
         </button>
@@ -154,7 +156,7 @@ body{
 <script>
 (function () {
 
-    const API_URL = window.SSO_API_URL || window.location.origin || "http://10.201.197.24:3011";
+    const API_URL = window.SSO_API_URL || window.location.origin || "http://localhost:3007";
 
     function getQueryParam(name) {
         const params = new URLSearchParams(window.location.search);
@@ -195,6 +197,10 @@ body{
 
             document.getElementById("status").style.display="none";
             document.querySelector(".spinner").style.display="none";
+
+            document
+                .getElementById("modalMsg")
+                .textContent = data.message || "Invalid or expired token.";
 
             document
                 .getElementById("modalOverlay")
