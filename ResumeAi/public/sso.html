@@ -143,6 +143,8 @@ body{
             Access Denied
         </h2>
 
+        <p id="modalMsg" style="color:#64748b;font-size:15px;margin-bottom:35px;"></p>
+
         <button class="modal-btn" id="modalOk">
             OK
         </button>
@@ -195,6 +197,10 @@ body{
 
             document.getElementById("status").style.display="none";
             document.querySelector(".spinner").style.display="none";
+
+            document
+                .getElementById("modalMsg")
+                .textContent = data.message || "Invalid or expired token.";
 
             document
                 .getElementById("modalOverlay")
