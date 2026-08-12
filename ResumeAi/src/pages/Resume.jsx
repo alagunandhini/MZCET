@@ -66,13 +66,13 @@ const Resume = () => {
   const currentSection = sections[sectionIndex];
   const [completedRounds, setCompletedRounds] = useState([]);
   const [roundAttempts, setRoundAttempts] = useState({});
-const [isDark, setIsDark] = useState(() => {
-  return localStorage.getItem("isDark") === "true";
-});
+  const [isDark, setIsDark] = useState(() => {
+    return localStorage.getItem("isDark") === "true";
+  });
 
-useEffect(() => {
-  localStorage.setItem("isDark", isDark);
-}, [isDark]);
+  useEffect(() => {
+    localStorage.setItem("isDark", isDark);
+  }, [isDark]);
 
   // Timer state — how long the user has spent on the current round
   const [seconds, setSeconds] = useState(0);
@@ -124,22 +124,26 @@ useEffect(() => {
         }
       );
 
-   if (res.data.hasResume) {
-  setShowQuestionsUI(true);
-  // setShowCompletionScreen(true);
-  setQuestions(res.data.questions || {});
-  setCompletedRounds(res.data.completedRounds || []);
-  setRoundAttempts(res.data.roundAttempts || {});
-} else {
-  // No resume on the server — override any stale cached state from a
-  // previous session/testing round, so the upload page shows correctly.
-  setShowQuestionsUI(false);
-  setQuestions({});
-  setCompletedRounds([]);
-  setRoundAttempts({});
-}
+      if (res.data.hasResume) {
+        setShowQuestionsUI(true);
+        // setShowCompletionScreen(true);
+        setQuestions(res.data.questions || {});
+        setCompletedRounds(res.data.completedRounds || []);
+        setRoundAttempts(res.data.roundAttempts || {});
+      } else {
+        // No resume on the server — override any stale cached state from a
+        // previous session/testing round, so the upload page shows correctly.
+        setShowQuestionsUI(false);
+        setQuestions({});
+        setCompletedRounds([]);
+        setRoundAttempts({});
+      }
     } catch (err) {
-      console.log(err);
+      // Surfaced instead of silently swallowed — if this fails (auth/token
+      // issue, SQL timeout, etc.) the dashboard would otherwise keep showing
+      // stale questions with no visible indication anything went wrong.
+      console.error("refreshResumeStatus failed:", err);
+      showToast("Couldn't refresh your progress. Please reload the page.", "error");
     }
   }, []);
 
@@ -303,13 +307,13 @@ useEffect(() => {
   // for start recording
   const startRecording = async () => {
 
-   const stream = await navigator.mediaDevices.getUserMedia({
-  audio: {
-    echoCancellation: true,
-    noiseSuppression: true,
-    autoGainControl: true,
-  },
-});
+    const stream = await navigator.mediaDevices.getUserMedia({
+      audio: {
+        echoCancellation: true,
+        noiseSuppression: true,
+        autoGainControl: true,
+      },
+    });
 
     const audioTrack = stream.getAudioTracks()[0];
     console.log("Track label:", audioTrack.label);
@@ -553,14 +557,19 @@ useEffect(() => {
       console.error("Terminate round failed", err);
     } finally {
       setStartPractice(false);
-      setShowQuestionsUI(true);
       setCurrentIndex(0);
       setQuestionStatus({});
       setSessionId(uuidv4());
       // Re-fetch so `questions` reflects the new attemptsUsed the backend
       // just recorded — otherwise the next attempt reuses the stale
-      // pre-attempt question slice.
-      refreshResumeStatus();
+      // pre-attempt question slice. Awaited (and setShowQuestionsUI moved
+      // to run AFTER it resolves) so the dashboard never renders with the
+      // old 45/stale question set for even a moment — previously these ran
+      // in parallel, so the dashboard could mount before the fresh
+      // `questions` data came back, and only a hard refresh forced a
+      // re-fetch that actually landed before render.
+      await refreshResumeStatus();
+      setShowQuestionsUI(true);
     }
   };
 
@@ -604,19 +613,31 @@ useEffect(() => {
     setTransitionText("Back to Dashboard");
     setTransitionLoading(true);
 
-    setTimeout(() => {
+    setTimeout(async () => {
       setShowCompletionScreen(false);
       setStartPractice(false);
-      setShowQuestionsUI(true);
       setCurrentIndex(0);
 
       setQuestionStatus({});
       setSessionId(uuidv4());
-      setTransitionLoading(false);
+
       // Re-fetch so `questions` reflects the new attemptsUsed the backend
       // just recorded in endInterview() — otherwise the next attempt on
       // this round reuses the stale pre-attempt question slice.
-      refreshResumeStatus();
+      //
+      // AWAITED, and setShowQuestionsUI(true) moved to run after it
+      // resolves (was previously fired in parallel, un-awaited, right
+      // alongside setShowQuestionsUI(true)). That race meant the dashboard
+      // mounted immediately with whatever `questions` was already sitting
+      // in memory (stale — from before this attempt), and only got the
+      // correct 15-question slice a moment later if/when the fetch
+      // resolved — which is why only a hard refresh reliably showed the
+      // right count (a full remount re-runs the initial fetch and blocks
+      // on it via checkingResume, this in-app path did not).
+      await refreshResumeStatus();
+
+      setShowQuestionsUI(true);
+      setTransitionLoading(false);
     }, 2200);
 
   };
@@ -668,7 +689,7 @@ useEffect(() => {
         </div>
       </div>)}
 
-    
+
       {/* Loader for all */}
       {transitionLoading && <TransitionLoader text={transitionText} />}
 
@@ -677,7 +698,7 @@ useEffect(() => {
         {/* Page 1 - Upload Resume */}
         {!showQuestionsUI && (
           <ResumeUpload
-            setQuestions={setQuestions}
+            refreshResumeStatus={refreshResumeStatus}
             setShowQuestionsUI={setShowQuestionsUI}
             showToast={showToast}
             setTransitionLoading={setTransitionLoading}
@@ -688,53 +709,53 @@ useEffect(() => {
 
         {/* Page 2 - Generate question  */}
 
-       {showQuestionsUI && !startPractice && (
-  <RoundDashboard
-    questions={questions}
-    completedRounds={completedRounds}
-    roundAttempts={roundAttempts}
-    setCompletedRounds={setCompletedRounds}
-    sections={sections}
-    selectedRound={selectedRound}
-    setSelectedRound={setSelectedRound}
-    setCurrentIndex={setCurrentIndex}
-    setSectionIndex={setSectionIndex}
-    setTransitionLoading={setTransitionLoading}
-    setTransitionText={setTransitionText}
-    setStartPractice={setStartPractice}
-    setShowQuestionsUI={setShowQuestionsUI}
-    setSessionId={setSessionId}
-    username={username}
-    handleLogout={handleLogout}
-    isDark={isDark}
-    setIsDark={setIsDark}
-  />
-)}
+        {showQuestionsUI && !startPractice && (
+          <RoundDashboard
+            questions={questions}
+            completedRounds={completedRounds}
+            roundAttempts={roundAttempts}
+            setCompletedRounds={setCompletedRounds}
+            sections={sections}
+            selectedRound={selectedRound}
+            setSelectedRound={setSelectedRound}
+            setCurrentIndex={setCurrentIndex}
+            setSectionIndex={setSectionIndex}
+            setTransitionLoading={setTransitionLoading}
+            setTransitionText={setTransitionText}
+            setStartPractice={setStartPractice}
+            setShowQuestionsUI={setShowQuestionsUI}
+            setSessionId={setSessionId}
+            username={username}
+            handleLogout={handleLogout}
+            isDark={isDark}
+            setIsDark={setIsDark}
+          />
+        )}
 
-  {/* Page 3 - Practice Question */}
+        {/* Page 3 - Practice Question */}
 
-{startPractice && (
-  <InterviewRoom
-    seconds={Math.max(ROUND_TIME_LIMIT_SECONDS - seconds, 0)}
-    currentIndex={currentIndex}
-    questions={questions}
-    sectionName={questions[currentSection]?.name}
-    roundNumber={sectionIndex}  
-    computedSection={currentSection}
-    isSpeaking={isSpeaking}
-    isRecording={isRecording}
-    startRecording={startRecording}
-    stopRecording={stopRecording}
-    skipQuestion={skipQuestion}
-    setShowExitModal={setShowExitModal}
-    setSessionId={setSessionId}
-    mediaRecorderRef={mediaRecorderRef}
-    setIsRecording={setIsRecording}
-    setCurrentIndex={setCurrentIndex}
-    isDark={isDark}
-    setIsDark={setIsDark}
-  />
-)}
+        {startPractice && (
+          <InterviewRoom
+            seconds={Math.max(ROUND_TIME_LIMIT_SECONDS - seconds, 0)}
+            currentIndex={currentIndex}
+            questions={questions}
+            sectionName={questions[currentSection]?.name}
+            roundNumber={sectionIndex}
+            computedSection={currentSection}
+            isSpeaking={isSpeaking}
+            isRecording={isRecording}
+            startRecording={startRecording}
+            stopRecording={stopRecording}
+            skipQuestion={skipQuestion}
+            setShowExitModal={setShowExitModal}
+            setSessionId={setSessionId}
+            mediaRecorderRef={mediaRecorderRef}
+            setIsRecording={setIsRecording}
+            setCurrentIndex={setCurrentIndex}
+            isDark={isDark}
+            setIsDark={setIsDark}
+          />
+        )}
       </div>
 
 
@@ -742,27 +763,27 @@ useEffect(() => {
       <InterviewLoader isAnalyzing={isAnalyzing} isDark={isDark} />
 
       {/* interview completed page */}
-    {/* exit module */}
+      {/* exit module */}
 
-    {showCompletionScreen && (
-  <InterviewCompleted
-    sessionId={sessionId}
-    answered={answeredCount}
-    skipped={skippedCount}
-    feedback={feedback}
-    onNextRound={handleNextRound}
-    roundLabel={questions[currentSection]?.name || currentSection}
-    isDark={isDark}
-  />
-)}
+      {showCompletionScreen && (
+        <InterviewCompleted
+          sessionId={sessionId}
+          answered={answeredCount}
+          skipped={skippedCount}
+          feedback={feedback}
+          onNextRound={handleNextRound}
+          roundLabel={questions[currentSection]?.name || currentSection}
+          isDark={isDark}
+        />
+      )}
 
-<ExitModal
-  showExitModal={showExitModal}
-  onCancel={() => setShowExitModal(false)}
-  onExit={handleExitPractice}
-  isDark={isDark}
-/>
-    
+      <ExitModal
+        showExitModal={showExitModal}
+        onCancel={() => setShowExitModal(false)}
+        onExit={handleExitPractice}
+        isDark={isDark}
+      />
+
     </>);
 };
 export default Resume;

@@ -448,8 +448,27 @@ function FileCard({ file, status, errorMessage, onRemove, onAnalyze }) {
 /*  Page                                                                      */
 /* -------------------------------------------------------------------------- */
 
+/**
+ * IMPORTANT FIX (bug: new accounts saw all 45 questions instead of 15):
+ *
+ * Previously this component parsed the raw /analyze response and pushed it
+ * straight into `questions` state via `setQuestions`. The raw /analyze
+ * response always contains all questions for the round (45), and the
+ * "slice to 15" logic lived only in `refreshResumeStatus` (tied to the
+ * /resume-status endpoint). New accounts hit /analyze first and never
+ * called /resume-status, so they got the raw, unsliced list. A manual
+ * refresh triggered the mount-effect's refreshResumeStatus() and
+ * "fixed" it — but only by accident.
+ *
+ * Fix: after a successful /analyze call, do NOT set `questions` directly.
+ * Instead, call `refreshResumeStatus()` (passed down from the parent),
+ * which hits /resume-status and applies the same slicing logic every
+ * other code path relies on. This guarantees a single source of truth
+ * for how many questions are shown, regardless of whether the user is
+ * new or returning.
+ */
 const ResumeUpload = ({
-  setQuestions,
+  refreshResumeStatus,
   setShowQuestionsUI,
   showToast,
   setTransitionLoading,
@@ -512,7 +531,7 @@ const ResumeUpload = ({
     setErrorMessage("");
   };
 
-  /* ---- real /analyze call, unchanged logic from the working version ---- */
+  /* ---- real /analyze call, now routed through refreshResumeStatus ---- */
   const analyzeInterview = async () => {
     if (!resumeText) {
       alert("Please upload your resume first!");
@@ -546,8 +565,20 @@ const ResumeUpload = ({
       const data = await response.json();
 
       if (data.success) {
-        const parsedQuestions = JSON.parse(data.analysis);
-        setQuestions?.(parsedQuestions);
+        // Do NOT set questions directly from the raw /analyze payload —
+        // it always contains all 45 questions for the round, unsliced.
+        // refreshResumeStatus() hits /resume-status and applies the
+        // shared slicing logic, so `questions` state ends up correct
+        // for both new and returning accounts.
+        if (typeof refreshResumeStatus === "function") {
+          await refreshResumeStatus();
+        } else {
+          console.warn(
+            "ResumeUpload: refreshResumeStatus prop is missing. " +
+              "Questions will not be sliced correctly. Pass refreshResumeStatus " +
+              "down from the parent component."
+          );
+        }
         setTransitionLoading?.(false);
         setShowQuestionsUI?.(true);
       } else {

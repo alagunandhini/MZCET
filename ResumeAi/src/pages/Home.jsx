@@ -26,6 +26,10 @@ import {
   RotateCcw,
   CheckCircle2,
   ChevronDown,
+    AlertTriangle,
+  Settings,
+  Link2,
+  RefreshCw,
 } from "lucide-react";
 
 const BLUE = "#0EA5E9";
@@ -254,6 +258,111 @@ function Navbar() {
     </header>
   );
 }
+function MicSetupGuide() {
+  const fixSteps = [
+    "Open Chrome or Edge",
+    <>Go to <code className="rounded px-1.5 py-0.5 text-xs font-semibold" style={{ background: BLUE_LIGHT, color: BLUE_DARK }}>chrome://flags/#unsafely-treat-insecure-origin-as-secure</code></>,
+    "Set the dropdown to Enabled",
+    <>Paste this in the text box: <code className="rounded px-1.5 py-0.5 text-xs font-semibold" style={{ background: BLUE_LIGHT, color: BLUE_DARK }}>http://10.201.197.202:3007</code></>,
+    "Click Relaunch at the bottom",
+    "Reopen the project link — mic should now work",
+  ];
+
+  const undoSteps = [
+    "Go to the same chrome://flags page",
+    "Set the dropdown back to Default",
+    "Click Relaunch",
+  ];
+
+  return (
+    <section className="py-16 sm:py-20" >
+      <div className="mx-auto max-w-6xl px-4 sm:px-6">
+        <div className="text-center">
+          <span
+            className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold"
+            style={{ background: BLUE_LIGHT, color: BLUE_DARK, ...body }}
+          >
+            <Mic className="h-3.5 w-3.5" />
+            Troubleshooting
+          </span>
+          <h2 className="mt-3 text-2xl font-bold sm:text-3xl" style={{ ...display, color: INK }}>
+            Mic not working? Here's the fix
+          </h2>
+          <p className="mt-2 text-sm" style={{ ...body, color: SLATE }}>
+            If your browser is blocking microphone access, follow these steps.
+          </p>
+        </div>
+
+        <div className="mt-8 grid gap-5 sm:grid-cols-2">
+          {/* Fix */}
+          <div className="rounded-2xl border bg-white p-6" style={{ borderColor: BORDER }}>
+            <div className="flex items-center gap-2.5">
+              <span
+                className="flex h-8 w-8 items-center justify-center rounded-lg"
+                style={{ background: BLUE_LIGHT, color: BLUE_DARK }}
+              >
+                <Settings className="h-4 w-4" />
+              </span>
+              <h3 className="text-base font-bold" style={{ ...display, color: INK }}>
+                Enable mic access
+              </h3>
+            </div>
+            <ol className="mt-4 space-y-3">
+              {fixSteps.map((step, i) => (
+                <li key={i} className="flex gap-2.5 text-sm leading-relaxed" style={{ ...body, color: INK }}>
+                  <span
+                    className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[11px] font-bold text-white"
+                    style={{ background: BLUE }}
+                  >
+                    {i + 1}
+                  </span>
+                  <span className="pt-0.5">{step}</span>
+                </li>
+              ))}
+            </ol>
+            <div
+              className="mt-4 flex items-start gap-2 rounded-xl px-3 py-2.5 text-xs"
+              style={{ background: "#FFFBEB", color: "#92400E" }}
+            >
+              <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" style={{ color: AMBER }} />
+              A red warning bar may appear — that's normal, ignore it.
+            </div>
+          </div>
+
+          {/* Undo */}
+          <div className="rounded-2xl border p-6" style={{ borderColor: BORDER, background: "#FAFAFA" }}>
+            <div className="flex items-center gap-2.5">
+              <span
+                className="flex h-8 w-8 items-center justify-center rounded-lg border bg-white"
+                style={{ borderColor: BORDER, color: SLATE }}
+              >
+                <RotateCcw className="h-4 w-4" />
+              </span>
+              <h3 className="text-base font-bold" style={{ ...display, color: INK }}>
+                Undo (optional)
+              </h3>
+            </div>
+            <ol className="mt-4 space-y-3">
+              {undoSteps.map((step, i) => (
+                <li key={i} className="flex gap-2.5 text-sm leading-relaxed" style={{ ...body, color: INK }}>
+                  <span
+                    className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full border bg-white text-[11px] font-bold"
+                    style={{ borderColor: BORDER, color: SLATE }}
+                  >
+                    {i + 1}
+                  </span>
+                  <span className="pt-0.5">{step}</span>
+                </li>
+              ))}
+            </ol>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+
 
 function RoundPreviewCard() {
   return (
@@ -697,55 +806,33 @@ function Pricing() {
     </section>
   );
 }
-
 function Footer() {
-  const columns = [
-    { title: "Product", links: ["Features", "Pricing", "Reviews", "Changelog"] },
-    { title: "Company", links: ["About", "Careers", "Blog", "Contact"] },
-    { title: "Legal", links: ["Privacy", "Terms", "Security", "Cookies"] },
-  ];
   return (
     <footer className="border-t bg-white" style={{ borderColor: BORDER }}>
-      <div className="mx-auto max-w-7xl px-4 py-14 sm:px-6">
-        <div className="grid gap-10 md:grid-cols-5">
-          <div className="md:col-span-2">
-            <Link to="/" className="flex items-center gap-2">
-              <span className="flex h-9 w-9 items-center justify-center rounded-xl text-white" style={{ background: BLUE }}>
-                <Bot className="h-5 w-5" />
-              </span>
-              <span className="text-lg font-bold tracking-tight" style={{ ...display, color: INK }}>
-                Resume<span style={{ color: BLUE }}>AI</span>
-              </span>
-            </Link>
-            <p className="mt-4 max-w-xs text-sm leading-relaxed" style={{ ...body, color: SLATE }}>
-              AI-powered mock interviews that turn your resume into confident, interview-ready answers.
-            </p>
-            <div className="mt-5 flex gap-3">
-              {[Globe, MessageCircle, Share2].map((Icon, i) => (
-                <Link key={i} to="/" aria-label="social link" className="flex h-9 w-9 items-center justify-center rounded-xl border transition hover:bg-sky-50" style={{ borderColor: BORDER, color: SLATE }}>
-                  <Icon className="h-4 w-4" />
-                </Link>
-              ))}
-            </div>
-          </div>
+      <div className="mx-auto flex max-w-7xl flex-col items-center gap-4 px-4 py-6 sm:flex-row sm:justify-between sm:px-6">
+        <div className="flex items-center gap-3">
+          <Link to="/" className="flex items-center gap-2 shrink-0">
+           <img src="completed logo.png" className="w-12 h-12"/>
+            <span className="text-base font-bold tracking-tight" style={{ ...display, color: INK }}>
+              MZ<span style={{ color: BLUE }}>PlaceNext</span>
+            </span>
+          </Link>
 
-          {columns.map((c) => (
-            <div key={c.title}>
-              <h4 className="text-sm font-bold" style={{ ...display, color: INK }}>{c.title}</h4>
-              <ul className="mt-4 space-y-2.5">
-                {c.links.map((l) => (
-                  <li key={l}>
-                    <Link to="/" className="text-sm transition hover:text-slate-900" style={{ ...body, color: SLATE }}>{l}</Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
+          <span className="hidden h-4 w-px sm:block" style={{ background: BORDER }} />
+
+          <p className="hidden text-xs sm:block" style={{ ...body, color: SLATE }}>
+            Turning resumes into interview-ready confidence.
+          </p>
         </div>
 
-        <div className="mt-12 flex flex-col items-center justify-between gap-3 border-t pt-6 sm:flex-row" style={{ borderColor: BORDER }}>
-          <p className="text-xs" style={{ ...body, color: SLATE }}>© {new Date().getFullYear()} ResumeAI. All rights reserved.</p>
-          <p className="text-xs" style={{ ...body, color: SLATE }}>Built with ♥ for ambitious candidates.</p>
+        <div className="flex items-center gap-5">
+         
+
+          <span className="hidden h-4 w-px sm:block" style={{ background: BORDER }} />
+
+          <p className="text-xs whitespace-nowrap" style={{ ...body, color: SLATE }}>
+            © {new Date().getFullYear()} · Built with ♥
+          </p>
         </div>
       </div>
     </footer>
@@ -759,12 +846,15 @@ export default function Home() {
       <Navbar />
       <main>
         <Hero />
+
         <TrustedBy />
         <Features />
         <HowItWorks />
+      
         <Stats />
         
       </main>
+        <MicSetupGuide />
       <Footer />
     </div>
   );
