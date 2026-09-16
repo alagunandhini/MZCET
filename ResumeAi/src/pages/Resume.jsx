@@ -25,6 +25,13 @@ import { API_URL } from "../config";
 // auto-finalized and graded using whatever answers were already submitted.
 const ROUND_TIME_LIMIT_SECONDS = 30 * 60; // 30 minutes
 
+// Minimum time (ms) a student must hold/keep the mic recording before a
+// stop is accepted as a real answer. Anything shorter than this is treated
+// as an accidental tap or an attempt to "skip" a question by starting and
+// immediately stopping the recording — stopRecording() will simply refuse
+// to stop and will warn the student to keep speaking instead.
+const MIN_RECORDING_MS = 5000; // 3 seconds
+
 const Resume = () => {
   const navigate = useNavigate();
   const { toast, showToast } = useToast();
@@ -304,6 +311,13 @@ const Resume = () => {
   const audioChunks = useRef([]);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
 
+  // Tracks when the current recording started (ms since epoch), so
+  // stopRecording() can enforce MIN_RECORDING_MS and reject premature
+  // stops — this is what prevents both (a) accidental sub-1s taps being
+  // treated as an answer, and (b) students deliberately tapping the mic
+  // on/off quickly to skip a question without actually answering it.
+  const recordingStartTimeRef = useRef(null);
+
   // for start recording
   const startRecording = async () => {
 
@@ -398,12 +412,34 @@ const Resume = () => {
     };
 
     mediaRecorderRef.current.start();
+    // Mark the moment recording actually began so stopRecording() can
+    // measure how long the student has been speaking.
+    recordingStartTimeRef.current = Date.now();
     setIsRecording(true);
   };
 
   // for stop recording
   const stopRecording = () => {
     if (!isRecording) return;
+
+    // Enforce a minimum hold/recording duration before a stop is honored.
+    // If the student releases too early, we refuse to stop the recorder —
+    // it keeps running, they get a warning, and they must keep speaking
+    // until the minimum is reached. This is what stops both accidental
+    // sub-1s taps from being lost as "no answer" AND deliberate quick
+    // tap-to-skip attempts, since no valid stop/upload/next() can fire
+    // before MIN_RECORDING_MS has elapsed.
+    const elapsed = Date.now() - (recordingStartTimeRef.current || 0);
+
+    if (elapsed < MIN_RECORDING_MS) {
+      const remainingSeconds = Math.ceil((MIN_RECORDING_MS - elapsed) / 1000);
+      showToast(
+        `Please keep speaking for at least ${MIN_RECORDING_MS / 1000} seconds. ${remainingSeconds} more second(s) to go.`,
+        "error"
+      );
+      return; // recording is NOT stopped — student must try again
+    }
+
     mediaRecorderRef.current.stop();
     mediaRecorderRef.current.stream
       .getTracks()
@@ -414,6 +450,9 @@ const Resume = () => {
   // Called once the 30-minute round timer runs out. Stops whatever is
   // currently happening (speech, an in-progress recording) and finalizes
   // the round using only the answers already submitted so far.
+  // NOTE: this intentionally bypasses stopRecording()'s MIN_RECORDING_MS
+  // check and stops the MediaRecorder directly — when the round's time is
+  // up, we must finalize regardless of how long the last recording ran.
   const handleTimeUp = () => {
     window.speechSynthesis.cancel();
     showToast("Time's up! Submitting your answers now.", "error");

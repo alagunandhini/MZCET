@@ -3,19 +3,11 @@ var express = require('express');
 var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
+var compression = require('compression');
 require("dotenv").config();
 var cors = require('cors');
 const connectDB = require("./temp.js"); 
 const { connectSQL } = require("./db-sql");
-
-
-
-
-
-
-
-
-
 
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
@@ -29,6 +21,11 @@ const ssoRoutes = require("./routes/sso");
 
 
 var app = express();
+
+// Compress all responses (HTML, JS, CSS, images going through Express, JSON, etc.)
+// Helps a lot on shared/weak WiFi with many concurrent students.
+app.use(compression());
+
 app.use(cors({
   origin: true,
   credentials: true,
@@ -61,7 +58,15 @@ app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
-app.use(express.static(path.join(__dirname, 'public')));
+
+// Static assets (logos/images/etc in /public) — cached by the browser for 1 day
+// so repeat loads (or page reloads mid-test) don't re-hit the server for the
+// same files. Lower this to '1h' or '10m' while you're still actively
+// swapping image files during development/testing.
+app.use(express.static(path.join(__dirname, 'public'), {
+  maxAge: '1d',
+  etag: true,
+}));
 
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
@@ -72,7 +77,12 @@ app.use("/", sessionRoutes);
 app.use("/feedback", feedbackRoutes);
 app.use("/admin", adminRoutes);
 app.use(ssoRoutes);
-app.use(express.static(path.join(__dirname, "../ResumeAi/dist")));
+
+// Frontend build (React/Vite dist) — same caching treatment.
+app.use(express.static(path.join(__dirname, "../ResumeAi/dist"), {
+  maxAge: '1d',
+  etag: true,
+}));
 
 app.get("*", (req, res) => {
   res.sendFile(path.join(__dirname, "../ResumeAi/dist", "index.html"));
