@@ -96,7 +96,7 @@ function Navbar() {
       >
         <div className="flex items-center gap-2">
           <button
-            onClick={() => window.location.href = "http://localhost:3011/home.html"}
+            onClick={() => window.location.href = "http://10.201.193.5:3115/home.html"}
             className="inline-flex items-center justify-center rounded-full border p-2 transition hover:bg-gray-100"
             style={{ borderColor: BORDER, color: INK }}
           >
