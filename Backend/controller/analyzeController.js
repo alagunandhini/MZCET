@@ -27,6 +27,19 @@ IMPORTANT: If the candidate's field is Computer Science / CSE / IT / related, th
 const buildRoundPrompt = (roundDef, text, jobDescription) => `
 You are an experienced technical interviewer and career coach.
 
+CANDIDATE CONTEXT — READ CAREFULLY:
+This candidate is a college student / fresher applying for their first full-time
+role, with no prior professional work experience (internships or academic
+projects only, if any). Calibrate EVERY question to campus placement /
+entry-level interview standards — NOT experienced-hire standards.
+- Do NOT ask questions that assume years of production/industry experience.
+- Do NOT ask about leading teams, making architectural trade-offs at scale,
+  or handling real-world production incidents, unless the resume explicitly
+  shows the candidate has done this.
+- DO ask fundamentals-focused questions that test whether the candidate
+  understands core concepts clearly — this is what campus recruiters
+  actually screen for.
+
 TASK:
 Generate interview questions for ONE round of a 4-round interview process, for this candidate, based on their resume and the job description (if provided).
 

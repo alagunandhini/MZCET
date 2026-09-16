@@ -102,7 +102,16 @@ exports.endSession = async (req, res) => {
       .join("\n\n");
 
     // --- PIECE D: call the AI ---
-    const feedback = await generateGroqFeedback(combinedText);
+    let feedback;
+    try {
+      feedback = await generateGroqFeedback(combinedText);
+    } catch (aiErr) {
+      console.error("Feedback generation failed (no attempt consumed):", aiErr.message);
+      return res.status(503).json({
+        error: "Feedback service is temporarily unavailable. Please try again in a moment.",
+        retryable: true,
+      });
+    }
 
     const isPass = feedback.result?.toLowerCase().includes("pass");
 
