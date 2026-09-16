@@ -123,16 +123,27 @@ const callGemini = async () => {
     }
   });
 };
-  let data = await callGemini();
-  let retries = 0;
 
-  while (data?.error && retries < 2) {
-    console.warn(`Gemini feedback error, retrying (${retries + 1}/2):`, data.error.message);
-    await new Promise((resolve) => setTimeout(resolve, 3000));
-    data = await callGemini();
-    retries++;
-  }
+// Call Gemini once, and keep retrying if it's overloaded (503 error).
+// Gemini's "high demand" errors are usually short-lived (a few seconds),
+// so instead of giving up quickly, we wait a bit longer each time before
+// trying again. This gives Gemini time to free up before we ask again.
 
+ let data = await callGemini();
+let retries = 0;
+const maxRetries = 3;
+
+ // wait longer each retry (1s, 2s, 4s, 8s, capped at 10s) + small random jitter
+while (data?.error && retries < maxRetries) {
+  const delay = Math.min(1000 * 2 ** retries, 10000) + Math.random() * 500;
+  console.warn(
+    `Gemini feedback error, retrying (${retries + 1}/${maxRetries}) in ${Math.round(delay)}ms:`,
+    data.error.message
+  );
+  await new Promise((resolve) => setTimeout(resolve, delay));
+  data = await callGemini();
+  retries++;
+}
   const raw = data?.candidates?.[0]?.content?.parts?.[0]?.text;
 
   if (!raw) {

@@ -24,6 +24,7 @@ import { API_URL } from "../config";
 // Maximum time allowed per round. Once the timer hits this, the round is
 // auto-finalized and graded using whatever answers were already submitted.
 const ROUND_TIME_LIMIT_SECONDS = 30 * 60; // 30 minutes
+const RETRY_TIME_LIMIT_MS = 1 * 60 * 1000; // 1 minutes
 
 const Resume = () => {
   const navigate = useNavigate();
@@ -303,6 +304,7 @@ const Resume = () => {
   const mediaRecorderRef = useRef(null);
   const audioChunks = useRef([]);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [stuckRetrying, setStuckRetrying] = useState(false);
 
   // for start recording
   const startRecording = async () => {
@@ -435,10 +437,8 @@ const Resume = () => {
   };
 
   // this function executes , when last question of each round
-  const endInterview = async () => {
+   const endInterview = async (attempt = 1, firstTryTime = Date.now()) => {
     const token = localStorage.getItem("token");
-
-    console.log("Token:", token);
 
     try {
       const res = await fetch(`${API_URL}/end-session`, {
@@ -455,25 +455,38 @@ const Resume = () => {
       });
 
       const data = await res.json();
+      console.log("Status:", res.status, "Response:", data);
 
-      console.log("Status:", res.status);
-      console.log("Response:", data);
-
-      // Special case: backend rejected because all 3 attempts are already used
       if (res.status === 403) {
         showToast("You've used all attempts for this round.", "error");
         setShowQuestionsUI(true);
         setStartPractice(false);
+        setIsAnalyzing(false);
         return;
       }
 
-      // Special case: time ran out (or round ended) before any answer was
-      // ever submitted, so there's no session/answers to grade yet.
-      // This isn't a real failure — just nothing to show a scorecard for.
       if (res.status === 404 || res.status === 400) {
         showToast("Time's up — no answers were submitted for this round.", "error");
         setShowQuestionsUI(true);
         setStartPractice(false);
+        setIsAnalyzing(false);
+        return;
+      }
+
+      if (res.status === 503 && data.retryable) {
+        const elapsed = Date.now() - firstTryTime;
+
+        if (elapsed < RETRY_TIME_LIMIT_MS) {
+          if (attempt % 5 === 0) {
+            showToast("Still generating your feedback, please stay on this page...", "error");
+          }
+          const delay = Math.min(3000 + attempt * 1500, 10000);
+          setTimeout(() => endInterview(attempt + 1, firstTryTime), delay);
+          return;
+        }
+
+        setStuckRetrying(true);
+        setIsAnalyzing(false);
         return;
       }
 
@@ -494,25 +507,21 @@ const Resume = () => {
           setCompletedRounds(prev => prev.includes(currentSection) ? prev : [...prev, currentSection]);
         }
 
-        // Reflect the attempt that was just used, immediately — matches what
-        // the backend just incremented, so the dashboard is correct without
-        // needing a refresh to re-fetch /resume-status.
         setRoundAttempts(prev => ({
           ...prev,
           [currentSection]: (prev[currentSection] || 0) + 1,
         }));
 
+        setStuckRetrying(false);
         setStartPractice(false);
         setShowCompletionScreen(true);
-
       }
+      setIsAnalyzing(false);
     } catch (err) {
       console.error("END SESSION ERROR:", err);
       showToast("Something went wrong generating your feedback. Please try again.", "error");
-      // don't leave them stuck on InterviewRoom - send them back to the dashboard instead
       setShowQuestionsUI(true);
       setStartPractice(false);
-    } finally {
       setIsAnalyzing(false);
     }
   };
@@ -761,6 +770,26 @@ const Resume = () => {
 
       {/* Loader-ANalyze interview */}
       <InterviewLoader isAnalyzing={isAnalyzing} isDark={isDark} />
+     
+      {stuckRetrying && (
+  <div className="fixed inset-0 z-[90] flex items-center justify-center bg-black/60">
+    <div className="bg-white rounded-lg p-6 max-w-sm text-center">
+      <p className="mb-4">
+        Feedback generation is taking longer than usual. Your answers are saved — you can try again.
+      </p>
+      <button
+        className="px-4 py-2 bg-pink-500 text-white rounded"
+        onClick={() => {
+          setStuckRetrying(false);
+          setIsAnalyzing(true);
+          endInterview();
+        }}
+      >
+        Try Again
+      </button>
+    </div>
+  </div>
+)}
 
       {/* interview completed page */}
       {/* exit module */}

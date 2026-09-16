@@ -349,7 +349,7 @@ ${isRecording
               {isRecording ? "Recording — tap to stop" : "Tap to speak"}
             </p>
 
-            {/* <button
+            <button
               onClick={skipQuestion}
               disabled={isRecording}
               className={`px-8 md:px-10 py-2 md:py-3 border rounded-xl text-sm md:text-base font-medium shadow-sm hover:shadow-md active:scale-95 transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2
@@ -363,7 +363,7 @@ ${isRecording
                 }`}
             >
               Skip
-            </button> */}
+            </button>
           </div>
 
         </div>
