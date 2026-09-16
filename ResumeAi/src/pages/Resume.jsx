@@ -18,6 +18,7 @@ import { CheckCircle } from "lucide-react";
 import ResumeUpload from "../pages/ResumeUpload";
 import useToast from "../hooks/useToast";
 import useSpeech from "../hooks/useSpeech";
+import { saveAndUpload, flushPendingUploads, startBackgroundSync } from "../utils/answerUploadQueue";
 import useInterviewStorage from "../hooks/useInterviewStorage";
 import axios from "axios";
 import { API_URL } from "../config";
@@ -361,13 +362,11 @@ const Resume = () => {
       }));
 
 
-      // send these data to backend to save in db and also convert audio into text
-      const formData = new FormData();
-      formData.append("audio", audioBlob, "answer.webm");
-      formData.append("question", questions[currentSection]?.questions?.[currentIndex]?.q);
-      formData.append("sessionId", sessionId);
-      formData.append("round", currentSection);
-      formData.append("mimeType", mediaRecorderRef.current.chosenMimeType);
+            // Save the answer to IndexedDB immediately, then try to upload it.
+      // This replaces the old "fire and forget" fetch that silently lost
+      // answers whenever the upload failed mid-interview.
+      const questionText = questions[currentSection]?.questions?.[currentIndex]?.q;
+      const mimeType = mediaRecorderRef.current.chosenMimeType;
 
       const isLastQuestion =
         currentIndex === questions[currentSection]?.questions?.length - 1
@@ -383,25 +382,53 @@ const Resume = () => {
         if (shouldFinalizeNow) {
           setIsAnalyzing(true);
           speakText("Great! Analyzing your interview. Please wait.");
-          // WAIT for LAST answer to save
-          const res = await fetch(`${API_URL}/upload-audio`, {
-            method: "POST",
-            headers: { Authorization: `Bearer ${token}` },
-            body: formData,
+
+          // Save + attempt upload for this last answer.
+          await saveAndUpload({
+            apiUrl: API_URL,
+            token,
+            audioBlob,
+            question: questionText,
+            sessionId,
+            round: currentSection,
+            questionIndex: currentIndex,
+            mimeType,
           });
 
-          const data = await res.json();
-
-          if (data.success) {
-            await endInterview();
+          // Whether or not that immediate attempt succeeded, make sure
+          // EVERY pending answer (this one and any earlier ones that
+          // failed) is flushed before we finalize the round. Retry a
+          // few times with a short pause — covers a brief network blip
+          // right at the end of the interview.
+          let remaining = await flushPendingUploads({ apiUrl: API_URL, token });
+          for (let i = 0; i < 5 && remaining > 0; i++) {
+            await new Promise((r) => setTimeout(r, 1500));
+            remaining = await flushPendingUploads({ apiUrl: API_URL, token });
           }
+
+          if (remaining > 0) {
+            showToast(
+              "Some answers are still syncing. Please keep this tab open a moment longer.",
+              "error"
+            );
+          }
+
+          await endInterview();
         } else {
-          //  Fire & forget for normal questions
-          fetch(`${API_URL}/upload-audio`, {
-            method: "POST",
-            headers: { Authorization: `Bearer ${token}` },
-            body: formData,
-          }).catch((err) => console.error("Backend audio save failed", err));
+          // Save locally + try to upload right away. If it fails, it's
+          // left in the IndexedDB queue and the background sync loop
+          // (started above) will keep retrying — the student is never
+          // blocked and never asked to redo anything.
+          saveAndUpload({
+            apiUrl: API_URL,
+            token,
+            audioBlob,
+            question: questionText,
+            sessionId,
+            round: currentSection,
+            questionIndex: currentIndex,
+            mimeType,
+          }).catch((err) => console.error("saveAndUpload failed unexpectedly", err));
 
           speakText("Okay good. Next question.");
           setTimeout(() => next(), 1200);
@@ -412,6 +439,7 @@ const Resume = () => {
         showToast("Upload failed. Please check your internet and try answering again.", "error");
       }
     };
+      
 
     mediaRecorderRef.current.start();
     // Mark the moment recording actually began so stopRecording() can
@@ -555,15 +583,32 @@ const Resume = () => {
         setStartPractice(false);
         setShowCompletionScreen(true);
       }
-      setIsAnalyzing(false);
-    } catch (err) {
-      console.error("END SESSION ERROR:", err);
-      showToast("Something went wrong generating your feedback. Please try again.", "error");
-      setShowQuestionsUI(true);
-      setStartPractice(false);
-      setIsAnalyzing(false);
-    }
-  };
+    }  catch (err) {
+  console.error("END SESSION ERROR:", err);
+
+  // If we're offline, don't give up — wait for the connection to come
+  // back and try end-session again, instead of kicking the student
+  // out of the interview room.
+  if (!navigator.onLine) {
+    showToast("You're offline. Waiting to reconnect...", "error");
+    await new Promise((resolve) => {
+      const onOnline = () => {
+        window.removeEventListener("online", onOnline);
+        resolve();
+      };
+      window.addEventListener("online", onOnline);
+    });
+    showToast("Back online. Finishing up...", "success");
+    return endInterview(); // retry now that we're back online
+  }
+
+  showToast("Something went wrong generating your feedback. Please try again.", "error");
+  setShowQuestionsUI(true);
+  setStartPractice(false);
+} finally {
+  setIsAnalyzing(false);
+  }
+};
 
   // terminate the interview , when violate
   const terminateForViolation = async () => {
@@ -853,5 +898,7 @@ const Resume = () => {
       />
 
     </>);
-};
+  }
+
+
 export default Resume;
