@@ -99,7 +99,7 @@ const callGemini = async () => {
   return queue.enqueue(async () => {
     try {
       const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${apiKey}`,
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent?key=${apiKey}`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -129,26 +129,33 @@ const callGemini = async () => {
 // so instead of giving up quickly, we wait a bit longer each time before
 // trying again. This gives Gemini time to free up before we ask again.
 
- let data = await callGemini();
+let data = await callGemini();
 let retries = 0;
 const maxRetries = 3;
 
- // wait longer each retry (1s, 2s, 4s, 8s, capped at 10s) + small random jitter
 while (data?.error && retries < maxRetries) {
+  // Quota exhaustion (429 RESOURCE_EXHAUSTED) is  Retrying immediately just wastes time and still fails, so stop
+
+  if (data.error.status === "RESOURCE_EXHAUSTED") {
+    console.error("Gemini quota exhausted, not retrying:", data.error.message);
+    break;
+  }
+
   const delay = Math.min(1000 * 2 ** retries, 10000) + Math.random() * 500;
-  console.warn(
-    `Gemini feedback error, retrying (${retries + 1}/${maxRetries}) in ${Math.round(delay)}ms:`,
-    data.error.message
-  );
+  console.warn(`Gemini feedback error, retrying (${retries + 1}/${maxRetries}) in ${Math.round(delay)}ms:`, data.error.message);
   await new Promise((resolve) => setTimeout(resolve, delay));
   data = await callGemini();
   retries++;
 }
-  const raw = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+
+
+    const raw = data?.candidates?.[0]?.content?.parts?.[0]?.text;
 
   if (!raw) {
     console.error("Gemini feedback error after retries:", data?.error);
-    throw new Error("AI failed to generate feedback after multiple attempts");
+    const err = new Error("AI failed to generate feedback after multiple attempts");
+    err.quotaExceeded = data?.error?.status === "RESOURCE_EXHAUSTED";
+    throw err;
   }
 
   const start = raw.indexOf('{');

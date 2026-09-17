@@ -107,6 +107,15 @@ exports.endSession = async (req, res) => {
       feedback = await generateGroqFeedback(combinedText);
     } catch (aiErr) {
       console.error("Feedback generation failed (no attempt consumed):", aiErr.message);
+
+      if (aiErr.quotaExceeded) {
+        // quota exceed  — retrying right away won't help
+        return res.status(429).json({
+          error: "The AI feedback service has reached its usage limit for now. Please try again later.",
+          retryable: false,
+        });
+      }
+
       return res.status(503).json({
         error: "Feedback service is temporarily unavailable. Please try again in a moment.",
         retryable: true,
@@ -353,16 +362,25 @@ exports.terminateRound = async (req, res) => {
         .input("round", sql.NVarChar, round)
         .query("SELECT bestScore FROM RoundResults WHERE userId = @userId AND round = @round");
 
-      const existingBest = existingResultRow.recordset[0]?.bestScore;
+           const existingBest = existingResultRow.recordset[0]?.bestScore;
 
       if (existingBest === undefined) {
-        await transaction.request()
-          .input("userId", sql.Int, userId)
-          .input("round", sql.NVarChar, round)
-          .query("INSERT INTO RoundResults (userId, round, bestScore, result) VALUES (@userId, @round, 0, 'FAIL')");
+        try {
+          await transaction.request()
+            .input("userId", sql.Int, userId)
+            .input("round", sql.NVarChar, round)
+            .query("INSERT INTO RoundResults (userId, round, bestScore, result) VALUES (@userId, @round, 0, 'FAIL')");
+        } catch (insertErr) {
+          // A concurrent violation event (fullscreenchange + visibilitychange
+          // firing at the same moment) may have already inserted this row a
+          // moment ago. That's fine — the row exists either way, so just
+          // continue instead of crashing.
+          if (insertErr.number !== 2627) {
+            throw insertErr;
+          }
+        }
       }
       // if a real attempt already scored higher than 0, leave it as-is
-
       if (attemptsResult.recordset.length > 0) {
         await transaction.request()
           .input("userId", sql.Int, userId)

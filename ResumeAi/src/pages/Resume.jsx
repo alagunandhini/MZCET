@@ -14,7 +14,7 @@ import InterviewRoom from "./InterviewRoom";
 import InterviewLoader from "../components/InterviewLoader";
 import ExitModal from "../components/ExitModal";
 import RoundDashboard from "./RoundDashboard";
-import { CheckCircle } from "lucide-react";
+import { CheckCircle , Loader2 } from "lucide-react";
 import ResumeUpload from "../pages/ResumeUpload";
 import useToast from "../hooks/useToast";
 import useSpeech from "../hooks/useSpeech";
@@ -35,7 +35,7 @@ const MIN_RECORDING_MS = 5000; // 3 seconds
 
 const Resume = () => {
   const navigate = useNavigate();
-  const { toast, showToast } = useToast();
+ const { toast, showToast, hideToast } = useToast();
   const [checkingResume, setCheckingResume] = useState(true);
 
   //  if token is not there then it autamatically in login page 
@@ -530,7 +530,7 @@ const Resume = () => {
       }
 
       if (!res.ok) {
-        throw new Error(data.message || "Request failed");
+        throw new Error(data.error || "Request failed");
       }
 
       if (data.success) {
@@ -558,7 +558,7 @@ const Resume = () => {
       setIsAnalyzing(false);
     } catch (err) {
       console.error("END SESSION ERROR:", err);
-      showToast("Something went wrong generating your feedback. Please try again.", "error");
+      showToast(err.message || "Something went wrong generating your feedback. Please try again.", "error");
       setShowQuestionsUI(true);
       setStartPractice(false);
       setIsAnalyzing(false);
@@ -725,17 +725,35 @@ const Resume = () => {
 
   return (
     <> {toast.show && (
-      <div className="fixed bottom-5 right-5 z-[100] animate-slideIn">
-        <div
-          className={`px-8 py-3 rounded-lg shadow-lg  text-sm ${toast.type === "success" ? "bg-pink-400 " : "bg-gray-900"
-            } text-white flex gap-3`} >
-          {toast.type === "success" ? (
-            <CheckCircle size={18} className="text-pink-500" />
-          ) : (
-            <span className="font-extrabold  ">!</span>
-          )}  {toast.message}
-        </div>
-      </div>)}
+  <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/50 px-4">
+    <div
+      className={`bg-white rounded-xl shadow-2xl p-6 max-w-sm w-full text-center border-t-4 ${
+        toast.type === "success"
+          ? "border-green-500"
+          : toast.type === "info"
+          ? "border-blue-500"
+          : "border-red-500"
+      }`}
+    >
+      <div className="flex justify-center mb-3">
+        {toast.type === "success" ? (
+          <CheckCircle size={40} className="text-green-500" />
+        ) : toast.type === "info" ? (
+          <Loader2 size={40} className="text-blue-500 animate-spin" />
+        ) : (
+          <span className="text-5xl font-extrabold text-red-500">!</span>
+        )}
+      </div>
+      <p className="text-gray-800 text-sm mb-5">{toast.message}</p>
+      <button
+         onClick={hideToast}
+        className="px-6 py-2 bg-gray-900 text-white rounded-lg font-medium hover:bg-gray-800 transition"
+      >
+        OK
+      </button>
+    </div>
+  </div>
+)}
 
 
       {/* Loader for all */}
