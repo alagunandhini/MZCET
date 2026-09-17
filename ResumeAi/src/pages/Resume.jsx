@@ -382,6 +382,7 @@ const Resume = () => {
       try {
         if (shouldFinalizeNow) {
           setIsAnalyzing(true);
+           setStartPractice(false); // done answering — turn off violation detection now
           speakText("Great! Analyzing your interview. Please wait.");
           // WAIT for LAST answer to save
           const res = await fetch(`${API_URL}/upload-audio`, {
@@ -469,8 +470,10 @@ const Resume = () => {
         .forEach((track) => track.stop());
       setIsRecording(false);
     } else {
+
       // Nothing in progress — finalize immediately with whatever was
       // already submitted for this round.
+         setStartPractice(false); // done answering — turn off violation detection now
       endInterview();
     }
   };
