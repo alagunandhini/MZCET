@@ -18,7 +18,7 @@ import { CheckCircle } from "lucide-react";
 import ResumeUpload from "../pages/ResumeUpload";
 import useToast from "../hooks/useToast";
 import useSpeech from "../hooks/useSpeech";
-import { saveAndUpload, flushPendingUploads, startBackgroundSync } from "../utils/answerUploadQueue";
+import { saveAndUpload, flushPendingUploads, hasPendingUploads, getFailedUploads, startBackgroundSync } from "../utils/answerUploadQueue";
 import useInterviewStorage from "../hooks/useInterviewStorage";
 import axios from "axios";
 import { API_URL } from "../config";
@@ -314,6 +314,18 @@ const Resume = () => {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [stuckRetrying, setStuckRetrying] = useState(false);
 
+  // Actually run the background sync loop while a round is in progress, so
+  // a failed upload on an earlier question gets retried continuously in
+  // the background instead of only being retried the next time an answer
+  // is recorded or the round finalizes. (startBackgroundSync was imported
+  // previously but never called — this was dead code.)
+  useEffect(() => {
+    if (!startPractice) return;
+    const token = localStorage.getItem("token");
+    const stop = startBackgroundSync({ apiUrl: API_URL, token, sessionId });
+    return stop;
+  }, [startPractice, sessionId]);
+
   // Tracks when the current recording started (ms since epoch), so
   // stopRecording() can enforce MIN_RECORDING_MS and reject premature
   // stops — this is what prevents both (a) accidental sub-1s taps being
@@ -395,20 +407,17 @@ const Resume = () => {
             mimeType,
           });
 
-          // Whether or not that immediate attempt succeeded, make sure
-          // EVERY pending answer (this one and any earlier ones that
-          // failed) is flushed before we finalize the round. Retry a
-          // few times with a short pause — covers a brief network blip
-          // right at the end of the interview.
-          let remaining = await flushPendingUploads({ apiUrl: API_URL, token });
-          for (let i = 0; i < 5 && remaining > 0; i++) {
-            await new Promise((r) => setTimeout(r, 1500));
-            remaining = await flushPendingUploads({ apiUrl: API_URL, token });
-          }
+          // Wait until EVERY answer queued for this session (this one and
+          // any earlier ones that failed) has actually uploaded — not just
+          // a few retries with a timeout. This is what makes an offline
+          // last question wait for reconnection instead of finalizing
+          // with missing answers.
+          await waitForQueueToDrain({ apiUrl: API_URL, token, sessionId });
 
-          if (remaining > 0) {
+          const failed = await getFailedUploads(sessionId);
+          if (failed.length > 0) {
             showToast(
-              "Some answers are still syncing. Please keep this tab open a moment longer.",
+              `${failed.length} answer(s) couldn't be uploaded and may be missing from your feedback. Please contact support if this keeps happening.`,
               "error"
             );
           }
@@ -500,6 +509,39 @@ const Resume = () => {
       // Nothing in progress — finalize immediately with whatever was
       // already submitted for this round.
       endInterview();
+    }
+  };
+
+  // Blocks until every answer queued for THIS session has either uploaded
+  // successfully or permanently failed on the server. Unlike the previous
+  // "retry 5 times over ~7.5s then give up" loop, this never lets
+  // endInterview() (and therefore feedback generation) run while a
+  // recoverable upload is still stuck — it waits for the browser to
+  // actually come back online and keeps retrying with backoff instead of
+  // timing out.
+  const waitForQueueToDrain = async ({ apiUrl, token, sessionId }) => {
+    let attempt = 0;
+    while (true) {
+      if (!navigator.onLine) {
+        showToast("You're offline. Waiting to reconnect to save your answers...", "error");
+        await new Promise((resolve) => {
+          const onOnline = () => {
+            window.removeEventListener("online", onOnline);
+            resolve();
+          };
+          window.addEventListener("online", onOnline);
+        });
+        showToast("Back online. Syncing your answers...", "success");
+      }
+
+      await flushPendingUploads({ apiUrl, token, sessionId });
+      if (!(await hasPendingUploads({ sessionId }))) return;
+
+      attempt += 1;
+      if (attempt % 5 === 0) {
+        showToast("Still syncing your answers, please stay on this page...", "error");
+      }
+      await new Promise((r) => setTimeout(r, Math.min(1500 * attempt, 10000)));
     }
   };
 
