@@ -18,6 +18,7 @@ import { CheckCircle , Loader2 } from "lucide-react";
 import ResumeUpload from "../pages/ResumeUpload";
 import useToast from "../hooks/useToast";
 import useSpeech from "../hooks/useSpeech";
+import { saveAndUpload, flushPendingUploads, hasPendingUploads, getFailedUploads, startBackgroundSync } from "../utils/answerUploadQueue";
 import useInterviewStorage from "../hooks/useInterviewStorage";
 import axios from "axios";
 import { API_URL } from "../config";
@@ -313,6 +314,18 @@ const Resume = () => {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [stuckRetrying, setStuckRetrying] = useState(false);
 
+  // Actually run the background sync loop while a round is in progress, so
+  // a failed upload on an earlier question gets retried continuously in
+  // the background instead of only being retried the next time an answer
+  // is recorded or the round finalizes. (startBackgroundSync was imported
+  // previously but never called — this was dead code.)
+  useEffect(() => {
+    if (!startPractice) return;
+    const token = localStorage.getItem("token");
+    const stop = startBackgroundSync({ apiUrl: API_URL, token, sessionId });
+    return stop;
+  }, [startPractice, sessionId]);
+
   // Tracks when the current recording started (ms since epoch), so
   // stopRecording() can enforce MIN_RECORDING_MS and reject premature
   // stops — this is what prevents both (a) accidental sub-1s taps being
@@ -361,13 +374,11 @@ const Resume = () => {
       }));
 
 
-      // send these data to backend to save in db and also convert audio into text
-      const formData = new FormData();
-      formData.append("audio", audioBlob, "answer.webm");
-      formData.append("question", questions[currentSection]?.questions?.[currentIndex]?.q);
-      formData.append("sessionId", sessionId);
-      formData.append("round", currentSection);
-      formData.append("mimeType", mediaRecorderRef.current.chosenMimeType);
+            // Save the answer to IndexedDB immediately, then try to upload it.
+      // This replaces the old "fire and forget" fetch that silently lost
+      // answers whenever the upload failed mid-interview.
+      const questionText = questions[currentSection]?.questions?.[currentIndex]?.q;
+      const mimeType = mediaRecorderRef.current.chosenMimeType;
 
       const isLastQuestion =
         currentIndex === questions[currentSection]?.questions?.length - 1
@@ -384,25 +395,50 @@ const Resume = () => {
           setIsAnalyzing(true);
            setStartPractice(false); // done answering — turn off violation detection now
           speakText("Great! Analyzing your interview. Please wait.");
-          // WAIT for LAST answer to save
-          const res = await fetch(`${API_URL}/upload-audio`, {
-            method: "POST",
-            headers: { Authorization: `Bearer ${token}` },
-            body: formData,
+
+          // Save + attempt upload for this last answer.
+          await saveAndUpload({
+            apiUrl: API_URL,
+            token,
+            audioBlob,
+            question: questionText,
+            sessionId,
+            round: currentSection,
+            questionIndex: currentIndex,
+            mimeType,
           });
 
-          const data = await res.json();
+          // Wait until EVERY answer queued for this session (this one and
+          // any earlier ones that failed) has actually uploaded — not just
+          // a few retries with a timeout. This is what makes an offline
+          // last question wait for reconnection instead of finalizing
+          // with missing answers.
+          await waitForQueueToDrain({ apiUrl: API_URL, token, sessionId });
 
-          if (data.success) {
-            await endInterview();
+          const failed = await getFailedUploads(sessionId);
+          if (failed.length > 0) {
+            showToast(
+              `${failed.length} answer(s) couldn't be uploaded and may be missing from your feedback. Please contact support if this keeps happening.`,
+              "error"
+            );
           }
+
+          await endInterview();
         } else {
-          //  Fire & forget for normal questions
-          fetch(`${API_URL}/upload-audio`, {
-            method: "POST",
-            headers: { Authorization: `Bearer ${token}` },
-            body: formData,
-          }).catch((err) => console.error("Backend audio save failed", err));
+          // Save locally + try to upload right away. If it fails, it's
+          // left in the IndexedDB queue and the background sync loop
+          // (started above) will keep retrying — the student is never
+          // blocked and never asked to redo anything.
+          saveAndUpload({
+            apiUrl: API_URL,
+            token,
+            audioBlob,
+            question: questionText,
+            sessionId,
+            round: currentSection,
+            questionIndex: currentIndex,
+            mimeType,
+          }).catch((err) => console.error("saveAndUpload failed unexpectedly", err));
 
           speakText("Okay good. Next question.");
           setTimeout(() => next(), 1200);
@@ -413,6 +449,7 @@ const Resume = () => {
         showToast("Upload failed. Please check your internet and try answering again.", "error");
       }
     };
+      
 
     mediaRecorderRef.current.start();
     // Mark the moment recording actually began so stopRecording() can
@@ -475,6 +512,39 @@ const Resume = () => {
       // already submitted for this round.
          setStartPractice(false); // done answering — turn off violation detection now
       endInterview();
+    }
+  };
+
+  // Blocks until every answer queued for THIS session has either uploaded
+  // successfully or permanently failed on the server. Unlike the previous
+  // "retry 5 times over ~7.5s then give up" loop, this never lets
+  // endInterview() (and therefore feedback generation) run while a
+  // recoverable upload is still stuck — it waits for the browser to
+  // actually come back online and keeps retrying with backoff instead of
+  // timing out.
+  const waitForQueueToDrain = async ({ apiUrl, token, sessionId }) => {
+    let attempt = 0;
+    while (true) {
+      if (!navigator.onLine) {
+        showToast("You're offline. Waiting to reconnect to save your answers...", "error");
+        await new Promise((resolve) => {
+          const onOnline = () => {
+            window.removeEventListener("online", onOnline);
+            resolve();
+          };
+          window.addEventListener("online", onOnline);
+        });
+        showToast("Back online. Syncing your answers...", "success");
+      }
+
+      await flushPendingUploads({ apiUrl, token, sessionId });
+      if (!(await hasPendingUploads({ sessionId }))) return;
+
+      attempt += 1;
+      if (attempt % 5 === 0) {
+        showToast("Still syncing your answers, please stay on this page...", "error");
+      }
+      await new Promise((r) => setTimeout(r, Math.min(1500 * attempt, 10000)));
     }
   };
 
@@ -558,15 +628,32 @@ const Resume = () => {
         setStartPractice(false);
         setShowCompletionScreen(true);
       }
-      setIsAnalyzing(false);
-    } catch (err) {
-      console.error("END SESSION ERROR:", err);
-      showToast(err.message || "Something went wrong generating your feedback. Please try again.", "error");
-      setShowQuestionsUI(true);
-      setStartPractice(false);
-      setIsAnalyzing(false);
-    }
-  };
+    }  catch (err) {
+  console.error("END SESSION ERROR:", err);
+
+  // If we're offline, don't give up — wait for the connection to come
+  // back and try end-session again, instead of kicking the student
+  // out of the interview room.
+  if (!navigator.onLine) {
+    showToast("You're offline. Waiting to reconnect...", "error");
+    await new Promise((resolve) => {
+      const onOnline = () => {
+        window.removeEventListener("online", onOnline);
+        resolve();
+      };
+      window.addEventListener("online", onOnline);
+    });
+    showToast("Back online. Finishing up...", "success");
+    return endInterview(); // retry now that we're back online
+  }
+
+  showToast("Something went wrong generating your feedback. Please try again.", "error");
+  setShowQuestionsUI(true);
+  setStartPractice(false);
+} finally {
+  setIsAnalyzing(false);
+  }
+};
 
   // terminate the interview , when violate
   const terminateForViolation = async () => {
@@ -874,5 +961,7 @@ const Resume = () => {
       />
 
     </>);
-};
+  }
+
+
 export default Resume;

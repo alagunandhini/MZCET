@@ -363,7 +363,7 @@ ${isRecording
                 }`}
             >
               Skip
-            </button>
+            </button> 
           </div>
 
         </div>
