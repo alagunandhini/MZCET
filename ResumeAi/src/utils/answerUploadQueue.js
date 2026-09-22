@@ -103,9 +103,9 @@ async function attemptUpload({ apiUrl, token, record }) {
       // forever would otherwise block round finalization indefinitely, so
       // it's marked "failed" instead of "pending". 5xx and network errors
       // (caught below) stay "pending" and keep retrying.
-      const isPermanent =
-        res.status >= 400 && res.status < 500 &&
-        res.status !== 401 && res.status !== 408 && res.status !== 429;
+    const isPermanent =
+  res.status >= 400 && res.status < 500 &&
+  res.status !== 408 && res.status !== 429;
       throw new Error(`Upload failed with status ${res.status}`, {
         cause: isPermanent ? "permanent" : "retryable",
       });

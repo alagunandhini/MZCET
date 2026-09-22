@@ -446,6 +446,7 @@ const Resume = () => {
       } catch (err) {
         console.error("Audio upload failed", err);
         setIsAnalyzing(false);
+        setShowQuestionsUI(true); // ← add this — otherwise blank screen if last-answer upload fails
         showToast("Upload failed. Please check your internet and try answering again.", "error");
       }
     };
@@ -627,6 +628,8 @@ const Resume = () => {
         setStuckRetrying(false);
         setStartPractice(false);
         setShowCompletionScreen(true);
+         setIsAnalyzing(false);
+
       }
     }  catch (err) {
   console.error("END SESSION ERROR:", err);
@@ -644,15 +647,15 @@ const Resume = () => {
       window.addEventListener("online", onOnline);
     });
     showToast("Back online. Finishing up...", "success");
-    return endInterview(); // retry now that we're back online
+     await endInterview();
+    return; // retry now that we're back online
   }
 
   showToast("Something went wrong generating your feedback. Please try again.", "error");
   setShowQuestionsUI(true);
   setStartPractice(false);
-} finally {
-  setIsAnalyzing(false);
-  }
+   setIsAnalyzing(false);
+} 
 };
 
   // terminate the interview , when violate
